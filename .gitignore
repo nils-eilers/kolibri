@@ -1,0 +1,9 @@
+*.o
+*.bin
+*.p
+*.lst
+
+# *NIX executable:
+emu/kolibri
+# Windows executable:
+*.exe

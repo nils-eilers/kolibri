@@ -1,0 +1,381 @@
+
+* set the trap vector at address $fff0 to TRAPMON *
+*                                                 *
+* DIV0  FDB   TRAPMON                             *
+*                                                 *
+* This vector is used for division by zero        *
+* or in the case of an illegal instruction (6309) *
+* So the easiest way to call the monitor is an    *
+* illegal instruction, e.g. $15                   *
+***************************************************
+
+
+****************************************
+* register position on stack after IRQ *
+****************************************
+
+***************
+* Stack       *
+*-------------*
+* 6809   6309 *
+* c:     PC   *
+* b:          *
+* a: PC  U    *
+* 9:          *
+* 8: U   Y    *
+* 7:          *
+* 6: Y   X    *
+* 5:     DP   *
+* 4: X   F    *
+* 3: DP  E    *
+* 2: B   B    *
+* 1: A   A    *
+* 0: CC  CC   *
+***************
+
+* define stack offset for native mode
+
+NATIVE=1
+STOFF=2
+
+*******
+TRAPMON
+*******
+
+         LDA     ,S           ; load stacked CC
+         ANDA    #$80         ; clear all but E flag
+         STA     ,S           ; put back on stack
+         TFR     A,CC         ; and use it
+         LDA     #DIRECT
+         TFR     A,DP
+         JMP     Monitor
+
+*****************************************
+* Machine Language Monitor for 6309 CPU *
+*****************************************
+
+Msg_Mon   FCB   "  PC DPCC A B E F   X   Y   U   S   V\r\n;\0"
+
+************
+Mon_Commands
+************
+
+          FCB   ':',Mon_Modify_Memory
+          FCB   ';',Mon_Modify_Register
+          FCB   'G',Mon_Go
+          FCB   'M',Mon_Show_Memory
+          FCB   'R',Mon_Show_Register
+          FCB   'X',Mon_Exit
+          FCB    0
+
+
+******
+Mon_Go
+******
+
+          LDX   #BUF_TXT+2
+          LDW   MON_PC        ; preset
+          JSR   Mon_Get_Word
+          LDS   MON_S         ; S
+          STW   10+STOFF,S    ; PC
+          LDA   MON_CC
+          STA   ,S            ; CC
+          LDQ   MON_A         ; A,B,E,F
+          STQ   1,S           ; D
+          LDA   MON_DP
+          STA   3+STOFF,S     ; DP
+          LDQ   MON_X
+          STQ   4+STOFF,S     ; X,Y
+          LDD   MON_U
+          STD   8+STOFF,S     ; U
+          LDD   MON_V         ; V
+          TFR   D,V
+          RTI
+
+*******
+Monitor
+*******
+
+          LDD   10+STOFF,S    ; PC
+          STD   MON_PC
+          LDD   1,S           ; D
+          STQ   MON_A         ; A,B,E,F
+          LDQ   4+STOFF,S     ; X,Y
+          STQ   MON_X
+          LDD   8+STOFF,S     ; U
+          STD   MON_U
+          STS   MON_S         ; S
+          TFR   V,D
+          STD   MON_V
+          LDA   3+STOFF,S     ; DP
+          LDB   ,S            ; CC
+          STD   MON_DP
+          JSR   Mon_Show_Register
+
+*********
+Main_Loop
+*********
+
+          PSHS  DP
+          TFR   B,DP          ; BASIC DP
+          JSR   Edit_Get_Line
+          JSR   Mon_CRLF
+          PULS  DP
+
+          LDX   #Mon_Commands
+          LDA   BUF_TXT+1     ; command
+          CMPA  #'a'
+          BLO   Moni_20
+          ANDA  #%1101 1111   ; force upper case
+
+Moni_20   LDB   ,X+           ; command char
+          BEQ   Moni_30       ; not in list
+          LDU   ,X++          ; command subroutine
+          CMPR  A,B
+          BNE   Moni_20       ; next
+          LDX   #BUF_TXT+2
+          JSR   ,U
+          BRA   Main_Loop
+
+Moni_30   JSR   Mon_CRLF
+          LDA   #'?'
+          CALL  PUTC
+          LDA   #BS
+          CALL  PUTC
+          BRA   Main_Loop
+
+
+***************
+Mon_Show_Memory
+***************
+
+          LDW   MON_MEM       ; preset
+          BSR   Mon_Get_Word
+          PSHSW
+          ADDW  #63           ; preset
+          BSR   Mon_Get_Word
+          PULS  X             ; X = start address
+          TFR   W,Y           ; Y = last  address
+          CMPR  X,Y
+          BHS   MoSM_10
+          LEAY  63,Y          ; default
+
+MoSM_10   JSR   Mon_Dump_Row
+;          CALL  GETC
+;          CMPA  #ESC
+;          BEQ   MoSM_20
+
+          LDA   #':'
+          CALL  PUTC
+          TFR   X,D
+          JSR   Mon_Show_Byte
+          TFR   X,D
+          TFR   B,A
+          JSR   Mon_Show_Byte
+
+          LDA   #':'
+          CALL  PUTC
+          TFR   Y,D
+          JSR   Mon_Show_Byte
+          TFR   Y,D
+          TFR   B,A
+          JSR   Mon_Show_Byte
+
+          CMPR  X,Y
+          BHS   MoSM_10
+MoSM_20   STX   MON_MEM       ; remember last used
+          RTS
+
+*****************
+Mon_Modify_Memory
+*****************
+
+          BSR   Mon_Get_Word
+          TFR   W,Y           ; Y = start address
+          LDB   #8
+MoMM_10   BSR   Mon_Get_Byte
+          STA   ,Y+
+          DECB
+          BNE   MoMM_10
+          RTS
+
+*******************
+Mon_Modify_Register
+*******************
+
+          LDY   #MONBUF
+MoMR_10   BSR   Mon_Get_Byte
+          STA   ,Y+
+          CMPY  #MONBUF+18
+          BLO   MoMR_10
+          RTS
+
+*****************
+Mon_Show_Register
+*****************
+
+          LDX   #Msg_Mon
+          CALL PUTS
+
+          LDX   #MONBUF
+MoSR_10   LDA   ,X+
+          JSR   Mon_Show_Byte
+          CMPX  #MONBUF+18
+          BLO   MoSR_10
+if NATIVE
+          LDA   #'*'
+          CALL  PUTC
+endif
+          JMP   Mon_CRLF
+
+********
+Mon_Exit
+********
+
+          JMP   DIE
+
+************
+Mon_Get_Word
+************
+
+* Input : X = buffer pointer
+*       : W = preset value
+* Output: W = word
+* Skip leading blank or minus
+
+          LDA   ,X
+          CMPA  #' '          ; leading blank ?
+          BLO   MoGW_Ret
+          BEQ   MoGW_10
+          CMPA  #'-'          ; - separator ?
+          BNE   MoGW_20
+MoGW_10   LEAX  1,X
+
+MoGW_20   BSR   Mon_Get_Byte
+          TFR   A,E
+          BSR   Mon_Get_Byte
+          TFR   A,F
+MoGW_Ret  RTS
+
+************
+Mon_Get_Byte
+************
+
+****************************************
+* Input :  X = pointer to input buffer *
+* Output:  A = byte value              *
+****************************************
+
+          PSHS  B
+          LDB   ,X
+          CMPB  #' '
+          BNE   MoGB_10
+          LEAX  1,X
+MoGB_10   BSR   Mon_Get_Nibble
+          TFR   B,A
+          LSLA
+          LSLA
+          LSLA
+          LSLA
+          BSR   Mon_Get_Nibble
+          ORR   B,A
+          PULS  PC,B
+
+**************
+Mon_Get_Nibble
+**************
+
+*****************************************
+* Input : X = pointer to next hex digit *
+* Output: B = nibble value              *
+*****************************************
+
+          LDB   ,X+
+          CMPB  #'9'+1
+          BLO   MGB_10
+          SUBB  #7
+MGB_10    ANDB  #15
+          RTS
+
+************
+Mon_Dump_Row
+************
+
+* Input : X = start address
+
+          PSHS  D
+          LDA   #':'
+          CALL  PUTC
+          TFR   X,D
+          BSR   Mon_Show_Byte
+          TFR   X,D
+          TFR   B,A
+          BSR   Mon_Show_Byte
+          LDE   #8
+MDR_10    BSR   Mon_Blank
+          LDA   ,X+
+          BSR   Mon_Show_Byte
+          DECE
+          BNE   MDR_10
+
+          BSR   Mon_Blank
+          LDE   #8
+          LEAX  -8,X
+MDR_20    LDA   ,X+
+          BMI   MDR_30
+          CMPA  #' '
+          BHS   MDR_40
+MDR_30    LDA   #'.'
+MDR_40    CALL  PUTC
+          DECE
+          BNE   MDR_20
+          BSR   Mon_CRLF
+          PULS  PC,D
+
+*********
+Mon_Blank
+*********
+
+          LDA   #' '
+          CALL  PUTC
+          RTS
+
+********
+Mon_CRLF
+********
+
+          LDA   #CR
+          CALL  PUTC
+          LDA   #LF
+          CALL  PUTC
+          RTS
+
+*************
+Mon_Show_Byte
+*************
+
+* Input : A = byte
+
+          PSHS  A
+          LSRA
+          LSRA
+          LSRA
+          LSRA
+	  BSR	Mon_Nib_Hex
+          CALL  PUTC
+          PULS  A
+          BSR   Mon_Nib_Hex
+          CALL  PUTC
+          RTS
+
+***********
+Mon_Nib_Hex
+***********
+
+          ANDA  #15
+          CMPA  #10
+          BLO   MoNH_10
+          ADDA  #7
+MoNH_10   ADDA  #'0'
+          RTS
+

@@ -1,0 +1,3 @@
+		ORG 0
+		FILL 16384($FF)
+		STORE 0,16384,"empty-16k-page.bin"

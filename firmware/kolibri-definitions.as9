@@ -1,0 +1,132 @@
+		INCLUDE "control.as9"
+
+
+**************************************************************************
+***   Software Interrupts
+**************************************************************************
+
+PUTC		= $00
+GETC		= $01
+PUTS		= $02
+
+
+**************************************************************************
+***   Zero page
+**************************************************************************
+
+DIRECT		= $00 ; used by BSMON
+
+
+
+**************************************************************************
+***   Memory map
+**************************************************************************
+
+VECTBL		= $0200
+
+BUF_TXT		= $0300
+
+MONBUF		= $0352 ; Monitor buffer
+MON_PC		= MONBUF
+MON_DP		= MONBUF+2
+MON_CC		= MONBUF+3
+MON_A		= MONBUF+4
+MON_B		= MONBUF+5
+MON_W		= MONBUF+6
+MON_X		= MONBUF+8
+MON_Y		= MONBUF+10
+MON_U		= MONBUF+12
+MON_S		= MONBUF+14
+MON_V		= MONBUF+16
+MON_MEM		= MONBUF+18
+
+MACHINESTACK	= $7FFF
+USERSTACK	= $7EFF
+
+
+**************************************************************************
+***   I/O area
+**************************************************************************
+
+MMU		= $FE00
+RTC		= $FE10
+MEMCONF0	= $FE20
+MEMCONF1 	= $FE21
+MEMCONF2	= $FE22
+MEMCONF3	= $FE23
+COPRODATA	= $FE24
+COPROCMD	= $FE25
+OPL2REGSEL	= $FE26	; write access
+OPL2STATUS	= $FE26	; read access
+OPL2DATA	= $FE27	; write only
+VRAMDATA	= $FE28
+VDPSTATUS	= $FE29	; read access
+VRAMADDR	= $FE29	; write access
+VDPREG		= $FE29 ; write access
+VDPPALETTE	= $FE2A	; write access
+VDPINDIRECT	= $FE2B	; write access
+VDP98		= $FE28 ; simplify porting of MSX code
+VDP99		= $FE29
+VDP9A		= $FE2A
+VDP9B		= $FE2B
+FT245R		= $FE2C	; virtual COM port R/W
+INPORT		= $FE2D
+INWP0		= 1
+INWP1		= 2
+INCD0		= 4
+INCD1		= 8
+INIBF		= 32
+INTXE		= 64
+INRXF		= 128
+
+
+
+**************************************************************************
+***   CPU flags
+**************************************************************************
+
+CARRYFLAG	= 1
+OVERFLOWFLAG	= 2
+ZEROFLAG	= 4
+NEGATIVEFLAG	= 8
+IRQFLAG		= 16
+HALFCARRYFLAG	= 32
+FIRQFLAG	= 64
+ENTIREFLAG	= 128
+
+****************************************
+* register position on stack after IRQ *
+****************************************
+
+***************
+* Stack       *
+*-------------*
+* 6809   6309 *
+* c:     PC   *
+* b:          *
+* a: PC  U    *
+* 9:          *
+* 8: U   Y    *
+* 7:          *
+* 6: Y   X    *
+* 5:     DP   *
+* 4: X   F    *
+* 3: DP  E    *
+* 2: B   B    *
+* 1: A   A    *
+* 0: CC  CC   *
+***************
+
+; Stack offsets for SWI routines
+SOFF_CC		= 4;
+SOFF_A		= 5;
+SOFF_B		= 6;
+SOFF_E		= 7;
+SOFF_F		= 8;
+SOFF_DP		= 9;
+SOFF_X		= 9;
+SOFF_Y		= 11;
+SOFF_U		= 13;
+SOFF_PC		= 15;
+
+
