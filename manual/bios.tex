@@ -1,0 +1,47 @@
+\chapter{BIOS}
+
+\section{Introduction}
+
+The BIOS functions are called via software interrupt {\bf SWI}.
+Input and output parameters are transferred via registers.
+The contents of all registers are retained, except those,
+which are used to return values.
+
+Register {\bf A} is loaded with the BIOS function number.
+Never use numeric values to load the {\bf A} register.
+Use the symbolic names, as defined in the file "bios.h".
+
+If more byte values are needed as input, the registers
+{\bf B}, {\bf E} and {\bf F} may be used.
+16-bit values or addresses are loaded into the registers
+{\bf X} or {\bf Y}.
+
+If the number of parameters exceeds the number of available
+registers, the address of a structure should be passed.
+
+Examples:
+\begin{verbatim}
+
+*       print the character 'A'
+
+        LDA   #SCR_Put_Char
+        LDB   #'A'
+        SWI
+
+*       print a zero terminated string
+
+Message BYTE "Kolibri welcomes you\n",0
+
+        LDA   #SCR_Put_String
+        LDX   #Message
+        SWI
+
+*       Read a character from keyboard
+
+        LDA   #KBD_Get_Key
+        SWI
+*             Register B now contains an ASCII value
+*             or NULL, if no key was read
+
+\end{verbatim}
+
