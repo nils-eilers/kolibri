@@ -7,13 +7,13 @@ Input and output parameters are transferred via registers.
 The contents of all registers are retained, except those,
 which are used to return values.
 
-Register {\bf A} is loaded with the BIOS function number.
-Never use numeric values to load the {\bf A} register.
+Register {\bf B} is loaded with the BIOS function number.
+Never use numeric values to load the {\bf B} register.
 Use the symbolic names, as defined in the file "bios.h".
 
 If more byte values are needed as input, the registers
-{\bf B}, {\bf E} and {\bf F} may be used.
-16-bit values or addresses are loaded into the registers
+{\bf A}, {\bf E} and {\bf F} may be used.
+16-bit values or addresses can be loaded into the registers
 {\bf X} or {\bf Y}.
 
 If the number of parameters exceeds the number of available
@@ -24,23 +24,23 @@ Examples:
 
 *       print the character 'A'
 
-        LDA   #SCR_Put_Char
-        LDB   #'A'
+        LDB   #SCR_Put_Char
+        LDA   #'A'
         SWI
 
 *       print a zero terminated string
 
 Message BYTE "Kolibri welcomes you\n",0
 
-        LDA   #SCR_Put_String
+        LDB   #SCR_Put_String
         LDX   #Message
         SWI
 
 *       Read a character from keyboard
 
-        LDA   #KBD_Get_Key
+        LDB   #KBD_Get_Key
         SWI
-*             Register B now contains an ASCII value
+*             Register A now contains an ASCII value
 *             or NULL, if no key was read
 
 \end{verbatim}
