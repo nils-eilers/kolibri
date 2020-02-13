@@ -4,10 +4,7 @@ run: firmware.bin
 	kolibri
 
 firmware-8000-ffff.bin: firmware-8000-ffff.as9 kolibri-definitions.as9 macros.as9 edit.as9 monitor.as9
-# Assemble to run code in emulator
-	bs9 -DEMU -n $< -l 0xff
-# Assemble to run code in real machine
-#	bs9 -n $< -l 0xff
+	bs9 -n $< -l 0xff
 
 # Alias filename for emulator
 firmware.bin: firmware-8000-ffff.bin
