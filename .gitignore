@@ -1,7 +1,11 @@
 *.o
 *.lst
-
-# *NIX executable:
-emu/kolibri
-# Windows executable:
+*.bin
+*.opt
+*.pp
 *.exe
+*.aux
+*.log
+*.pdf
+emu/kolibri
+firmware/tools/char2asm

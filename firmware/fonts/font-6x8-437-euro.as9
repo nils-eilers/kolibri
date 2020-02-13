@@ -1,5 +1,5 @@
            ORG 0
-           STORE 0,2048,"fonts/font-6x8-437-euro.bin"
+           STORE 0,2048,"fonts/font-6x8-437-euro.fon"
 
            BITS  . . . . . . . . ; $0000
            BITS  . . . . . . . .

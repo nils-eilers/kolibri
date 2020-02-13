@@ -46,7 +46,7 @@ asm2char:
 
 char2asm:
 	$(MAKE) -C tools
-	./tools/char2asm fonts/font-6x8-437-euro.bin > fonts/font-6x8-437-euro.as9
+	./tools/char2asm fonts/font-6x8-437-euro.fon > fonts/font-6x8-437-euro.as9
 
 .PHONY: all clean run sim buildcomplete asm2char char2asm
 
