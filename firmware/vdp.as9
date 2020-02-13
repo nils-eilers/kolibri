@@ -27,14 +27,16 @@ VDPWRITEADDRESS 	MACRO		; *** set VDP write vram address-pointer to D
 		ENDM
 
 **************************************************************************
-VDPINIT:				; *** initialize VDP ***
-		clra
+WAIT6US		FILL 8 ($12)	; *** wait 6 us
+		rts			; total with jsr/rts -> 18 cycles = 6 us @ 3MHz
+
+VDPINIT		clra		; *** initialize VDP ***
 		VDPSETREG 17		; write VDP regs fast indirect
-		WAIT 6			; add 6 us to reach 8 us
+		jsr WAIT6US		; add 6 us to reach 8 us
 		ldx #VDPINITDATA
 VDPINITREGS	lda ,x+
 		sta VDPINDIRECT
-		WAIT 5			; add 5 us to reach 8us
+		jsr WAIT6US
 		cmpx #VDPINITDATAEND
 		bne VDPINITREGS
 
@@ -42,25 +44,24 @@ VDPINITREGS	lda ,x+
 		VDPSETREG 18		; set register 18 V/H display adjust L 7-1,0,f-8 R
 					; * clear 16kB VRAM
 		clrd
-		WAIT 7 
+		jsr WAIT6US 
 		VDPWRITEADDRESS		; set VRAM write address to D = $0000, Bank Reg already $00
 		ldw #$4000		; set counter W to $4000
-CLEARVRAM	WAIT 6			; vdp pause between VRAM write 8 us 
+CLEARVRAM	jsr WAIT6US			; vdp pause between VRAM write 8 us 
 		stb VDPRAM		; B = VRAM init value = $00
 		decw
 		bne CLEARVRAM
 					; * load color palette
 		clra
-		WAIT 6
+		jsr WAIT6US
 		VDPSETREG 16		 
-		WAIT 6
+		jsr WAIT6US
 		ldx #VDPPALETTEDATA
 VDPINITPALETTE	lda ,x+			; load palette-color to write
 		sta VDPPALETTE		; write to palette register
-		WAIT 5			; add 5 us to reach 8us
+		jsr WAIT6US
 		cmpx #VDPPALETTEDATAEND
 		bne VDPINITPALETTE
-
 		rts
 
 **************************************************************************
