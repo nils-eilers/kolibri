@@ -1,6 +1,4 @@
 *.o
-*.bin
-*.p
 *.lst
 
 # *NIX executable:
