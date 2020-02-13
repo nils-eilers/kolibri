@@ -1,17 +1,10 @@
 ; ***** V9958 subroutines *****
 
-PAL = 1			; PAL=1, NTSC=0	selects V9938/58 PAL RGB-output, NTSC has a higher picture
-
-VDPRAM		= $FE28
-VDPSTATUS	= $FE29	; read access
-VDPCONTROL	= $FE29	; write access
-VDPPALETTE	= $FE2A	; write access
-VDPINDIRECT	= $FE2B	; write access
-
+PAL = 1				; PAL=1, NTSC=0	selects V9938/58 PAL RGB-output
 COLREG1		= $f1		; color / background+backdrop color
 COLREG2		= $1f		; blink (reverse) color / background+backdrop color
 VDPREG9		= $80 | PAL*2	; VDP reg 9 value ($80 = NTSC, $82 = PAL / 212 lines)
-VDPREG18		= $0d		; VDP reg 18 value (V/H screen adjust, $0d = Sony PVM 9")
+VDPREG18	= $0d		; VDP reg 18 value (V/H screen adjust, $0d = Sony PVM 9")
 
 WAIT		MACRO ARG	; wait ARG us
 		FILL ARG*3 ($12)		; each $12=nop needs 1/3 us @ 3MHz 6309/native mode
