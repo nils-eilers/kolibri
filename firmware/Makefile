@@ -36,11 +36,19 @@ clean:
 	rm -f firmware-8000-ffff.bin firmware-8000-ffff.lst firmware-8000-ffff.opt
 	rm -f firmware-8000-ffff.as9.opt
 	rm -f empty-16k-page.bin empty-16k-page.lst
+	rm -f fonts/font-6x8-437-euro.lst
 
 buildcomplete:
 	 @echo Try \'make run\' for emulation or \'make sim\' for the real thing
 
-.PHONY: all clean sim buildcomplete
+asm2char:
+	bs9 fonts/font-6x8-437-euro.as9
+
+char2asm:
+	$(MAKE) -C tools
+	./tools/char2asm fonts/font-6x8-437-euro.bin > fonts/font-6x8-437-euro.as9
+
+.PHONY: all clean run sim buildcomplete asm2char char2asm
 
 # Do not run multiple builds at the same time, this gives scrambled output
 .NOTPARALLEL:
