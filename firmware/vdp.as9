@@ -1,10 +1,22 @@
 ; ***** V9958 subroutines *****
 
 PAL = 1				; PAL=1, NTSC=0	selects V9938/58 PAL RGB-output
-COLREG1		= $f1		; color / background+backdrop color
-COLREG2		= $1f		; blink (reverse) color / background+backdrop color
+
+PATTERNTABLE	= $1000	; font memory in VRAM
+COLORTABLE	= $0A00	; color/attribute-table in VRAM
+SCREENTABLE	= $0000	; screen memory in VRAM
+
+VDPREG1		= $10		; VDP reg 1 value (mode bits M1+M2, screen disabled)
 VDPREG9		= $80 | PAL*2	; VDP reg 9 value ($80 = NTSC, $82 = PAL / 212 lines)
-VDPREG18	= $0d		; VDP reg 18 value (V/H screen adjust, $0d = Sony PVM 9")
+VDPREG18		= $0d		; VDP reg 18 value (V/H screen adjust, $0d = Sony PVM 9")
+
+VDPCOLOR1	= 15		; start color values
+VDPCOLOR2	= 12
+VDPBGCOLOR1	= 1
+VDPBGCOLOR2	= 1
+
+COLS		= 80		; screen columns
+ROWS		= 25		; used lines
 
 WAIT		MACRO ARG	; wait ARG us
 		FILL ARG*3 ($12)		; each $12=nop needs 1/3 us @ 3MHz 6309/native mode
@@ -30,7 +42,8 @@ VDPWRITEADDRESS 	MACRO		; *** set VDP write vram address-pointer to D
 WAIT6US		FILL 8 ($12)	; *** wait 6 us
 		rts			; total with jsr/rts -> 18 cycles = 6 us @ 3MHz
 
-VDPINIT		clra		; *** initialize VDP ***
+VDPINIT				; *** initialize VDP ***
+		clra
 		VDPSETREG 17		; write VDP regs fast indirect
 		jsr WAIT6US		; add 6 us to reach 8 us
 		ldx #VDPINITDATA
@@ -43,17 +56,27 @@ VDPINITREGS	lda ,x+
 		lda # VDPREG18
 		VDPSETREG 18		; set register 18 V/H display adjust L 7-1,0,f-8 R
 					; * clear 16kB VRAM
-		clrd
 		jsr WAIT6US 
+		clrd
 		VDPWRITEADDRESS		; set VRAM write address to D = $0000, Bank Reg already $00
 		ldw #$4000		; set counter W to $4000
 CLEARVRAM	jsr WAIT6US			; vdp pause between VRAM write 8 us 
 		stb VDPRAM		; B = VRAM init value = $00
 		decw
 		bne CLEARVRAM
-					; * load color palette
-		clra
+					; * copy font to pattern generator table
 		jsr WAIT6US
+		ldd #PATTERNTABLE
+		VDPWRITEADDRESS		; set VRAM write address to D = Patterntable
+		ldx #VDPFONTDATA
+VDPLOADFONT	lda ,x+
+		sta VDPRAM
+		jsr WAIT6US
+		cmpx #VDPFONTDATAEND
+		bne VDPLOADFONT
+					; * load color palette
+		jsr WAIT6US
+		clra
 		VDPSETREG 16		 
 		jsr WAIT6US
 		ldx #VDPPALETTEDATA
@@ -64,12 +87,31 @@ VDPINITPALETTE	lda ,x+			; load palette-color to write
 		bne VDPINITPALETTE
 		rts
 
+VDPON				; *** enable screen ***
+		lda #VDPREG1 | $40	; set mode reg 1 (M1+M2), bit#6 = 1 enables screen
+		VDPSETREG 1
+		rts
+
+VDPOFF				; *** disable screen ***
+		lda #VDPREG1 & $bf	; set mode reg 1 (M1+M2), bit#6 = 1 enables screen
+		VDPSETREG 1
+		rts
+
+VDPREADSTATUS			; *** read status register in A - return status in A
+		lda #1
+		VDPSETREG 15		; reg 15 = 1 initiates read status-reg 1
+		jsr WAIT6US		; wait 8 us total for DVP
+		WAIT 2
+		lda VDPSTATUS		; read status
+		rts
+
 **************************************************************************
 ; vdp-tables
 VDPINITDATA			; ***** VDP init data table *****
-	FCB $04,$50,$03,$2f,$02,$3f,$03,COLREG1,$08,VDPREG9,$00,$00,COLREG2,$f0,$00
+	FCB $04,VDPREG1,$03,$2f,$02,$3f,$03,VDPCOLOR1*16+VDPBGCOLOR1
+	FCB $08,VDPREG9,$00,$00,VDPCOLOR2*16+VDPBGCOLOR2,$f0,$00
 	; reg  0: $04 mode control 1: text mode 2 (bit#1-3 = M3 - M5)
-	; reg  1: $50 mode control 2: bit#1 16x16 sprites, bit#3-4 = M2-M1, #6 =1: display enable)
+	; reg  1: $10 mode control 2: bit#1 16x16 sprites, bit#3-4 = M2-M1, #6 =1: display enable)
 	; reg  2: $03 name (screen) table base address $0000 ( * $400 + bit#0+1 = 1)
 	; reg  3: $2f color table base address $0A00 ( * $40 + bit#0-2 = 1)
 	; reg  4: $02 pattern (character) generator table base address $1000 (* $800)
@@ -86,10 +128,14 @@ VDPINITDATA			; ***** VDP init data table *****
 	; reg 16: $00 color palette pointer to color 0
 VDPINITDATAEND
 
-; ***** Color Palette - 16 colors, 2 byte/color RB, 0G each 3bit -> CGA-colors *****
-VDPPALETTEDATA
+VDPPALETTEDATA	; ***** Color Palette - 16 colors, 2 byte/color RB, 0G each 3bit -> CGA-colors *****
 	FCB $00,$00,$05,$00,$00,$05,$05,$05   ;   0=black     1=blue      2=green       3=cyan
 	FCB $50,$00,$55,$00,$50,$03,$55,$05   ;   4=red       5=magenta   6=brown       7=lightgrey
 	FCB $33,$03,$37,$03,$33,$07,$37,$07   ;   8=grey      9=lightblue a=lightgreen  b=lightcyan
 	FCB $73,$03,$77,$03,$73,$07,$77,$07   ;   c=lightred  d=ltmagenta e=yellow      f=white
 VDPPALETTEDATAEND
+
+		ORG $E000
+VDPFONTDATA		
+		LOAD "fonts/font-6x8-437-euro.fon"
+VDPFONTDATAEND
