@@ -142,22 +142,27 @@ Moni_30   JSR   Mon_CRLF
 Mon_Show_Memory
 ***************
 
+***************************************
+* Dump a memory range to screen       *
+* Read two hex words for start and    *
+* stop :XXXX WWWW                     *
+* ----------------------------------- *
+* Input : X = pointer to input buffer *
+*         MON_MEM = default start     *
+* Output: X = advanced                *
+*         MON_MEM = end address + 1   *
+*         D,W modified                *
+***************************************
+
           LDW   MON_MEM       ; preset
           JSR   Mon_Get_Word
-          PSHSW
-          ADDW  #63           ; preset
+          PSHSW               ; push start
+          ADDW  #127          ; preset
           JSR   Mon_Get_Word
           PULS  X             ; X = start address
           TFR   W,Y           ; Y = last  address
-          CMPR  X,Y
-          BHS   MoSM_10
-          LEAY  63,X          ; default end = start + 63
-
 MoSM_10   JSR   Mon_Dump_Row
-;          CALL  GETC
-;          CMPA  #ESC
-;          BEQ   MoSM_20
-
+                              ; TODO: check STOP key
           CMPR  X,Y
           BHS   MoSM_10
 MoSM_20   STX   MON_MEM       ; remember last used
@@ -237,23 +242,29 @@ Mon_Exit
 Mon_Get_Word
 ************
 
-* Input : X = buffer pointer
-*       : W = preset value
-* Output: W = word
-* Skip leading blank or minus
+*****************************************
+* Convert four hex digits to word value *
+* skipping an optional leading blank    *
+* ------------------------------------- *
+* Input : X = pointer to input buffer   *
+*       : W = default result            *
+* Output: W = word value                *
+*       : X = advanced after hex word   *
+*****************************************
 
-          LDA   ,X
+          LDA   ,X            ; next char
           CMPA  #' '          ; leading blank ?
-          BLO   MoGW_Ret
-          BEQ   MoGW_10
-          CMPA  #'-'          ; - separator ?
-          BNE   MoGW_20
-MoGW_10   LEAX  1,X
-
-MoGW_20   BSR   Mon_Get_Byte
-          TFR   A,E
-          BSR   Mon_Get_Byte
-          TFR   A,F
+          BLO   MoGW_Ret      ; -> error
+          BEQ   MoGW_10       ; -> skip
+          CMPA  #','          ; comma separator ?
+          BEQ   MoGW_10       ; -> yes
+          CMPA  #'-'          ; dash separator ?
+          BNE   MoGW_20       ; -> no
+MoGW_10   LEAX  1,X           ; skip 1 char
+MoGW_20   BSR   Mon_Get_Byte  ; 2 hex to byte
+          TFR   A,E           ; high byte
+          BSR   Mon_Get_Byte  ; 2 hex to byte
+          TFR   A,F           ; low   byte
 MoGW_Ret  RTS
 
 ************
@@ -261,23 +272,27 @@ Mon_Get_Byte
 ************
 
 ****************************************
+* Convert two hex digits to byte value *
+* skipping an optional leading blank   *
+* ------------------------------------ *
 * Input :  X = pointer to input buffer *
 * Output:  A = byte value              *
+*          X = advanced after hex byte *
 ****************************************
 
-          PSHS  B
-          LDB   ,X
-          CMPB  #' '
-          BNE   MoGB_10
-          LEAX  1,X
-MoGB_10   BSR   Mon_Get_Nibble
-          TFR   B,A
+          PSHS  B              ; save B
+          LDB   ,X             ; next char
+          CMPB  #' '           ; leading blank ?
+          BNE   MoGB_10        ; -> no
+          LEAX  1,X            ; skip blank
+MoGB_10   BSR   Mon_Get_Nibble ; get high nibble
+          TFR   B,A            ; store in A
+          LSLA                 ; shift to high
           LSLA
           LSLA
           LSLA
-          LSLA
-          BSR   Mon_Get_Nibble
-          ORR   B,A
+          BSR   Mon_Get_Nibble ; get low nibble
+          ORR   B,A            ; combine nibbles -> A
           PULS  PC,B
 
 **************
@@ -285,15 +300,19 @@ Mon_Get_Nibble
 **************
 
 *****************************************
+* Get a hex digit from buffer pointer X *
+* convert it to binary  and return in A *
+* ------------------------------------- *
 * Input : X = pointer to next hex digit *
 * Output: B = nibble value              *
+*         X++                           *
 *****************************************
 
-          LDB   ,X+
-          CMPB  #'9'+1
-          BLO   MGB_10
-          SUBB  #7
-MGB_10    ANDB  #15
+          LDB   ,X+           ; get hex digit
+          CMPB  #'9'+1        ; numeric ?
+          BLO   MGB_10        ; -> yes
+          SUBB  #7            ; assume A -> F
+MGB_10    ANDB  #15           ; to binary
           RTS
 
 ************
