@@ -4,14 +4,14 @@
 		INCLUDE "macros.as9"
 
 **************************************************************************
-DO_RESET	; cold start machine
-		ORCC #IRQFLAG|FIRQFLAG	; disable interrupts
-		SETDP 0
-		CLRA
-		TFR A,DP		; Set direct page register to 0
-		LDS #MACHINESTACK
-		LDU #USERSTACK
-		LDMD #$01		; Switch to 6309 native mode,
+DO_RESET	   ; cold start machine
+		ORCC  #IRQFLAG|FIRQFLAG	; disable interrupts
+		SETDP BIOS_DP
+		LDA   #BIOS_DP
+		TFR   A,DP		; Set direct page register
+		LDS   #MACHINESTACK
+		LDU   #USERSTACK
+		LDMD  #$01		; Switch to 6309 native mode,
 					; FIRQ-handling as on the 6809
 
 **************************************************************************
@@ -112,28 +112,63 @@ VECT_ROMTBL	FDB USBOUT		; STDOUT
 		FDB DO_PUTS
 VECT_ROMTBL_END
 
-		IF ((VECT_ROMTBL_END - VECT_ROMTBL) >> 1) > 127
-		   ERROR DO_SWI can't handle more than 128 entries
+		IF ((VECT_ROMTBL_END - VECT_ROMTBL) >> 1) > 255
+		   ERROR DO_SWI can't handle more than 255 entries
 		ENDIF
 
 **************************************************************************
 ***   Interrupt vectors
 **************************************************************************
 
-DO_SWI		CMPB #(VECT_ROMTBL_END - VECT_ROMTBL) >> 1
-		BHS DO_BAD_SWI
-		ASLB
-		PSHS Y
-		LDY #VECTBL
-		JSR [B,Y]
-		PULS Y
-		RTI
+***********
+* Stack   *
+*---------*
+* c: PC   *
+* b:      *
+* a: U    *
+* 9:      *
+* 8: Y    *
+* 7:      *
+* 6: X    *
+* 5: DP   *
+* 4: F    *
+* 3: E    *
+* 2: B    *
+* 1: A    *
+* 0: CC   *
+***********
 
-DO_BAD_SWI	LDX #BADSWI
-		JSR [VECTBL+PUTS*2]
-		RTI
+******
+DO_SWI
+******
 
-BADSWI		FCC "ILLEGAL SWI\n\0"
+************************************
+* Entry for software interrupt SWI *
+* -------------------------------- *
+* Input: B = function number       *
+************************************
+
+        CMPB    #(VECT_ROMTBL_END - VECT_ROMTBL) >> 1
+        BHS     DO_BAD_SWI    ; -> illegal number
+        ANDCC   #%1010 1111   ; enable FIRQ & IRQ
+        LDA     #BIOS_DP      ; BIOS direct page
+        TFR     A,DP          ; set DP
+        SETDP   BIOS_DP       ; inform assembler
+        LDX     #VECTBL       ; switch table
+        ABX                   ; X = table + function number
+        LDD     B,X           ; D = function address [X+B+B]
+        STD     BIOS_ADR      ; store function address
+        LDD     1,S           ; restore D from stack
+        LDX     6,S           ; restore X from stack
+        JSR     [BIOS_ADR]    ; call BIOS subroutine
+        RTI                   ; return from interrupt
+
+DO_BAD_SWI
+        LDX     #BADSWI
+        JSR     DO_PUTS
+        RTI
+
+BADSWI  FCC "ILLEGAL SWI\n\0"
 
 
 DO_SWI2

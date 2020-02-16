@@ -15,8 +15,9 @@ PUTS		= $02
 **************************************************************************
 
 DIRECT		= $00 ; used by BSMON
+BIOS_DP     = $00 ; BIOS
 
-
+BIOS_ADR    ENUM  (BIOS_DP >> 8) ; JSR vector for SWI
 
 **************************************************************************
 ***   Memory map
@@ -112,16 +113,17 @@ ENTIREFLAG	= 128
 * 0: CC  CC   *
 ***************
 
-; Stack offsets for SWI routines
-SOFF_CC		= 4;
-SOFF_A		= 5;
-SOFF_B		= 6;
-SOFF_E		= 7;
-SOFF_F		= 8;
-SOFF_DP		= 9;
-SOFF_X		= 9;
-SOFF_Y		= 11;
-SOFF_U		= 13;
-SOFF_PC		= 15;
+; Stack offsets for SWI routines = SWI offset + 2 for JSR
+
+SOFF_CC		= 2;
+SOFF_A		= 3;
+SOFF_B		= 4;
+SOFF_E		= 5;
+SOFF_F		= 6;
+SOFF_DP		= 7;
+SOFF_X		= 8;
+SOFF_Y		= 10;
+SOFF_U		= 12;
+SOFF_PC		= 14;
 
 
