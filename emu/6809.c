@@ -1427,7 +1427,7 @@ void opcode_trap(void)
 {
     CLK += 6;
     EFI |= E_FLAG;
-    MD &= MD_ILL;
+    MD |= MD_ILL;
     S -= 2;
     write_stack16(S, PC);
     S -= 2;
@@ -1452,7 +1452,7 @@ void div0_trap(void)
 {
     CLK += 6;
     EFI |= E_FLAG;
-    MD &= MD_DBZ;
+    MD |= MD_DBZ;
     S -= 2;
     write_stack16(S, PC);
     S -= 2;
