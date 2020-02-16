@@ -370,28 +370,39 @@ Mon_Show_Word
 Mon_Show_Byte
 *************
 
-* Input : A = byte
+*****************************
+* Print A as two hex digits *
+* ------------------------- *
+* Input : A = value         *
+* Output: A = low byte hex  *
+*         B = #PUTC         *
+*****************************
 
           PSHS  A
           LSRA
           LSRA
           LSRA
           LSRA
-	  BSR	Mon_Nib_Hex
-          CALL  PUTC
-          PULS  A
           BSR   Mon_Nib_Hex
-          CALL  PUTC
-          RTS
+          PULS  A             ; fall through
 
 ***********
 Mon_Nib_Hex
 ***********
+
+************************************
+* Print lower nibble of value in A *
+* -------------------------------- *
+* Input : A = binary number        *
+* Output: A = hex digit (0 - F)    *
+*         B = #PUTC                *
+************************************
 
           ANDA  #15
           CMPA  #10
           BLO   MoNH_10
           ADDA  #7
 MoNH_10   ADDA  #'0'
+          CALL  PUTC
           RTS
 
