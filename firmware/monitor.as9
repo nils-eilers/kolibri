@@ -150,7 +150,7 @@ Mon_Show_Memory
           PULS  X             ; X = start address
           TFR   W,Y           ; Y = last  address
           CMPR  X,Y
-          BLS   MoSM_10
+          BHS   MoSM_10
           LEAY  63,X          ; default end = start + 63
 
 MoSM_10   JSR   Mon_Dump_Row
@@ -159,7 +159,7 @@ MoSM_10   JSR   Mon_Dump_Row
 ;          BEQ   MoSM_20
 
           CMPR  X,Y
-          BLS   MoSM_10
+          BHS   MoSM_10
 MoSM_20   STX   MON_MEM       ; remember last used
           RTS
 

@@ -3375,7 +3375,7 @@ void h6809_mainloop (void)
 
             case 0x1037:        /* CMPR R,R */
                 post_byte = imm_byte();
-                cmp16(get_reg((uint8_t)(post_byte >> 4)), get_reg((uint8_t)(post_byte & 0x0f)), 1, 1);
+                cmp16(get_reg((uint8_t)(post_byte & 0x0f)), get_reg((uint8_t)(post_byte >> 4)), 1, 1);
                 break;
 #endif
 
