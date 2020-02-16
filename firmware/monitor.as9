@@ -300,50 +300,41 @@ MGB_10    ANDB  #15
 Mon_Dump_Row
 ************
 
-* Input : X = start address
+*****************************************************
+* Print a row of 16 bytes as hexdump and ASCII dump *
+* ------------------------------------------------- *
+* Input : X = start address                         *
+* Output: X += 16                                   *
+*         A,B,E modified                            *
+*****************************************************
 
-          PSHS  D
-          LDA   #':'
+          LDA   #':'          ; modify memory symbol
           CALL  PUTC
           TFR   X,D
-          BSR   Mon_Show_Byte
-          TFR   X,D
-          TFR   B,A
-          BSR   Mon_Show_Byte
-          LDE   #16
+          BSR   Mon_Show_Word ; print start address
+          CLRE                ; index
 MDR_10    BSR   Mon_Blank
-          LDA   ,X+
+          LDA   E,X           ; next byte
           BSR   Mon_Show_Byte
-          CMPE  #9
-          BNE   MDR_15
-          BSR   Mon_Blank
-MDR_15    DECE
-          BNE   MDR_10
-
-          BSR   Mon_Blank
-          LDE   #16
-          LEAX  -16,X
-MDR_20    LDA   ,X+
-          BMI   MDR_30
-          CMPA  #' '
-          BHS   MDR_40
-MDR_30    LDA   #'.'
-MDR_40    CALL  PUTC
-          CMPE  #9
-          BNE   MDR_50
-          BSR   Mon_Blank
-MDR_50    DECE
+          CMPE  #7
           BNE   MDR_20
-          BSR   Mon_CRLF
-          PULS  PC,D
-
-*********
-Mon_Blank
-*********
-
-          LDA   #' '
-          CALL  PUTC
-          RTS
+          BSR   Mon_Blank     ; insert blank after 8
+MDR_20    INCE
+          CMPE  #16
+          BNE   MDR_10
+          BSR   Mon_Blank     ; E = 16
+MDR_30    LDA   ,X+
+          BMI   MDR_40
+          CMPA  #' '          ; printable ?
+          BHS   MDR_50
+MDR_40    LDA   #'.'
+MDR_50    CALL  PUTC
+          CMPE  #9
+          BNE   MDR_60
+          BSR   Mon_Blank
+MDR_60    DECE
+          BNE   MDR_30        ; fall through at end
+          SIZE
 
 ********
 Mon_CRLF
@@ -355,11 +346,25 @@ Mon_CRLF
           CALL  PUTC
           RTS
 
+*********
+Mon_Blank
+*********
+
+          LDA   #' '
+          CALL  PUTC
+          RTS
+
 *************
 Mon_Show_Word
 *************
 
-* Input : D = word (big endian)
+******************************
+* Print D as four hex digits *
+* -------------------------- *
+* Input : D = value          *
+* Output: A = low byte hex   *
+*         B = #PUTC          *
+******************************
 
           PSHS  B              ; push  low byte
           BSR   Mon_Show_Byte  ; print high byte
@@ -385,6 +390,7 @@ Mon_Show_Byte
           LSRA
           BSR   Mon_Nib_Hex
           PULS  A             ; fall through
+          SIZE
 
 ***********
 Mon_Nib_Hex
