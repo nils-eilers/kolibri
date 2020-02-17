@@ -149,8 +149,9 @@ VDPCLEARWINDOW	jsr VDP_Wait16c
 		ste IO_VDPRAM
 		decd
 		bne VDPCLEARWINDOW
-		sta BIOS_CursorX		; set cursor to 0,0 (A is already 0 from decd)
-		sta BIOS_CursorY
+		sta BIOS_CursorX		; set cursor to column 0 (A is already 0 from decd)
+		lda BIOS_RowTop
+		sta BIOS_CursorY		; set cursor to window top line
 		rts
 
 VDP_SetColor			; *** sets color register 7 + 12 from color variables
