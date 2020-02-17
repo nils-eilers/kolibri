@@ -1,28 +1,33 @@
-Edit_Get_Line	CLRA
-		LDX #BUF_TXT
-		STA ,X+
-EGL10		CALL GETC
-		CMPA #CR
-		BEQ EGL80
-		CMPA #LF
-		BEQ EGL80
-		CALL PUTC
-		CMPA #DEL
-		BNE EGL20
-		CMPX #BUF_TXT+1
-		BEQ EGL10
-		CLRA
-		STA ,X
-		LEAX -1,X
-		LDA #BS
-		CALL PUTC
-		LDA #' '
-		CALL PUTC
-		LDA #BS
-		CALL PUTC
-		BRA EGL10
-EGL20		STA ,X+
-		BRA EGL10
-EGL80		CLRA
-		STA ,X
-		RTS
+*************
+Edit_Get_Line
+*************
+
+        CLRA
+        LDX     #BUF_TXT
+        STA     ,X+
+EGL_10  CALL    GETC
+        CMPA    #CR
+        BEQ     EGL_80
+        CMPA    #LF
+        BEQ     EGL_80
+        CALL    PUTC
+        CMPA    #DEL
+        BNE     EGL_20
+        CMPX    #BUF_TXT+1
+        BEQ     EGL_10
+        CLRA
+        STA     ,X
+        LEAX    -1,X
+        LDA     #BS
+        CALL    PUTC
+        LDA     #' '
+        CALL    PUTC
+        LDA     #BS
+        CALL    PUTC
+        BRA     EGL_10
+EGL_20  STA     ,X+
+        BRA     EGL_10
+EGL_80  CLRA
+        STA     ,X
+        RTS
+

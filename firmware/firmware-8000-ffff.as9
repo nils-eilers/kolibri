@@ -1,132 +1,173 @@
-		STORE $8000,$8000,"firmware-8000-ffff.bin"
-		ORG $8000
-		INCLUDE "kolibri-definitions.as9"
-		INCLUDE "macros.as9"
+        STORE   $8000,$8000,"firmware-8000-ffff.bin"
+        ORG     $8000
+        INCLUDE "kolibri-definitions.as9"
+        INCLUDE "macros.as9"
 
-VDPFONTDATA	= $E000		; fontata start
-VDPFONTSIZE	= $0800		; fontdata size
-		LOAD VDPFONTDATA, "fonts/font-6x8-437-euro.fon"
+VDPFONTDATA = $E000             ; fontata start
+VDPFONTSIZE = $0800             ; fontdata size
 
-**************************************************************************
-DO_RESET	   ; cold start machine
-		ORCC  #IRQFLAG|FIRQFLAG	; disable interrupts
-		SETDP BIOS_DP
-		LDA   #BIOS_DP
-		TFR   A,DP		; Set direct page register
-		LDS   #MACHINESTACK
-		LDU   #USERSTACK
-		LDMD  #$01		; Switch to 6309 native mode,
-					; FIRQ-handling as on the 6809
+        LOAD    VDPFONTDATA,"fonts/font-6x8-437-euro.fon"
 
-**************************************************************************
+
+********
+Do_Reset                        ; cold start machine
+********
+
+        ORCC    #IRQFLAG|FIRQFLAG ; disable interrupts
+        SETDP   BIOS_DP
+        LDA     #BIOS_DP
+        TFR     A,DP            ; Set direct page register
+        LDS     #MACHINESTACK
+        LDU     #USERSTACK
+        LDMD    #$01            ; Switch to 6309 native mode,
+                                ; FIRQ-handling as on the 6809
+
+
 ; No high level code here, the output shall work even with broken RAM chip
-		LDX #BOOTPROMPT
-PROMPT		LDA ,X+
-		BEQ PROMPT80
+        LDX     #BOOTPROMPT
+PROMPT  LDA     ,X+
+        BEQ     PROMPT80
 ; TODO: check if chip is ready
-		STA IO_FT245R
-		BRA PROMPT
-BOOTPROMPT	FCC "\r\n\r\nkolibri.computer\r\n\0"
+        STA     IO_FT245R
+        BRA     PROMPT
+BOOTPROMPT FCC "\r\n\r\nkolibri.computer\r\n\0"
 PROMPT80
-**************************************************************************
-
-		JSR InitVectors
-
-**************************************************************************
-; Little emulator test/demo
-
-		LDX #QUESTION
-		CALL PUTS
-		JSR Edit_Get_Line
-		JSR Mon_CRLF
-
-		LDX #HELLO
-		CALL PUTS
-		LDX #BUF_TXT+1
-		CALL PUTS
-		JSR Mon_CRLF
-
-		ILLOP			; Call monitor
-
-QUESTION	FCC "What's your name? \0"
-HELLO		FCC "Hi \0"
 
 
-**************************************************************************
-DIE		SYNC			; stop execution
-		BRA DIE			; just in case
+        JSR     Init_Vectors
+
+*****************************
+* Little emulator test/demo *
+*****************************
+
+        LDX     #QUESTION
+        CALL    PUTS
+        JSR     Edit_Get_Line
+        JSR     Mon_CRLF
+
+        LDX     #HELLO
+        CALL    PUTS
+        LDX     #BUF_TXT+1
+        CALL    PUTS
+        JSR     Mon_CRLF
+
+        ILLOP                   ; Call monitor
+
+QUESTION FCC    "What's your name? \0"
+HELLO   FCC     "Hi \0"
+
+DIE     SYNC                    ; stop execution
+        BRA     DIE             ; just in case
 
 
-**************************************************************************
-InitVectors
-**************************************************************************
-		LDX #VECT_ROMTBL
-		LDY #VECTBL
-		LDW #VECT_ROMTBL_END - VECT_ROMTBL
-		TFM X+,Y+
-		RTS
+************
+Init_Vectors
+************
 
-**************************************************************************
-		INCLUDE "monitor.as9"
-		INCLUDE "edit.as9"
-**************************************************************************
-TO_UPPER
-		CMPA #'a'
-		BLO TO_UPPER80
-		CMPA #'z'
-		BHI TO_UPPER80
-		EORA #$20
-TO_UPPER80	RTS
+        LDX     #VECT_ROMTBL
+        LDY     #VECTBL
+        LDW     #VECT_ROMTBL_END - VECT_ROMTBL
+        TFM     X+,Y+
+        RTS
 
 
+        INCLUDE "monitor.as9"
+        INCLUDE "edit.as9"
 
-**************************************************************************
-USBOUT
-*		A: character to be written over USB serial port
+
+********
+To_Upper
+********
+
+*****************************************************
+* Convert character to uppercase                    *
+* ------------------------------------------------- *
+* Input : A = any value                             *
+* Output: A = upper case character if A was a lower *
+*             case character, unchanged if not      *
+*****************************************************
+
+        CMPA    #'a'
+        BLO     TU_80
+        CMPA    #'z'
+        BHI     TU_80
+        EORA    #$20
+TU_80   RTS
+
+
+
+*******
+USB_Out
+*******
+
+******************************************
+* Output a byte over the USB serial port *
+* -------------------------------------- *
+* Input : A = byte to be written         *
+******************************************
+
 ; TODO: check if chip is ready
-		STA IO_FT245R
-		RTS
+        STA     IO_FT245R
+        RTS
 
 
-**************************************************************************
-USBIN
-;		A: character read from USB serial port
-		LDA IO_FT245R
-		STA SOFF_A,S		; Return character in stacked A
-		RTS
+******
+USB_In
+******
+
+****************************************
+* Read a byte from the USB serial port *
+* ------------------------------------ *
+* Output: A: read character            *
+****************************************
+
+        LDA     IO_FT245R
+        STA     SOFF_A,S        ; Return character in stacked A
+        RTS
 
 
-**************************************************************************
-DO_PUTS
-;		Write zero terminated string to stdout
-;		X --> string
+*******
+Do_PUTS
+*******
 
-		LDA ,X+
-		BEQ PUTS80
-		JSR [VECTBL+PUTC*2]
-		BRA DO_PUTS
-PUTS80		RTS
+******************************************
+* Write zero terminated string to stdout *
+* -------------------------------------- *
+* Input : X = start address of string    *
+* Output: A = \0                         *
+******************************************
 
-**************************************************************************
-; VDP Definitions + Subroutines
+        LDA     ,X+
+        BEQ     PUTS_80
+        JSR     [VECTBL+PUTC*2]
+        BRA     Do_PUTS
+PUTS_80 RTS
 
-		INCLUDE"vdp.as9"
 
-**************************************************************************
-***   Default values for vectored routines
-**************************************************************************
-VECT_ROMTBL	FDB USBOUT		; STDOUT
-		FDB USBIN		; STDIN
-		FDB DO_PUTS
+*********************************
+* VDP Definitions + Subroutines *
+*********************************
+
+        INCLUDE "vdp.as9"
+
+
+****************************************
+* Default values for vectored routines *
+****************************************
+
+VECT_ROMTBL
+        FDB     USB_Out         ; STDOUT
+        FDB     USB_In          ; STDIN
+        FDB     Do_PUTS
 VECT_ROMTBL_END
 
-		IF ((VECT_ROMTBL_END - VECT_ROMTBL) >> 1) > 255
-		   ERROR DO_SWI can't handle more than 255 entries
-		ENDIF
+        IF ((VECT_ROMTBL_END - VECT_ROMTBL) >> 1) > 255
+                ERROR DO_SWI can't handle more than 255 entries
+        ENDIF
 
-**************************************************************************
-***   Interrupt vectors
-**************************************************************************
+*********************
+* Interrupt vectors *
+*********************
 
 ***********
 * Stack   *
@@ -157,41 +198,42 @@ DO_SWI
 ************************************
 
         CMPB    #(VECT_ROMTBL_END - VECT_ROMTBL) >> 1
-        BHS     DO_BAD_SWI    ; -> illegal number
-        ANDCC   #%1010 1111   ; enable FIRQ & IRQ
-        LDA     #BIOS_DP      ; BIOS direct page
-        TFR     A,DP          ; set DP
-        SETDP   BIOS_DP       ; inform assembler
-        LDX     #VECTBL       ; switch table
-        ABX                   ; X = table + function number
-        LDD     B,X           ; D = function address [X+B+B]
-        STD     BIOS_ADR      ; store function address
-        LDD     1,S           ; restore D from stack
-        LDX     6,S           ; restore X from stack
-        JSR     [BIOS_ADR]    ; call BIOS subroutine
-        RTI                   ; return from interrupt
+        BHS     Do_Bad_SWI      ; -> illegal number
+        ANDCC   #%1010 1111     ; enable FIRQ & IRQ
+        LDA     #BIOS_DP        ; BIOS direct page
+        TFR     A,DP            ; set DP
+        SETDP   BIOS_DP         ; inform assembler
+        LDX     #VECTBL         ; switch table
+        ABX                     ; X = table + function number
+        LDD     B,X             ; D = function address [X+B+B]
+        STD     BIOS_ADR        ; store function address
+        LDD     1,S             ; restore D from stack
+        LDX     6,S             ; restore X from stack
+        JSR     [BIOS_ADR]      ; call BIOS subroutine
+        RTI                     ; return from interrupt
 
-DO_BAD_SWI
-        LDX     #BADSWI
-        JSR     DO_PUTS
+Do_Bad_SWI
+        LDX     #Bad_SWI
+        JSR     Do_PUTS
         RTI
 
-BADSWI  FCC "ILLEGAL SWI\n\0"
+Bad_SWI FCC     "ILLEGAL SWI\n\0"
 
 
 DO_SWI2
 DO_SWI3
 DO_IRQ
 DO_FIRQ
-DO_NMI		JMP TRAPMON
+DO_NMI  JMP     TRAPMON
 
-		ORG $FFF0
+        ORG     $FFF0
 
-HW_EXCEPTION	FDB TRAPMON
-HW_SWI3		FDB DO_SWI3
-HW_SWI2		FDB DO_SWI2
-HW_FIRQ		FDB DO_FIRQ
-HW_IRQ		FDB DO_IRQ
-HW_SWI		FDB DO_SWI
-HW_NMI		FDB DO_NMI
-HW_RESET	FDB DO_RESET
+HW_EXCEPTION FDB TRAPMON
+HW_SWI3      FDB DO_SWI3
+HW_SWI2      FDB DO_SWI2
+HW_FIRQ      FDB DO_FIRQ
+HW_IRQ       FDB DO_IRQ
+HW_SWI       FDB DO_SWI
+HW_NMI       FDB DO_NMI
+HW_RESET     FDB Do_Reset
+

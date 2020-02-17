@@ -2,39 +2,39 @@
 * ASCII CONTROL CODES *
 ***********************
 
-  NUL   = $00 ; Ctrl @  NULL
-  SOH   = $01 ; Ctrl A  START OF HEADING
-  SOX   = $02 ; Ctrl B  START OF TEXT
-  ETX   = $03 ; Ctrl C  END OF TEXT
-  EOT   = $04 ; Ctrl D  END OF TRANSMISSION
-  ENQ   = $05 ; Ctrl E  ENQUIRY
-  ACK   = $06 ; CTRL F  ACKNOWLEDGE
-  BEL   = $07 ; Ctrl G  BELL
-  BS    = $08 ; Ctrl H  BACKSPACE
-  HT    = $09 ; Ctrl I  HORIZONTAL TABULATION
-  LF    = $0A ; Ctrl J  LINE FEED
-  VT    = $0B ; Ctrl K  VERTICAL TABULATION
-  FF    = $0C ; Ctrl L  FORM FEED
-  CR    = $0D ; Ctrl M  CARRIAGE RETURN
-  SO    = $0E ; Ctrl N  SHIFT OUT
-  SI    = $0F ; Ctrl O  SHIFT IN
-  DLE   = $10 ; Ctrl P  DATA LINK ESCAPE
-  DC1   = $11 ; Ctrl Q  DEVICE CONTROL 1
-  DC2   = $12 ; Ctrl R  DEVICE CONTROL 2
-  DC3   = $13 ; Ctrl S  DEVICE CONTROL 3
-  DC4   = $14 ; Ctrl T  DEVICE CONTROL 4
-  NAK   = $15 ; Ctrl U  NEGATIVE ACKNOWLEDGE
-  SYN   = $16 ; Ctrl V  SYNCHRONOUS IDLE
-  ETB   = $17 ; Ctrl W  END OF TRANSMISSION BLOCK
-  CAN   = $18 ; Ctrl X  CANCEL
-  EM    = $19 ; Ctrl Y  END OF MEDIUM
-  SUB   = $1A ; Ctrl-Z  SUBSTITUTE
-  ESC   = $1B ; ESCAPE
-  FS    = $1C ; FILE SEPARATOR
-  GS    = $1D ; GROUP SEPARAROR
-  RS    = $1E ; RECORD SEPARATOR
-  US    = $1F ; UNIT SEPARATOR
-  DEL   = $7F ; DELETE
+  NUL      = $00 ; Ctrl @  NULL
+  SOH      = $01 ; Ctrl A  START OF HEADING
+  SOX      = $02 ; Ctrl B  START OF TEXT
+  ETX      = $03 ; Ctrl C  END OF TEXT
+  EOT      = $04 ; Ctrl D  END OF TRANSMISSION
+  ENQ      = $05 ; Ctrl E  ENQUIRY
+  ACK      = $06 ; CTRL F  ACKNOWLEDGE
+  BEL      = $07 ; Ctrl G  BELL
+  BS       = $08 ; Ctrl H  BACKSPACE
+  HT       = $09 ; Ctrl I  HORIZONTAL TABULATION
+  LF       = $0A ; Ctrl J  LINE FEED
+  VT       = $0B ; Ctrl K  VERTICAL TABULATION
+  FF       = $0C ; Ctrl L  FORM FEED
+  CR       = $0D ; Ctrl M  CARRIAGE RETURN
+  SO       = $0E ; Ctrl N  SHIFT OUT
+  SI       = $0F ; Ctrl O  SHIFT IN
+  DLE      = $10 ; Ctrl P  DATA LINK ESCAPE
+  DC1      = $11 ; Ctrl Q  DEVICE CONTROL 1
+  DC2      = $12 ; Ctrl R  DEVICE CONTROL 2
+  DC3      = $13 ; Ctrl S  DEVICE CONTROL 3
+  DC4      = $14 ; Ctrl T  DEVICE CONTROL 4
+  NAK      = $15 ; Ctrl U  NEGATIVE ACKNOWLEDGE
+  SYN      = $16 ; Ctrl V  SYNCHRONOUS IDLE
+  ETB      = $17 ; Ctrl W  END OF TRANSMISSION BLOCK
+  CAN      = $18 ; Ctrl X  CANCEL
+  EM       = $19 ; Ctrl Y  END OF MEDIUM
+  SUB      = $1A ; Ctrl-Z  SUBSTITUTE
+  ESC      = $1B ; ESCAPE
+  FS       = $1C ; FILE SEPARATOR
+  GS       = $1D ; GROUP SEPARAROR
+  RS       = $1E ; RECORD SEPARATOR
+  US       = $1F ; UNIT SEPARATOR
+  DEL      = $7F ; DELETE
 
 *************************
 * KOLIBRI CONTROL CODES *
@@ -73,3 +73,4 @@
   RS       = $1E ;         -
   US       = $1F ;         -
   DEL      = $7F ; DELETE                   (ASCII)
+

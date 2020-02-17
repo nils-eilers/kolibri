@@ -32,8 +32,8 @@ int main(int argc, char *argv[])
    }
    fclose(fp);
 
-   printf("           ORG 0\n");
-   printf("           STORE 0,2048,\"%s\"\n\n",argv[1]);
+   printf("        ORG     0\n");
+   printf("        STORE   0,2048,\"%s\"\n\n",argv[1]);
 
    cp = cf;
 
@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
    {
       for (row=0 ; row < 8 ; ++row, ++cp)
       {
-         printf("           BITS ");
+         printf("        BITS   ");
          for (k=0x80 ; k ; k >>=1)
          {
             if (*cp & k) printf(" *");
