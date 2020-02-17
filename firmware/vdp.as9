@@ -98,14 +98,15 @@ VDPINITPALETTE	lda ,x+			; load palette-color to write
 		jsr VDP_Wait16c
 		ldd #SCREENTABLE
 		VDPWRITEADDRESS		; set VRAM write address to D = Screentable
+		ldw #(ROWS+1)*COLUMNS
 		lda #' '			; fill with SPACE
 VDPCLEARSCREEN	jsr VDP_Wait16c
 		VDPWAITC 2
 		sta VDPRAM
-		cmpx #(ROWS+1)*COLUMNS
+		decw
 		bne VDPCLEARSCREEN
 
-		lda #0
+		lda #0			; initialize zeropage variables
 		sta BIOS_RowTop
 		lda #ROWS-1
 		sta BIOS_RowBottom
@@ -131,6 +132,27 @@ VDP_Off				; *** disable screen ***
 		VDPSETREG 1
 		rts
 
+VDP_ClearWindow
+		lda BIOS_RowTop		; load windows top row
+		ldb BIOS_Columns		; load columns
+		mul			; calc screen position
+		addd #SCREENTABLE		; add VRAM position
+		VDPWRITEADDRESS		; set VRAM write address to D = Screentable
+		lda BIOS_RowBottom	; load window bottom row 
+		adda #1			; add one line to bottom
+		suba BIOS_RowTop		; calc lines to clear (Carry flag already 0 from adda)
+		ldb BIOS_Columns
+		mul			; calc bytes to clear
+		lde #' '			; fill with SPACE
+VDPCLEARWINDOW	jsr VDP_Wait16c
+		VDPWAITC 1
+		ste VDPRAM
+		decd
+		bne VDPCLEARWINDOW
+		sta BIOS_CursorX		; set cursor to 0,0 (A is already 0 from decd)
+		sta BIOS_CursorY
+		rts
+
 VDP_ReadStatus			; *** read status register in A - return status in A
 		lda #1
 		VDPSETREG 15		; reg 15 = 1 initiates read status-reg 1
@@ -138,22 +160,6 @@ VDP_ReadStatus			; *** read status register in A - return status in A
 		VDPWAITC 2
 		lda VDPSTATUS		; read status
 		rts
-
-VDP_Color						; *** sets color register 7 + 12 from color variables
-;	lda vdp_color1
-;	asl
-;	asl
-;	asl
-;	ora vdp_bgcolor1
-;	VDPSETRG 7
-;	lda vdp_color2
-;	asl
-;	asl
-;	asl
-;	asl
-;	ora vdp_bgcolor2
-;	VDPSETREG 12
-;	rts
 
 **************************************************************************
 ; vdp-tables
