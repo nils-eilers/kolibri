@@ -14,20 +14,20 @@ PUTS		= $02
 ***   Zero page
 **************************************************************************
 
-BIOS_DP    = $00     ; BIOS Direct Page
+BIOS_DP		= $00	; BIOS Direct Page
 
-         & = BIOS_DP ; set BSS counter
+	& = BIOS_DP	; set BSS counter
 
-BIOS_ADR    	BSS 2 ; JSR vector for SWI
-BIOS_CursorX   BSS 1
-BIOS_CursorY   BSS 1
-BIOS_Color1    BSS 1
-BIOS_Color2    BSS 1
-BIOS_BGColor1  BSS 1
-BIOS_BGColor2  BSS 1
-BIOS_RowTop    BSS 1
-BIOS_RowBottom BSS 1
-BIOS_Columns   BSS 1
+BIOS_ADR	BSS 2	; JSR vector for SWI
+BIOS_CursorX	BSS 1
+BIOS_CursorY	BSS 1
+BIOS_Color1	BSS 1
+BIOS_Color2	BSS 1
+BIOS_BGColor1	BSS 1
+BIOS_BGColor2	BSS 1
+BIOS_RowTop	BSS 1
+BIOS_RowBottom	BSS 1
+BIOS_Columns	BSS 1
 
 **************************************************************************
 ***   Memory map
@@ -37,20 +37,20 @@ VECTBL		= $0200
 
 BUF_TXT		= $0300
 
-MONBUF 	= $0352 ; Monitor buffer
-MON_PC 	= MONBUF
-MON_DP 	= MONBUF+2
-MON_CC 	= MONBUF+3
-MON_A 	= MONBUF+4
-MON_B 	= MONBUF+5
-MON_W 	= MONBUF+6
-MON_X 	= MONBUF+8
-MON_Y 	= MONBUF+10
-MON_U 	= MONBUF+12
-MON_S 	= MONBUF+14
-MON_V 	= MONBUF+16
+MONBUF		= $0352	; Monitor buffer
+MON_PC		= MONBUF
+MON_DP		= MONBUF+2
+MON_CC		= MONBUF+3
+MON_A		= MONBUF+4
+MON_B		= MONBUF+5
+MON_W		= MONBUF+6
+MON_X		= MONBUF+8
+MON_Y		= MONBUF+10
+MON_U		= MONBUF+12
+MON_S		= MONBUF+14
+MON_V		= MONBUF+16
 MON_MEM 	= MONBUF+18
-MON_TMP  = MONBUF+20
+MON_TMP		= MONBUF+20
 
 MACHINESTACK	= $7FFF
 USERSTACK	= $7EFF
