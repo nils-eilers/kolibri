@@ -1,4 +1,4 @@
-TEX=manual.tex frontcover.tex bios.tex
+TEX=manual.tex frontcover.tex bios.tex memorymap.tex
 
 manual.pdf: $(TEX)
 	pdflatex manual

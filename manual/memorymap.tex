@@ -1,0 +1,110 @@
+\chapter{Memory Map}
+
+\section{Overview}
+The Hitachi 6309 CPU has 16 address lines and can thus address
+2$^{16}$ = 65536 bytes which are 64 KB because $64 \times 1024 =
+65536$.  The main memory RAM chip used inside the kolibri offers
+512 KB of RAM addressed by 19 address lines. The same goes for
+the Flash ROM chip. To address the whole amount of memory, way
+more than the 64 KB the CPU is capable to address, a memory
+management unit (MMU) is required. The kolibri uses a 74HCT612
+chip for this purpose. It expands the 16 address lines of the
+CPU to a total of 22 address lines, so a maximum of 2$^{22}$ = 4
+MB can get addressed. This memory is split into pages of 16 KB
+each, so four pages of 16 KB fit into the 64 KB address area of
+the CPU.
+
+The MMU is just a little more than a few bytes of RAM which hold
+page numbers to define which 16 KB page shall appear at which of
+the four 16 KB sections inside the total 64 KB the CPU can
+access, so for example page 0 should appear at 0--16 KB, page 4
+at 16--32 KB, page 5 at 32--48 KB and page 12 at 48--64 KB.
+
+At the bottom and upper end of the 64 KB area, three fixed areas
+are always visible:
+
+The so called {\bf common RAM} area from 0--2 KB  always
+accesses page 0, no matter which page is switched in for the
+0--16 KB area.  The first 1024 bytes of this common RAM are used
+by the operating system, the higher 1024 bytes are freely
+available for the application.
+
+At the upper end, the {\bf I/O area} is located from \$FE00 to
+\$FEFF with a size of 256 bytes. About one fifth is used by
+peripheral devices located on kolibri's main board, the rest is
+available through the expansion port. The I/O area is always
+visible, no matter of the MMU configuration.
+
+To the very last, the topmost page from \$FF00 to \$FFFF is the
+{\bf common ROM} which holds the reset and interrupt vectors
+among other things. This common ROM is always visible, no matter
+of the MMU configuration.
+
+\section{MMU modes}
+The MMU can either be switched on or off. The proper names for
+these modes are {\bf pass mode} (MMU switched off) and map mode
+(MMU switched on). Pass mode means that the MMU just passes
+address lines A14 and A15 through from the CPU to the memory
+chips and memory decoder, with all higher address lines starting
+at A16 being held low. This is the default state after system
+reset because the MMU's mapping RAM lacks a defined power-on
+state and you won't have much luck with random garbage.
+
+In pass mode, you have 32 KB RAM available at \$0000--\$7FFF and
+32 KB ROM at \$8000--\$FFFF, of course minus the I/O area at
+\$FE00--\$FEFF. Since the higher address lines are held low, the
+visible 16 KB pages are taken from the lower end of the RAM and
+ROM chips.
+
+In {\bf map mode}, address lines A0--A13 are passed through and
+the address lines A14 and A15 select one of four 16 KB pages,
+defined by a byte stored in the MMU mapping RAM. The value of
+this byte is used to define address lines MA14--MA21 which are
+visible to the memory chips and memory decoder.
+
+You might have noticed that A14 and A15 are mentioned in two
+ways here: one from the CPU to select the 16 KB page and one
+passed from the MMU to the memory. In order to be able to
+distinguish them, the address lines which always attach directly
+to the CPU are called A0--A14 and those mapped by the MMU are
+called MA14--MA21, with the prefix 'M' indicating that they are
+mapped by the MMU.
+
+\section{Defining MMU configurations}
+TODO
+
+\section{Switching MMU configurations}
+TODO
+
+\section{Description of I/O area addresses}
+TODO
+
+\section{Numbering of address lines}
+This section is only of interest when you want or need to study
+the datasheet of the 74HCT612 or 74LS612 memory management unit.
+Otherwise skip it completely, to keep your brain sane.
+
+It's common sense to start the numbering of address lines with
+zero for the least significant address line, A0. If you want to
+double the addressable address space, just add another address
+line and increment the number by one: A1. In theory, you can do
+this over and over and over again without having to rename an
+existing address line.
+
+But there seems to be barely anything which couldn't be done in
+another way and so Texas Instruments decided to start with A0
+for the most significant address line instead of the least
+significant address line. This works well (well, okay, at least
+it works) as long as you don't change the amount of address
+lines. Because just when you need a memory expansion and decide
+to double the address lines (or even add some more), A0 won't be
+the most significant address line any longer. So what would you
+do now? Would you rename all existing address lines, ending up
+with the now most significant address line still being called
+A0? Or would you just decrement the counter for the new address
+lines ending up with address lines A-1, A-2 and A-3?
+
+So be warned when studying the datasheet because all address
+lines are numbered in that inverse, insane way.
+
+
