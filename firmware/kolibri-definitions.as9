@@ -60,31 +60,31 @@ USERSTACK	= $7EFF
 ***   I/O area
 **************************************************************************
 
-MMU		= $FE00
-RTC		= $FE10
-MEMCONF0	= $FE20
-MEMCONF1 	= $FE21
-MEMCONF2	= $FE22
-MEMCONF3	= $FE23
-COPRODATA	= $FE24
-COPROCMD	= $FE25
-OPL2REGSEL	= $FE26	; write access
-OPL2STATUS	= $FE26	; read access
-OPL2DATA	= $FE27	; write only
-VDPRAM		= $FE28
-VDPSTATUS	= $FE29	; read access
-VDPCONTROL	= $FE29 ; write access
-VDPPALETTE	= $FE2A	; write access
-VDPINDIRECT	= $FE2B	; write access
-FT245R		= $FE2C	; virtual COM port R/W
-INPORT		= $FE2D
-INWP0		= 1
-INWP1		= 2
-INCD0		= 4
-INCD1		= 8
-INIBF		= 32
-INTXE		= 64
-INRXF		= 128
+IO_MMU		= $FE00
+IO_RTC		= $FE10
+IO_MEMCONF0	= $FE20
+IO_MEMCONF1 	= $FE21
+IO_MEMCONF2	= $FE22
+IO_MEMCONF3	= $FE23
+IO_COPRODATA	= $FE24
+IO_COPROCMD	= $FE25
+IO_OPL2REGSEL	= $FE26	; write access
+IO_OPL2STATUS	= $FE26	; read access
+IO_OPL2DATA	= $FE27	; write only
+IO_VDPRAM	= $FE28
+IO_VDPSTATUS	= $FE29	; read access
+IO_VDPCONTROL	= $FE29 ; write access
+IO_VDPPALETTE	= $FE2A	; write access
+IO_VDPINDIRECT	= $FE2B	; write access
+IO_FT245R	= $FE2C	; virtual COM port R/W
+IO_INPORT	= $FE2D
+IO_INWP0	= 1
+IO_INWP1	= 2
+IO_INCD0	= 4
+IO_INCD1	= 8
+IO_INIBF	= 32
+IO_INTXE	= 64
+IO_INRXF	= 128
 
 **************************************************************************
 ***   CPU flags

@@ -8,7 +8,7 @@ SCREENTABLE	= $0000		; screen memory in VRAM
 
 VDPREG1		= $10		; VDP reg 1 value (mode bits M1+M2, screen disabled)
 VDPREG9		= $80 | PAL*2	; VDP reg 9 value ($80 = NTSC, $82 = PAL / 212 lines)
-VDPREG18		= $0d		; VDP reg 18 value (V/H screen adjust, $0d = Sony PVM 9")
+VDPREG18	= $0d		; VDP reg 18 value (V/H screen adjust, $0d = Sony PVM 9")
 
 VDPCOLOR1	= 15		; start color values
 VDPCOLOR2	= 12
@@ -28,22 +28,22 @@ VDPWAITC		MACRO ARG	; wait ARG cycles
 VDPSETREG  	MACRO ARG	; *** set VDP Register ARG to A
 		pshs cc			; safe flags
 		orcc  #IRQFLAG|FIRQFLAG	; disable interrupts
-		sta VDPCONTROL		; first writes data in A to control port #1
+		sta IO_VDPCONTROL	; first writes data in A to control port #1
 		nop			; adds 2 nops to reach 2us pause
 		nop
 		lda # ARG | $80		; writes register no. with bit#7 = 1 to Port #1
-		sta VDPCONTROL
+		sta IO_VDPCONTROL
 		puls cc			; restore flags
 		ENDM
 
 VDPWRITEADDRESS 	MACRO		; *** set VDP write vram address-pointer to D
 		pshs cc			; safe flags
 		orcc #IRQFLAG|FIRQFLAG	; disable interrupts
-		stb VDPCONTROL		; write address low-byte
-		nop			; adds 2 nops to reach 2us pause  
+		stb IO_VDPCONTROL	; write address low-byte
+		nop			; adds 2 nops to reach 2us pause
 		nop
 		ora # $40		; bit#6 = 1 write
-	         sta VDPCONTROL		; write address high-byte
+	         sta IO_VDPCONTROL		; write address high-byte
 		puls cc			; restore flags
 	         ENDM
 
@@ -59,19 +59,19 @@ VDP_Init				; *** initialize VDP ***
 		ldx #VDPINITDATA
 VDPINITREGS	lda ,x+
 		jsr VDP_Wait16c		; add 6 us to reach 8 us
-		sta VDPINDIRECT
+		sta IO_VDPINDIRECT
 		cmpx #VDPINITDATAEND
 		bne VDPINITREGS
 
 		lda # VDPREG18
 		VDPSETREG 18		; set register 18 V/H display adjust L 7-1,0,f-8 R
 					; * clear 16kB VRAM
-		jsr VDP_Wait16c 
+		jsr VDP_Wait16c
 		clrd
 		VDPWRITEADDRESS		; set VRAM write address to D = $0000, Bank Reg already $00
 		ldw #$4000		; set counter W to $4000
-CLEARVRAM	jsr VDP_Wait16c			; vdp pause between VRAM write 8 us 
-		stb VDPRAM		; B = VRAM init value = $00
+CLEARVRAM	jsr VDP_Wait16c		; vdp pause between VRAM write 8 us
+		stb IO_VDPRAM		; B = VRAM init value = $00
 		decw
 		bne CLEARVRAM
 					; * copy font to pattern generator table
@@ -81,17 +81,17 @@ CLEARVRAM	jsr VDP_Wait16c			; vdp pause between VRAM write 8 us
 		ldx #VDPFONTDATA
 VDPLOADFONT	lda ,x+
 		jsr VDP_Wait16c
-		sta VDPRAM
+		sta IO_VDPRAM
 		cmpx #VDPFONTDATA+VDPFONTSIZE
 		bne VDPLOADFONT
 					; * load color palette
 		jsr VDP_Wait16c
 		clra
-		VDPSETREG 16		 
+		VDPSETREG 16
 		ldx #VDPPALETTEDATA
 VDPINITPALETTE	lda ,x+			; load palette-color to write
 		jsr VDP_Wait16c
-		sta VDPPALETTE		; write to palette register
+		sta IO_VDPPALETTE		; write to palette register
 		cmpx #VDPPALETTEDATAEND
 		bne VDPINITPALETTE
 
@@ -102,7 +102,7 @@ VDPINITPALETTE	lda ,x+			; load palette-color to write
 		lda #' '			; fill with SPACE
 VDPCLEARSCREEN	jsr VDP_Wait16c
 		VDPWAITC 2
-		sta VDPRAM
+		sta IO_VDPRAM
 		decw
 		bne VDPCLEARSCREEN
 
@@ -138,7 +138,7 @@ VDP_ClearWindow
 		mul			; calc screen position
 		addd #SCREENTABLE		; add VRAM position
 		VDPWRITEADDRESS		; set VRAM write address to D = Screentable
-		lda BIOS_RowBottom	; load window bottom row 
+		lda BIOS_RowBottom	; load window bottom row
 		adda #1			; add one line to bottom
 		suba BIOS_RowTop		; calc lines to clear (Carry flag already 0 from adda)
 		ldb BIOS_Columns
@@ -146,7 +146,7 @@ VDP_ClearWindow
 		lde #' '			; fill with SPACE
 VDPCLEARWINDOW	jsr VDP_Wait16c
 		VDPWAITC 1
-		ste VDPRAM
+		ste IO_VDPRAM
 		decd
 		bne VDPCLEARWINDOW
 		sta BIOS_CursorX		; set cursor to 0,0 (A is already 0 from decd)
@@ -176,7 +176,7 @@ VDP_ReadStatus			; *** read status register in A - return status in A
 		VDPSETREG 15		; reg 15 = 1 initiates read status-reg 1
 		jsr VDP_Wait16c		; wait 8 us total for DVP
 		VDPWAITC 2
-		lda VDPSTATUS		; read status
+		lda IO_VDPSTATUS		; read status
 		rts
 
 **************************************************************************
@@ -191,7 +191,7 @@ VDPINITDATA			; ***** VDP init data table *****
 	; reg  4: $02 pattern (character) generator table base address $1000 (* $800)
 	; reg  5: $3f sprite attribute table base address $1e00 (* $80 - bit#0+1 = 1)
 	; reg  6: $03 sprite pattern (data) generator base address = $1800 (* $800)
-	; reg  7: $10 text/overscan-backdrop color 
+	; reg  7: $10 text/overscan-backdrop color
 	; reg  8: $08 bit#3 = 1: 64k VRAM chips, bit#1 = 0 sprites disable, bit#5 0=transparent
 	; reg  9: $80 bit#1 = NTSC/PAL, #2 = EVEN/ODD, #3 = interlace, #7 = 192/212 lines
 	; reg 10: $00 color table base address $0000 bit#0-2 = A14-A16

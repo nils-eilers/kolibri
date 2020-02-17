@@ -24,7 +24,7 @@ DO_RESET	   ; cold start machine
 PROMPT		LDA ,X+
 		BEQ PROMPT80
 ; TODO: check if chip is ready
-		STA FT245R
+		STA IO_FT245R
 		BRA PROMPT
 BOOTPROMPT	FCC "\r\n\r\nkolibri.computer\r\n\0"
 PROMPT80
@@ -84,14 +84,14 @@ TO_UPPER80	RTS
 USBOUT
 *		A: character to be written over USB serial port
 ; TODO: check if chip is ready
-		STA FT245R
+		STA IO_FT245R
 		RTS
 
 
 **************************************************************************
 USBIN
 ;		A: character read from USB serial port
-		LDA FT245R
+		LDA IO_FT245R
 		STA SOFF_A,S		; Return character in stacked A
 		RTS
 
