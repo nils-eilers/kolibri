@@ -4,7 +4,7 @@
 		INCLUDE "macros.as9"
 
 VDPFONTDATA	= $E000		; fontata start
-VDPFONTSIZE	= $2048		; fontdata size
+VDPFONTSIZE	= $0800		; fontdata size
 		LOAD VDPFONTDATA, "fonts/font-6x8-437-euro.fon"
 
 **************************************************************************

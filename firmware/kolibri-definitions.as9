@@ -14,20 +14,20 @@ PUTS		= $02
 ***   Zero page
 **************************************************************************
 
-DIRECT		= $00 ; used by BSMON
-BIOS_DP     	= $00 ; BIOS
+BIOS_DP    = $00     ; BIOS Direct Page
 
-BIOS_ADR    	ENUM 0 ; (BIOS_DP >> 8) JSR vector for SWI
+         & = BIOS_DP ; set BSS counter
 
-BIOS_CursorX	ENUM
-BIOS_CursorY	ENUM
-BIOS_Color1	ENUM
-BIOS_Color2	ENUM
-BIOS_BGColor1	ENUM
-BIOS_BGColor2	ENUM
-BIOS_RowTop	ENUM
-BIOS_RowBottom	ENUM
-BIOS_Columns	ENUM
+BIOS_ADR    	BSS 2 ; JSR vector for SWI
+BIOS_CursorX   BSS 1
+BIOS_CursorY   BSS 1
+BIOS_Color1    BSS 1
+BIOS_Color2    BSS 1
+BIOS_BGColor1  BSS 1
+BIOS_BGColor2  BSS 1
+BIOS_RowTop    BSS 1
+BIOS_RowBottom BSS 1
+BIOS_Columns   BSS 1
 
 **************************************************************************
 ***   Memory map
