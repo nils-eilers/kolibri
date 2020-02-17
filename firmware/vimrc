@@ -1,0 +1,2 @@
+au BufRead,BufNewFile *.as9 set filetype=as9
+autocmd FileType as9 setlocal expandtab tabstop=8 number syntax=asm6809
