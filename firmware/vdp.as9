@@ -170,6 +170,34 @@ VDP_SetColor			; *** sets color register 7 + 12 from color variables
 		jsr VDP_Wait16c
 		VDPSETREG 12
 		rts
+		
+VDP_PutChar			; *** puts char from A to screen at actual cursor position and moves cursor
+		tfr a,e			; safe char in E 
+		lda BIOS_CursorY		; load cursor line
+		ldb BIOS_Columns		; load columns
+		mul			; calc line position
+		ldf BIOS_CursorX		; load Cursor column
+		adcr f,d			; calc screen position
+		addd #SCREENTABLE		; add VRAM position
+		VDPWRITEADDRESS		; set VRAM write address to D = Screentable
+		jsr VDP_Wait16c
+		VDPWAITC 1
+		ste IO_VDPRAM
+		lda BIOS_CursorX
+		inca			; move cursor
+		cmpa BIOS_Columns		; end of line ?
+		bne VDPPUTCHARMOVEOK
+		lda BIOS_CursorY
+		inca
+		cmpa BIOS_RowBottom
+		bne VDPPUTCHARNOSCROL
+
+; SCROLL WIndows
+
+VDPPUTCHARNOSCROL	sta BIOS_CursorY		
+		clra
+VDPPUTCHARMOVEOK	sta BIOS_CursorX
+		rts
 
 VDP_ReadStatus			; *** read status register in A - return status in A
 		lda #1
