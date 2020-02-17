@@ -1,10 +1,10 @@
-; ***** V9958 subroutines *****
+; ***** VDP-Definitions
 
-PAL = 1				; PAL=1, NTSC=0	selects V9938/58 PAL RGB-output
+PAL = 1			; PAL=1, NTSC=0	selects V9938/58 PAL RGB-output
 
-PATTERNTABLE	= $1000	; font memory in VRAM
-COLORTABLE	= $0A00	; color/attribute-table in VRAM
-SCREENTABLE	= $0000	; screen memory in VRAM
+PATTERNTABLE	= $1000		; font memory in VRAM
+COLORTABLE	= $0A00		; color/attribute-table in VRAM
+SCREENTABLE	= $0000		; screen memory in VRAM
 
 VDPREG1		= $10		; VDP reg 1 value (mode bits M1+M2, screen disabled)
 VDPREG9		= $80 | PAL*2	; VDP reg 9 value ($80 = NTSC, $82 = PAL / 212 lines)
@@ -15,95 +15,145 @@ VDPCOLOR2	= 12
 VDPBGCOLOR1	= 1
 VDPBGCOLOR2	= 1
 
-COLS		= 80		; screen columns
-ROWS		= 25		; used lines
+COLUMNS		= 80		; screen columns
+ROWS		= 26		; used lines
 
-WAIT		MACRO ARG	; wait ARG us
-		FILL ARG*3 ($12)		; each $12=nop needs 1/3 us @ 3MHz 6309/native mode
+**************************************************************************
+; VDP-Macros
+
+VDPWAITC		MACRO ARG	; wait ARG cycles
+		FILL ARG ($12)		; each $12=nop needs 1/3 us @ 3MHz 6309/native mode
 		ENDM
 
 VDPSETREG  	MACRO ARG	; *** set VDP Register ARG to A
+		pshs cc			; safe flags
+		orcc  #IRQFLAG|FIRQFLAG	; disable interrupts
 		sta VDPCONTROL		; first writes data in A to control port #1
 		nop			; adds 2 nops to reach 2us pause
 		nop
 		lda # ARG | $80		; writes register no. with bit#7 = 1 to Port #1
 		sta VDPCONTROL
+		puls cc			; restore flags
 		ENDM
 
 VDPWRITEADDRESS 	MACRO		; *** set VDP write vram address-pointer to D
+		pshs cc			; safe flags
+		orcc #IRQFLAG|FIRQFLAG	; disable interrupts
 		stb VDPCONTROL		; write address low-byte
 		nop			; adds 2 nops to reach 2us pause  
 		nop
 		ora # $40		; bit#6 = 1 write
-		sta VDPCONTROL		; write address high-byte
-		ENDM
+	         sta VDPCONTROL		; write address high-byte
+		puls cc			; restore flags
+	         ENDM
 
-**************************************************************************
-WAIT6US		FILL 8 ($12)	; *** wait 6 us
-		rts			; total with jsr/rts -> 18 cycles = 6 us @ 3MHz
+; ***** VDP-Subroutines
 
-VDPINIT				; *** initialize VDP ***
+VDP_Wait16c				; *** wait 16 cycles
+		FILL 6 ($12)		; total with jsr/rts -> 16 cycles
+		rts
+
+VDP_Init				; *** initialize VDP ***
 		clra
 		VDPSETREG 17		; write VDP regs fast indirect
-		jsr WAIT6US		; add 6 us to reach 8 us
 		ldx #VDPINITDATA
 VDPINITREGS	lda ,x+
+		jsr VDP_Wait16c		; add 6 us to reach 8 us
 		sta VDPINDIRECT
-		jsr WAIT6US
 		cmpx #VDPINITDATAEND
 		bne VDPINITREGS
 
 		lda # VDPREG18
 		VDPSETREG 18		; set register 18 V/H display adjust L 7-1,0,f-8 R
 					; * clear 16kB VRAM
-		jsr WAIT6US 
+		jsr VDP_Wait16c 
 		clrd
 		VDPWRITEADDRESS		; set VRAM write address to D = $0000, Bank Reg already $00
 		ldw #$4000		; set counter W to $4000
-CLEARVRAM	jsr WAIT6US			; vdp pause between VRAM write 8 us 
+CLEARVRAM	jsr VDP_Wait16c			; vdp pause between VRAM write 8 us 
 		stb VDPRAM		; B = VRAM init value = $00
 		decw
 		bne CLEARVRAM
 					; * copy font to pattern generator table
-		jsr WAIT6US
+		jsr VDP_Wait16c
 		ldd #PATTERNTABLE
 		VDPWRITEADDRESS		; set VRAM write address to D = Patterntable
 		ldx #VDPFONTDATA
 VDPLOADFONT	lda ,x+
+		jsr VDP_Wait16c
 		sta VDPRAM
-		jsr WAIT6US
-		cmpx #VDPFONTDATAEND
+		cmpx #VDPFONTDATA+VDPFONTSIZE
 		bne VDPLOADFONT
 					; * load color palette
-		jsr WAIT6US
+		jsr VDP_Wait16c
 		clra
 		VDPSETREG 16		 
-		jsr WAIT6US
 		ldx #VDPPALETTEDATA
 VDPINITPALETTE	lda ,x+			; load palette-color to write
+		jsr VDP_Wait16c
 		sta VDPPALETTE		; write to palette register
-		jsr WAIT6US
 		cmpx #VDPPALETTEDATAEND
 		bne VDPINITPALETTE
+
+		jsr VDP_Wait16c
+		ldd #SCREENTABLE
+		VDPWRITEADDRESS		; set VRAM write address to D = Screentable
+		lda #' '			; fill with SPACE
+VDPCLEARSCREEN	jsr VDP_Wait16c
+		VDPWAITC 2
+		sta VDPRAM
+		cmpx #(ROWS+1)*COLUMNS
+		bne VDPCLEARSCREEN
+
+		lda #0
+		sta BIOS_RowTop
+		lda #ROWS-1
+		sta BIOS_RowBottom
+		lda #COLUMNS
+		sta BIOS_Columns
+		lda #VDPCOLOR1
+		sta BIOS_Color1
+		lda #VDPCOLOR2
+		sta BIOS_Color2
+		lda #VDPBGCOLOR1
+		sta BIOS_BGColor1
+		lda #VDPBGCOLOR1
+		sta BIOS_BGColor1
 		rts
 
-VDPON				; *** enable screen ***
+VDP_On				; *** enable screen ***
 		lda #VDPREG1 | $40	; set mode reg 1 (M1+M2), bit#6 = 1 enables screen
 		VDPSETREG 1
 		rts
 
-VDPOFF				; *** disable screen ***
+VDP_Off				; *** disable screen ***
 		lda #VDPREG1 & $bf	; set mode reg 1 (M1+M2), bit#6 = 1 enables screen
 		VDPSETREG 1
 		rts
 
-VDPREADSTATUS			; *** read status register in A - return status in A
+VDP_ReadStatus			; *** read status register in A - return status in A
 		lda #1
 		VDPSETREG 15		; reg 15 = 1 initiates read status-reg 1
-		jsr WAIT6US		; wait 8 us total for DVP
-		WAIT 2
+		jsr VDP_Wait16c		; wait 8 us total for DVP
+		VDPWAITC 2
 		lda VDPSTATUS		; read status
 		rts
+
+VDP_Color						; *** sets color register 7 + 12 from color variables
+;	lda vdp_color1
+;	asl
+;	asl
+;	asl
+;	ora vdp_bgcolor1
+;	VDPSETRG 7
+;	lda vdp_color2
+;	asl
+;	asl
+;	asl
+;	asl
+;	ora vdp_bgcolor2
+;	VDPSETREG 12
+;	rts
 
 **************************************************************************
 ; vdp-tables
@@ -134,8 +184,4 @@ VDPPALETTEDATA	; ***** Color Palette - 16 colors, 2 byte/color RB, 0G each 3bit 
 	FCB $33,$03,$37,$03,$33,$07,$37,$07   ;   8=grey      9=lightblue a=lightgreen  b=lightcyan
 	FCB $73,$03,$77,$03,$73,$07,$77,$07   ;   c=lightred  d=ltmagenta e=yellow      f=white
 VDPPALETTEDATAEND
-
-		ORG $E000
-VDPFONTDATA		
-		LOAD "fonts/font-6x8-437-euro.fon"
-VDPFONTDATAEND
+	FCB 0				; only to get last label !

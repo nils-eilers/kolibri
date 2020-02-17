@@ -15,9 +15,19 @@ PUTS		= $02
 **************************************************************************
 
 DIRECT		= $00 ; used by BSMON
-BIOS_DP     = $00 ; BIOS
+BIOS_DP     	= $00 ; BIOS
 
-BIOS_ADR    ENUM  (BIOS_DP >> 8) ; JSR vector for SWI
+BIOS_ADR    	ENUM 0 ; (BIOS_DP >> 8) JSR vector for SWI
+
+BIOS_CursorX	ENUM
+BIOS_CursorY	ENUM
+BIOS_Color1	ENUM
+BIOS_Color2	ENUM
+BIOS_BGColor1	ENUM
+BIOS_BGColor2	ENUM
+BIOS_RowTop	ENUM
+BIOS_RowBottom	ENUM
+BIOS_Columns	ENUM
 
 **************************************************************************
 ***   Memory map
@@ -75,8 +85,6 @@ INCD1		= 8
 INIBF		= 32
 INTXE		= 64
 INRXF		= 128
-
-
 
 **************************************************************************
 ***   CPU flags
