@@ -70,11 +70,43 @@ to the CPU are called A0--A14 and those mapped by the MMU are
 called MA14--MA21, with the prefix 'M' indicating that they are
 mapped by the MMU.
 
-\section{Defining MMU configurations}
-TODO
-
 \section{Switching MMU configurations}
-TODO
+Different applications or routines may require different MMU
+configurations, for example the application might handle large
+arrays within a database, whereas the DOS routines need to
+handle some file buffers. To fully define, which 16 KB page
+should be visible in which 16 KB area, 4 bytes need to be
+written to the MMU mapping RAM. It would be rather cumbersome if
+every application would have to save and restore these four
+bytes to switch the MMU configuration. That's why a shortcut
+exists: any access to one of four I/O memory addresses selects
+another MMU configuration.
+
+It doesn't matter if you read or write to these addresses. The
+value of written bytes is ignored, it's just the address that
+matters.
+
+Seen from a technical point of view, the state of address line
+A0 is copied to the MMU configuration signal P0 and address line
+A1 is copied to P1 when one of these locations is addressed.
+These two lines P0 and P1 tell the MMU which memory mapping
+shall be used.
+
+\begin{verbatim}
+   IO_MEMCONF0   $FE20   Memory configuration 0
+   IO_MEMCONF1   $FE21   Memory configuration 1
+   IO_MEMCONF2   $FE22   Memory configuration 2
+   IO_MEMCONF3   $FE23   Memory configuration 3
+\end{verbatim}
+
+\section{Defining MMU configurations}
+\begin{tabbing}
+\$FFFF \= 0000 \=32--64 KB \= 3 \kill % just to define max width
+\$FE00 \= 0000 \= 0--16 KB \= 3 \\
+\$FE01 \= 0001 \= 0--16 KB \= 3 \\
+\$FE02 \= 0010 \= 0--16 KB \= 3 \\
+\$FE03 \= 0011 \= 0--16 KB \= 3 \\
+\end{tabbing}
 
 \section{Description of I/O area addresses}
 TODO
@@ -82,7 +114,7 @@ TODO
 \section{Numbering of address lines}
 This section is only of interest when you want or need to study
 the datasheet of the 74HCT612 or 74LS612 memory management unit.
-Otherwise skip it completely, to keep your brain sane.
+If not, skip it completely.
 
 It's common sense to start the numbering of address lines with
 zero for the least significant address line, A0. If you want to
