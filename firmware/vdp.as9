@@ -153,6 +153,24 @@ VDPCLEARWINDOW	jsr VDP_Wait16c
 		sta BIOS_CursorY
 		rts
 
+VDP_SetColor			; *** sets color register 7 + 12 from color variables
+		lda BIOS_Color1		; load color 1 variable
+		asla			; shift to high nibble
+		asla
+		asla
+		asla
+		ora BIOS_BGColor1		; add bg color variable
+		VDPSETREG 7		; set color register
+		lda BIOS_Color2
+		asla
+		asla
+		asla
+		asla
+		ora BIOS_BGColor2
+		jsr VDP_Wait16c
+		VDPSETREG 12
+		rts
+
 VDP_ReadStatus			; *** read status register in A - return status in A
 		lda #1
 		VDPSETREG 15		; reg 15 = 1 initiates read status-reg 1
