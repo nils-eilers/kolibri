@@ -31,8 +31,6 @@ Examples:
 
 *       print a zero terminated string
 
-Message BYTE "Kolibri welcomes you\n",0
-
         LDB   #SCR_Put_String
         LDX   #Message
         SWI
@@ -43,6 +41,9 @@ Message BYTE "Kolibri welcomes you\n",0
         SWI
 *             Register A now contains an ASCII value
 *             or NULL, if no key was read
+        RTS
+
+Message BYTE "Kolibri welcomes you\n",0
 
 \end{verbatim}
 
