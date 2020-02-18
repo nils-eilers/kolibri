@@ -47,6 +47,18 @@ VDPWRITEADDRESS MACRO   ; *** set VDP write vram address-pointer to D
         puls cc                 ; restore flags
         ENDM
 
+VDPREADADDRESS MACRO    ; *** set VDP read vram address-pointer to D
+        pshs cc                 ; safe flags
+        orcc #IRQFLAG|FIRQFLAG  ; disable interrupts
+        stb IO_VDPCONTROL       ; read address low-byte
+        nop                     ; adds 2 nops to reach 2us pause
+        nop
+        nop 
+        nop
+        sta IO_VDPCONTROL       ; read address high-byte
+        puls cc                 ; restore flags
+        ENDM
+        
 ; ***** VDP-Subroutines
 
 VDP_Wait16c             ; *** wait 16 cycles
@@ -187,17 +199,57 @@ VDP_PutChar             ; *** puts char from A to screen at actual cursor positi
         lda BIOS_CursorX
         inca                    ; move cursor
         cmpa BIOS_Columns       ; end of line ?
-        bne VDPPUTX             ; no new line
+        lbne VDPPUTX             ; no new line
         lda BIOS_CursorY
         inca
         cmpa BIOS_RowBottom
-        bne VDPPUTY             ; no scroll neccessary
-
-; SCROLL WIndow
-
-VDPPUTY sta BIOS_CursorY           
-        clra
-VDPPUTX sta BIOS_CursorX
+        lbne VDPPUTY             ; no scroll neccessary
+        lde BIOS_RowTop
+        cmpe BIOS_RowBottom
+        beq VDPSCRN
+        ldb BIOS_Columns
+        mul
+        addd #SCREENTABLE       ; calc target line screen address
+        tfr d,x                 ; move target address to X
+        ldf BIOS_Columns
+        adcr f,d                ; calc source line address
+        addf BIOS_Columns       ; calc 2x line columns for later usage
+VDPSCRL VDPREADADDRESS
+        ldy #0
+VDPSCRS jsr VDP_Wait16c
+        lda IO_VDPRAM
+        sta LINEBUF,y+
+        cmpy BIOS_Columns       ; end of line ?
+        bne VDPSCRS
+        exg d,x                 ; move target address to D
+        VDPWRITEADDRESS
+        ldy #0
+VDPSCRT jsr VDP_Wait16c
+        lda LINEBUF,y+
+        sta IO_VDPRAM
+        cmpy BIOS_Columns
+        bne VDPSCRT
+        ince                    ; next row
+        cmpe BIOS_RowBottom
+        beq VDPSCRN             ; last row - finished scrolling
+        adcr f,d                ; add 2x columns to calc next source line
+        bra VDPSCRL
+VDPSCRN lda BIOS_RowBottom      ; bottom row löschen
+        ldb BIOS_Columns
+        mul
+        addd #SCREENTABLE       ; calc screen address
+        VDPWRITEADDRESS
+        lda BIOS_Columns
+        ldb #' '                ; clear line with SPACE
+VDPPUTC jsr VDP_Wait16c
+        VDPWAITC 2
+        stb IO_VDPRAM
+        deca
+        bne VDPPUTC
+        bra VDPPUTE
+VDPPUTY sta BIOS_CursorY        ; store new line         
+VDPPUTE clra                    ; reset column
+VDPPUTX sta BIOS_CursorX        ; store new column
         rts
 
 VDP_ReadStatus                  ; *** read status register in A - return status in A
