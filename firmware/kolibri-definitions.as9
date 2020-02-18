@@ -53,6 +53,10 @@ MON_V           = MONBUF+16
 MON_MEM         = MONBUF+18
 MON_TMP         = MONBUF+20
 
+LINEBUF         = MONBUF+22     ; 80 Chars scrollbuffer
+
+DUMMY           = MONBUF+102    ; from here available
+
 MACHINESTACK    = $7FFF
 USERSTACK       = $7EFF
 
