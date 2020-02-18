@@ -199,40 +199,42 @@ VDP_PutChar             ; *** puts char from A to screen at actual cursor positi
         lda BIOS_CursorX
         inca                    ; move cursor
         cmpa BIOS_Columns       ; end of line ?
-        lbne VDPPUTX             ; no new line
+        lbne VDPPUTX            ; no new line
         lda BIOS_CursorY
-        inca
         cmpa BIOS_RowBottom
         lbne VDPPUTY             ; no scroll neccessary
         lde BIOS_RowTop
         cmpe BIOS_RowBottom
         beq VDPSCRN
+        tfr e,a
         ldb BIOS_Columns
         mul
         addd #SCREENTABLE       ; calc target line screen address
         tfr d,x                 ; move target address to X
         ldf BIOS_Columns
-        adcr f,d                ; calc source line address
-        addf BIOS_Columns       ; calc 2x line columns for later usage
-VDPSCRL VDPREADADDRESS
+VDPSCRL addr f,d                ; calc source line address
+        VDPREADADDRESS
         ldy #0
+        ldb BIOS_Columns
 VDPSCRS jsr VDP_Wait16c
         lda IO_VDPRAM
         sta LINEBUF,y+
-        cmpy BIOS_Columns       ; end of line ?
-        bne VDPSCRS
-        exg d,x                 ; move target address to D
+        decb
+        bne VDPSCRS             ; end of line? 
+        tfr x,d                 ; move target address to D    
         VDPWRITEADDRESS
         ldy #0
+        ldb BIOS_Columns
 VDPSCRT jsr VDP_Wait16c
         lda LINEBUF,y+
         sta IO_VDPRAM
-        cmpy BIOS_Columns
+        decb
         bne VDPSCRT
         ince                    ; next row
         cmpe BIOS_RowBottom
         beq VDPSCRN             ; last row - finished scrolling
-        adcr f,d                ; add 2x columns to calc next source line
+        addr f,x                ; add columns to calc next target line
+        tfr x,d                 ; copy target address to D
         bra VDPSCRL
 VDPSCRN lda BIOS_RowBottom      ; bottom row löschen
         ldb BIOS_Columns
@@ -247,7 +249,8 @@ VDPPUTC jsr VDP_Wait16c
         deca
         bne VDPPUTC
         bra VDPPUTE
-VDPPUTY sta BIOS_CursorY        ; store new line         
+VDPPUTY inca
+        sta BIOS_CursorY        ; store new line         
 VDPPUTE clra                    ; reset column
 VDPPUTX sta BIOS_CursorX        ; store new column
         rts
