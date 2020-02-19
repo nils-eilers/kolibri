@@ -21,10 +21,8 @@ BIOS_DP = $00                   ; BIOS Direct Page
 BIOS_ADR        BSS 2           ; JSR vector for SWI
 BIOS_CursorX    BSS 1
 BIOS_CursorY    BSS 1
-BIOS_Color1     BSS 1
-BIOS_Color2     BSS 1
-BIOS_BGColor1   BSS 1
-BIOS_BGColor2   BSS 1
+BIOS_Color      BSS 1
+BIOS_BGColor    BSS 1
 BIOS_RowTop     BSS 1
 BIOS_RowBottom  BSS 1
 BIOS_Columns    BSS 1

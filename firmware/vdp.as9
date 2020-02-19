@@ -10,10 +10,8 @@ VDPREG1         = $10           ; VDP reg 1 value (mode bits M1+M2, screen disab
 VDPREG9         = $80 | PAL*2   ; VDP reg 9 value ($80 = NTSC, $82 = PAL / 212 lines)
 VDPREG18        = $0d           ; VDP reg 18 value (V/H screen adjust, $0d = Sony PVM 9")
 
-VDPCOLOR1       = 15            ; start color values
-VDPCOLOR2       = 12
-VDPBGCOLOR1     = 1
-VDPBGCOLOR2     = 1
+VDPCOLOR        = 15            ; start color values
+VDPBGCOLOR      = 1
 
 COLUMNS         = 80            ; screen columns
 ROWS            = 26            ; used lines
@@ -124,14 +122,10 @@ VDPCLRS jsr VDP_Wait16c
         sta BIOS_RowBottom
         lda #COLUMNS
         sta BIOS_Columns
-        lda #VDPCOLOR1
-        sta BIOS_Color1
-        lda #VDPCOLOR2
-        sta BIOS_Color2
-        lda #VDPBGCOLOR1
-        sta BIOS_BGColor1
-        lda #VDPBGCOLOR1
-        sta BIOS_BGColor1
+        lda #VDPCOLOR
+        sta BIOS_Color
+        lda #VDPBGCOLOR
+        sta BIOS_BGColor
         rts
 
 VDP_On                          ; *** enable screen ***
@@ -166,31 +160,36 @@ VDPCLRW jsr VDP_Wait16c
         sta BIOS_CursorY        ; set cursor to window top line
         rts
 
-VDP_SetColor            ; *** sets color register 7 + 12 from color variables
-        lda BIOS_Color1         ; load color 1 variable
-        asla                    ; shift to high nibble
+VDP_SetBGColor            ; *** set background-color from A to register 7 + revers in 12
+        sta BIOS_BGColor
+        lda BIOS_Color
+        bra VDPSCOL
+
+VDP_SetColor            ; *** set text-color from A to register 7 + revers in 12
+        sta BIOS_Color          ; store new textcolor
+VDPSCOL asla                    ; shift to high nibble
         asla
         asla
         asla
-        ora BIOS_BGColor1       ; add bg color variable
+        ora BIOS_BGColor        ; add bg color variable
         VDPSETREG 7             ; set color register
-        lda BIOS_Color2
+        lda BIOS_BGColor
         asla
         asla
         asla
         asla
-        ora BIOS_BGColor2
+        ora BIOS_Color
         jsr VDP_Wait16c
         VDPSETREG 12
         rts
-                  
+
 VDP_PutChar             ; *** puts char from A to screen at actual cursor position and moves cursor
         tfr a,e                 ; safe char in E 
         lda BIOS_CursorY        ; load cursor line
         ldb BIOS_Columns        ; load columns
         mul                     ; calc line position
         ldf BIOS_CursorX        ; load Cursor column
-        adcr f,d                ; calc screen position
+        addr f,d                ; calc screen position
         addd #SCREENTABLE       ; add VRAM position
         VDPWRITEADDRESS         ; set VRAM write address to D = Screentable
         jsr VDP_Wait16c
@@ -199,10 +198,65 @@ VDP_PutChar             ; *** puts char from A to screen at actual cursor positi
         lda BIOS_CursorX
         inca                    ; move cursor
         cmpa BIOS_Columns       ; end of line ?
-        lbne VDPPUTX            ; no new line
+        bne VDPPUTX             ; no new line
         lda BIOS_CursorY
         cmpa BIOS_RowBottom
-        lbne VDPPUTY             ; no scroll neccessary
+        bne VDPPUTY             ; no scroll neccessary
+        jsr VDP_ScrollUp
+        bra VDPPUTE
+VDPPUTY inca
+        sta BIOS_CursorY        ; store new line         
+VDPPUTE clra                    ; reset column
+VDPPUTX sta BIOS_CursorX        ; store new column
+        rts
+
+VDP_CursorDown          ; *** Move cursor down
+        lda BIOS_CursorY
+        cmpa BIOS_RowBottom     ; reached window bottom row ?
+        bne VDPCRSD
+        jsr VDP_ScrollUp        ; scroll up
+        rts
+VDPCRSD inca
+        sta BIOS_CursorY        ; move down
+        rts
+
+VDP_CursorUp            ; *** Move cursor up
+        lda BIOS_CursorY
+        cmpa BIOS_RowTop        ; reached window top row ?
+        beq VDPCRSU
+        deca
+        sta BIOS_CursorY        ; move up
+VDPCRSU rts
+
+VDP_CursorLeft          ; *** Move cursor left
+        lda BIOS_CursorX
+        bne VDPCRSL             ; not column 0 ?
+        lda BIOS_CursorY
+        cmpa BIOS_RowTop        ; reached window top row ?
+        beq VDPCRLE
+        deca                    ; move one row up
+        sta BIOS_CursorY
+        lda BIOS_Columns
+VDPCRSL deca                    ; move left
+        sta BIOS_CursorX
+VDPCRLE rts
+
+VDP_CursorRight         ; *** Move cursor right
+        lda BIOS_CursorX
+        inca                    ; move right
+        bne VDPCRSR             ; not column end ?
+        lda BIOS_CursorY
+        cmpa BIOS_RowBottom     ; reached window bottom row ?
+        bne VDPCRRS
+        jsr VDP_ScrollUp
+        bra VDPCRRE
+VDPCRRS inca 
+        sta BIOS_CursorY
+VDPCRRE clra
+VDPCRSR sta BIOS_CursorX
+        rts
+
+VDP_ScrollUp
         lde BIOS_RowTop
         cmpe BIOS_RowBottom
         beq VDPSCRN
@@ -243,17 +297,12 @@ VDPSCRN lda BIOS_RowBottom      ; bottom row löschen
         VDPWRITEADDRESS
         lda BIOS_Columns
         ldb #' '                ; clear line with SPACE
-VDPPUTC jsr VDP_Wait16c
+VDPSCRC jsr VDP_Wait16c
         VDPWAITC 2
         stb IO_VDPRAM
         deca
-        bne VDPPUTC
-        bra VDPPUTE
-VDPPUTY inca
-        sta BIOS_CursorY        ; store new line         
-VDPPUTE clra                    ; reset column
-VDPPUTX sta BIOS_CursorX        ; store new column
-        rts
+        bne VDPSCRC
+        rts 
 
 VDP_ReadStatus                  ; *** read status register in A - return status in A
         lda #1
@@ -266,8 +315,8 @@ VDP_ReadStatus                  ; *** read status register in A - return status 
 **************************************************************************
 ; vdp-tables
 VDPINITDATA                         ; ***** VDP init data table *****
-        FCB $04,VDPREG1,$03,$2f,$02,$3f,$03,VDPCOLOR1*16+VDPBGCOLOR1
-        FCB $08,VDPREG9,$00,$00,VDPCOLOR2*16+VDPBGCOLOR2,$f0,$00
+        FCB $04,VDPREG1,$03,$2f,$02,$3f,$03,VDPCOLOR*16+VDPBGCOLOR
+        FCB $08,VDPREG9,$00,$00,VDPBGCOLOR*16+VDPCOLOR,$f0,$00
         ; reg  0: $04 mode control 1: text mode 2 (bit#1-3 = M3 - M5)
         ; reg  1: $10 mode control 2: bit#1 16x16 sprites, bit#3-4 = M2-M1, #6 =1: display enable)
         ; reg  2: $03 name (screen) table base address $0000 ( * $400 + bit#0+1 = 1)
