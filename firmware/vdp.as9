@@ -195,20 +195,34 @@ VDP_PutChar             ; *** puts char from A to screen at actual cursor positi
         jsr VDP_Wait16c
         VDPWAITC 1
         ste IO_VDPRAM
+VDP_CursorRight         ; *** Move cursor right
         lda BIOS_CursorX
-        inca                    ; move cursor
+        inca                    ; move right
         cmpa BIOS_Columns       ; end of line ?
-        bne VDPPUTX             ; no new line
+        bne VDPCRSR             ; not column end ?
         lda BIOS_CursorY
-        cmpa BIOS_RowBottom
-        bne VDPPUTY             ; no scroll neccessary
+        cmpa BIOS_RowBottom     ; reached window bottom row ?
+        bne VDPCRRS             ; no scroll neccessary
         jsr VDP_ScrollUp
-        bra VDPPUTE
-VDPPUTY inca
-        sta BIOS_CursorY        ; store new line         
-VDPPUTE clra                    ; reset column
-VDPPUTX sta BIOS_CursorX        ; store new column
+        bra VDPCRRE
+VDPCRRS inca 
+        sta BIOS_CursorY
+VDPCRRE clra
+VDPCRSR sta BIOS_CursorX
         rts
+
+VDP_CursorLeft          ; *** Move cursor left
+        lda BIOS_CursorX
+        bne VDPCRSL             ; not column 0 ?
+        lda BIOS_CursorY
+        cmpa BIOS_RowTop        ; reached window top row ?
+        beq VDPCRLE
+        deca                    ; move one row up
+        sta BIOS_CursorY
+        lda BIOS_Columns
+VDPCRSL deca                    ; move left
+        sta BIOS_CursorX
+VDPCRLE rts
 
 VDP_CursorDown          ; *** Move cursor down
         lda BIOS_CursorY
@@ -227,34 +241,6 @@ VDP_CursorUp            ; *** Move cursor up
         deca
         sta BIOS_CursorY        ; move up
 VDPCRSU rts
-
-VDP_CursorLeft          ; *** Move cursor left
-        lda BIOS_CursorX
-        bne VDPCRSL             ; not column 0 ?
-        lda BIOS_CursorY
-        cmpa BIOS_RowTop        ; reached window top row ?
-        beq VDPCRLE
-        deca                    ; move one row up
-        sta BIOS_CursorY
-        lda BIOS_Columns
-VDPCRSL deca                    ; move left
-        sta BIOS_CursorX
-VDPCRLE rts
-
-VDP_CursorRight         ; *** Move cursor right
-        lda BIOS_CursorX
-        inca                    ; move right
-        bne VDPCRSR             ; not column end ?
-        lda BIOS_CursorY
-        cmpa BIOS_RowBottom     ; reached window bottom row ?
-        bne VDPCRRS
-        jsr VDP_ScrollUp
-        bra VDPCRRE
-VDPCRRS inca 
-        sta BIOS_CursorY
-VDPCRRE clra
-VDPCRSR sta BIOS_CursorX
-        rts
 
 VDP_ScrollUp
         lde BIOS_RowTop
