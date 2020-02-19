@@ -3,12 +3,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <ncurses.h>
 
 #include "kbhit.h"
 #include "memory.h"
 #include "main.h"
 #include "6809.h"
-
+#include "screen.h"
 
 uint8_t mem[65536];
 
@@ -59,8 +60,12 @@ void write8(uint16_t addr, uint8_t val)
 
    switch (addr) {
       case FT245R:
+#ifdef SEM
+         waddch(Win,val);
+#else
          putchar(val);
          fflush(stdout);
+#endif
          return;
       default:
          sim_error("Warning: write $%02X to $%04X\n", val, addr);
@@ -109,6 +114,11 @@ int load_rom(uint16_t addr, char *filename)
       exit(EXIT_FAILURE);
    }
    fclose(in);
+#ifdef SEM
+   wprintw(Deb,"Loaded ROM file '%s' to address $%04X.\n", filename, addr);
+   wrefresh(Deb);
+#else
    printf("Loaded ROM file '%s' to address $%04X.\n", filename, addr);
+#endif
    return 0;
 }

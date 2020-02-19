@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <signal.h>
 
+#include "main.h"
 #include "memory.h"
 #include "6809.h"
 #include "kbhit.h"
@@ -11,6 +12,9 @@ static bool load_rom_given = false;
 
 void die(char *errmsg)
 {
+#ifdef SEM
+   Exit_SEM();
+#endif
    fprintf(stderr, "%s\n", errmsg);
    exit(EXIT_FAILURE);
 }
@@ -91,6 +95,10 @@ int main(int argc, char *argv[])
    mem_init(0x00);
    process_args(argc, argv);
    atexit(coredump);
+#ifdef SEM
+   Init_SEM();
+#endif
+
    (void) _kbhit(); // Init terminal on Linux
    if (!load_rom_given) load_rom(0x8000, "firmware.bin");
    cpu6809_reset();

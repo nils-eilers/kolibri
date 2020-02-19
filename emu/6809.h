@@ -20,6 +20,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+/* use ncurses for SEM (Sreen Emulator) */
+#define SEM
 
 #ifndef M6809_H
 #define M6809_H

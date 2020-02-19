@@ -1,8 +1,8 @@
-PREFIX ?= /usr/local
+PREFIX ?= $HOME
 
 CC ?= gcc
 
-OBJ = main.o 6809.o memory.o kbhit.o
+OBJ = main.o 6809.o memory.o kbhit.o screen.o
 TARGET = kolibri
 CFLAGS = -std=c99 -Wall -Wextra -pedantic -O2
 
@@ -12,7 +12,7 @@ ifeq ($(WIN),y)
 endif
 
 $(TARGET): $(OBJ)
-	$(CC) $(OBJ) -o $@
+	$(CC) $(OBJ) -o $@ -lncurses
 
 clean:
 	rm -f $(OBJ)

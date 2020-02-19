@@ -1,0 +1,1 @@
+cc -o ~/bin/kolibri main.c 6809.c memory.c kbhit.c screen.c -lncurses
