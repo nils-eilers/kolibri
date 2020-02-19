@@ -1,4 +1,4 @@
-PREFIX ?= $HOME
+PREFIX ?= /usr/local
 
 CC ?= gcc
 
