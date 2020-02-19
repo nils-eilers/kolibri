@@ -47,7 +47,7 @@ TRAPMON
 *****************************************
 
 Msg_Mon FCB     "  PC  DP CC  A B  E F    X    Y    U    S    V"
-        FCB     " EFHINZVC\r\n;\0"
+        FCB     " EFHINZVC\n;\0"
 
 ************
 Mon_Commands
@@ -359,8 +359,6 @@ MDR_60  DECE
 Mon_CRLF
 ********
 
-        LDA     #CR
-        CALL    PUTC
         LDA     #LF
         CALL    PUTC
         RTS
