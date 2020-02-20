@@ -19,6 +19,7 @@
 ; VDP_CursorOn            ; *** set cursor attribute bit in color table
 ; VDP_Backspace           ; *** backspace
 ; VDP_Delete              ; *** delete character
+; VDP_Insert              ; *** insert SPACE
 ; VDP_ReadStatus          ; *** read status register in A - return status in A
 
 ; ***** VDP-Definitions
@@ -440,7 +441,40 @@ VDPDELS lda #' '                ; fill last char in line with SPACE
 VDPDELN tfr x,d                 ; restore write address
         VDPWRITEADDRESS
         jsr VDP_Wait16c
-        bra VDPDELS             ; clear last char     
+        bra VDPDELS             ; clear last char
+     
+VDP_Insert              ; *** insert SPACE
+        lda BIOS_CursorY        ; load cursor line
+        ldb BIOS_Columns        ; load columns
+        mul                     ; calc line position
+        ldf BIOS_CursorX        ; load Cursor column
+        addr f,d                ; calc screen position
+        addd #SCREENTABLE       ; add VRAM position
+        tfr d,x                 ; safe write address in X
+        ldb BIOS_CursorX        ; Load Cursor column
+        incb                    ; add 1 because last col is 79 and columns is 80 !
+        cmpb BIOS_Columns       ; check if last char in line
+        beq VDPINSN             ; skip srolling
+        VDPREADADDRESS          ; set VRAM write address to D = Screentable
+        ldy #0
+VDPINSR jsr VDP_Wait16c
+        lda IO_VDPRAM           ; load char
+        sta LINEBUF,y+          ; write char to buffer
+        incb
+        cmpb BIOS_Columns       ; check reached end of line ?
+        bne VDPINSR             ; read next char
+        tfr x,d                 ; restore write address
+        VDPWRITEADDRESS
+        ldb BIOS_CursorX        ; Load Cursor column
+        ldy #0
+        lda #' '                ; fill with SPACE
+VDPINSW jsr VDP_Wait16c
+        sta IO_VDPRAM           ; write char
+        lda LINEBUF,y+          ; read char from buffer
+        incb
+        cmpb BIOS_Columns       ; check reached end of chars in buffer ?
+        bne VDPINSW             ; write  next char
+        rts
 
 VDP_ReadStatus          ; *** read status register in A - return status in A
         lda #1
