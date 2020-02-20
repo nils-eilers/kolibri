@@ -252,7 +252,7 @@ VDP_CursorUp            ; *** Move cursor up
         jsr VDP_CursorOn
 VDPCRSU rts
 
-VDP_ScrollUp
+VDP_ScrollUp            ; *** scroll screen up
         lde BIOS_RowTop
         cmpe BIOS_RowBottom
         beq VDPSCRN
@@ -300,7 +300,7 @@ VDPSCRC jsr VDP_Wait16c
         bne VDPSCRC
         rts 
 
-VDP_CursorOff
+VDP_CursorOff            ; *** set cursor attribute byte in color table
         lda BIOS_CursorY        ; load cursor line
         ldb BIOS_Columns        ; load columns
         mul                     ; calc line position
@@ -315,7 +315,7 @@ VDP_CursorOff
         sta IO_VDPRAM
         rts
 
-VDP_CursorOn
+VDP_CursorOn            ; *** set cursor attribute bit in color table
         lda BIOS_CursorY        ; load cursor line
         ldb BIOS_Columns        ; load columns
         mul                     ; calc line position
@@ -332,12 +332,61 @@ VDP_CursorOn
         clrb
         tfr d,x
         lda REVERSETABLE,x      ; load bit for screen position
-        VDPWAITC 10
+        VDPWAITC 8
         sta IO_VDPRAM
         rts
 REVERSETABLE    FCB $80,$40,$20,$10,$08,$04,$02,$01
 
-VDP_ReadStatus                  ; *** read status register in A - return status in A
+VDP_Backspace              ; *** backspace
+        jsr VDP_CursorLeft
+        lda BIOS_CursorY
+        cmpa BIOS_RowTop        ; check if window top row    
+        bne VDP_Delete
+        lda BIOS_CursorX        ; check if first char in window
+        bne VDP_Delete
+        rts                     ; no delete possible in uper left corner !
+
+VDP_Delete              ; *** delete character
+        lda BIOS_CursorY        ; load cursor line
+        ldb BIOS_Columns        ; load columns
+        mul                     ; calc line position
+        ldf BIOS_CursorX        ; load Cursor column
+        addr f,d                ; calc screen position
+        addd #SCREENTABLE       ; add VRAM position
+        tfr d,x                 ; safe write address in X
+        ldb BIOS_CursorX        ; Load Cursor column
+        incb                    ; add 1 because last col is 79 and columns is 80 !
+        cmpb BIOS_Columns       ; check if last char in line
+        beq VDPDELN             ; skip srolling
+        incd                    ; calc read address
+        VDPREADADDRESS          ; set VRAM write address to D = Screentable
+        ldy #0
+VDPDELR jsr VDP_Wait16c
+        lda IO_VDPRAM           ; load char
+        sta LINEBUF,y+          ; write char to buffer
+        incb
+        cmpb BIOS_Columns       ; check reached end of line ?
+        bne VDPDELR             ; read next char
+        tfr x,d                 ; restore write address
+        VDPWRITEADDRESS
+        ldb BIOS_CursorX        ; Load Cursor column
+        incb                    ; add 1 because last col is 79 and columns is 80 !
+        ldy #0
+VDPDELW jsr VDP_Wait16c
+        lda LINEBUF,y+          ; read char from buffer
+        sta IO_VDPRAM           ; write char
+        incb
+        cmpb BIOS_Columns       ; check reached end of chars in buffer ?
+        bne VDPDELW             ; write  next char
+VDPDELS lda #' '                ; fill last char in line with SPACE
+        sta IO_VDPRAM           ; write char
+        rts
+VDPDELN tfr x,d                 ; restore write address
+        VDPWRITEADDRESS
+        jsr VDP_Wait16c
+        bra VDPDELS             ; clear last char     
+
+VDP_ReadStatus          ; *** read status register in A - return status in A
         lda #1
         VDPSETREG 15            ; reg 15 = 1 initiates read status-reg 1
         jsr VDP_Wait16c         ; wait 8 us total for DVP
