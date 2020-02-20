@@ -1,3 +1,26 @@
+; ***** VDP-functions *****
+
+; VDP_Init                ; *** initialize VDP ***
+; VDP_On                  ; *** enable screen ***
+; VDP_Off                 ; *** disable screen ***
+; VDP_ClearWindow         ; *** clear window
+; VDP_SetBGColor          ; *** set background-color from A to register 7 + revers in 12
+; VDP_SetColor            ; *** set text-color from A to register 7 + revers in 12
+; VDP_ReadChar            ; *** return at actual cursor position in A
+; VDP_ReadLine            ; *** store line A in LINEBUF
+; VDP_PutChar             ; *** puts char from A to screen at actual cursor position and moves cursor
+; VDP_CursorRight         ; *** Move cursor right
+; VDP_CursorLeft          ; *** Move cursor left
+; VDP_CursorDown          ; *** Move cursor down
+; VDP_CursorUp            ; *** Move cursor up
+; VDP_ScrollUp            ; *** scroll screen up
+; VDP_SetCursor           ; *** set cursor to A=X, B=Y
+; VDP_CursorOff           ; *** set cursor attribute byte in color table
+; VDP_CursorOn            ; *** set cursor attribute bit in color table
+; VDP_Backspace           ; *** backspace
+; VDP_Delete              ; *** delete character
+; VDP_ReadStatus          ; *** read status register in A - return status in A
+
 ; ***** VDP-Definitions
 
 PAL = 1                         ; PAL=1, NTSC=0   selects V9938/58 PAL RGB-output
@@ -128,17 +151,17 @@ VDPCLRS jsr VDP_Wait16c
         sta BIOS_BGColor
         rts
 
-VDP_On                          ; *** enable screen ***
+VDP_On                  ; *** enable screen ***
         lda #VDPREG1 | $40      ; set mode reg 1 (M1+M2), bit#6 = 1 enables screen
         VDPSETREG 1
         rts
 
-VDP_Off                         ; *** disable screen ***
+VDP_Off                 ; *** disable screen ***
         lda #VDPREG1 & $bf      ; set mode reg 1 (M1+M2), bit#6 = 1 enables screen
         VDPSETREG 1
         rts
 
-VDP_ClearWindow
+VDP_ClearWindow         ; *** clear window
         jsr VDP_CursorOff
         lda BIOS_RowTop         ; load windows top row
         ldb BIOS_Columns        ; load columns
@@ -162,7 +185,7 @@ VDPCLRW jsr VDP_Wait16c
         jsr VDP_CursorOn
         rts
 
-VDP_SetBGColor            ; *** set background-color from A to register 7 + revers in 12
+VDP_SetBGColor          ; *** set background-color from A to register 7 + revers in 12
         sta BIOS_BGColor
         lda BIOS_Color
         bra VDPSCOL
@@ -183,6 +206,32 @@ VDPSCOL lsla                    ; shift to high nibble
         ora BIOS_Color
         jsr VDP_Wait16c
         VDPSETREG 12
+        rts
+
+VDP_ReadChar            ; *** return at actual cursor position in A
+        lda BIOS_CursorY        ; load cursor line
+        ldb BIOS_Columns        ; load columns
+        mul                     ; calc line position
+        ldf BIOS_CursorX        ; load Cursor column
+        addr f,d                ; calc screen position
+        addd #SCREENTABLE       ; add VRAM position
+        VDPREADADDRESS          ; set VRAM read address to D = Screentable
+        jsr VDP_Wait16c
+        VDPWAITC 2
+        lda IO_VDPRAM
+        rts
+
+VDP_ReadLine            ; *** store line A in LINEBUF
+        ldb BIOS_Columns        ; load columns
+        mul                     ; calc line position
+        addd #SCREENTABLE       ; add VRAM position
+        VDPREADADDRESS          ; set VRAM read address to D = Screentable
+        ldx #0                  ; clear columns counter
+VDPREAD jsr VDP_Wait16c
+        lda IO_VDPRAM           ; read char
+        sta LINEBUF,x+          ; write to buffer
+        cmpx BIOS_Columns       ; check if end of line reached
+        bne VDPREAD
         rts
 
 VDP_PutChar             ; *** puts char from A to screen at actual cursor position and moves cursor
@@ -299,6 +348,13 @@ VDPSCRC jsr VDP_Wait16c
         deca
         bne VDPSCRC
         rts 
+
+VDP_SetCursor           ; *** set cursor to A=X, B=Y
+        jsr VDP_CursorOff
+        sta BIOS_CursorX
+        stb BIOS_CursorY
+        jsr VDP_CursorOn
+        rts
 
 VDP_CursorOff            ; *** set cursor attribute byte in color table
         lda BIOS_CursorY        ; load cursor line
