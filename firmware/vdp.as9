@@ -6,7 +6,7 @@
 ; VDP_ClearWindow         ; *** clear window
 ; VDP_SetBGColor          ; *** set background-color from A to register 7 + revers in 12
 ; VDP_SetColor            ; *** set text-color from A to register 7 + revers in 12
-; VDP_ReadChar            ; *** return at actual cursor position in A
+; VDP_ReadChar            ; *** return char at actual cursor position in A
 ; VDP_ReadLine            ; *** store line A in LINEBUF
 ; VDP_PutChar             ; *** puts char from A to screen at actual cursor position and moves cursor
 ; VDP_CursorRight         ; *** Move cursor right
