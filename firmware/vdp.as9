@@ -139,6 +139,7 @@ VDP_Off                         ; *** disable screen ***
         rts
 
 VDP_ClearWindow
+        jsr VDP_CursorOff
         lda BIOS_RowTop         ; load windows top row
         ldb BIOS_Columns        ; load columns
         mul                     ; calc screen position
@@ -158,6 +159,7 @@ VDPCLRW jsr VDP_Wait16c
         sta BIOS_CursorX        ; set cursor to column 0 (A is already 0 from decd)
         lda BIOS_RowTop
         sta BIOS_CursorY        ; set cursor to window top line
+        jsr VDP_CursorOn
         rts
 
 VDP_SetBGColor            ; *** set background-color from A to register 7 + revers in 12
@@ -167,17 +169,17 @@ VDP_SetBGColor            ; *** set background-color from A to register 7 + reve
 
 VDP_SetColor            ; *** set text-color from A to register 7 + revers in 12
         sta BIOS_Color          ; store new textcolor
-VDPSCOL asla                    ; shift to high nibble
-        asla
-        asla
-        asla
+VDPSCOL lsla                    ; shift to high nibble
+        lsla
+        lsla
+        lsla
         ora BIOS_BGColor        ; add bg color variable
         VDPSETREG 7             ; set color register
         lda BIOS_BGColor
-        asla
-        asla
-        asla
-        asla
+        lsla
+        lsla
+        lsla
+        lsla
         ora BIOS_Color
         jsr VDP_Wait16c
         VDPSETREG 12
@@ -196,6 +198,7 @@ VDP_PutChar             ; *** puts char from A to screen at actual cursor positi
         VDPWAITC 1
         ste IO_VDPRAM
 VDP_CursorRight         ; *** Move cursor right
+        jsr VDP_CursorOff
         lda BIOS_CursorX
         inca                    ; move right
         cmpa BIOS_Columns       ; end of line ?
@@ -209,9 +212,11 @@ VDPCRRS inca
         sta BIOS_CursorY
 VDPCRRE clra
 VDPCRSR sta BIOS_CursorX
+        jsr VDP_CursorOn
         rts
 
 VDP_CursorLeft          ; *** Move cursor left
+        jsr VDP_CursorOff
         lda BIOS_CursorX
         bne VDPCRSL             ; not column 0 ?
         lda BIOS_CursorY
@@ -222,7 +227,8 @@ VDP_CursorLeft          ; *** Move cursor left
         lda BIOS_Columns
 VDPCRSL deca                    ; move left
         sta BIOS_CursorX
-VDPCRLE rts
+VDPCRLE jsr VDP_CursorOn
+        rts
 
 VDP_CursorDown          ; *** Move cursor down
         lda BIOS_CursorY
@@ -230,16 +236,20 @@ VDP_CursorDown          ; *** Move cursor down
         bne VDPCRSD
         jsr VDP_ScrollUp        ; scroll up
         rts
-VDPCRSD inca
+VDPCRSD jsr VDP_CursorOff
+        inca
         sta BIOS_CursorY        ; move down
+        jsr VDP_CursorOn
         rts
 
 VDP_CursorUp            ; *** Move cursor up
         lda BIOS_CursorY
         cmpa BIOS_RowTop        ; reached window top row ?
         beq VDPCRSU
+        jsr VDP_CursorOff
         deca
         sta BIOS_CursorY        ; move up
+        jsr VDP_CursorOn
 VDPCRSU rts
 
 VDP_ScrollUp
@@ -289,6 +299,43 @@ VDPSCRC jsr VDP_Wait16c
         deca
         bne VDPSCRC
         rts 
+
+VDP_CursorOff
+        lda BIOS_CursorY        ; load cursor line
+        ldb BIOS_Columns        ; load columns
+        mul                     ; calc line position
+        ldf BIOS_CursorX        ; load Cursor column
+        lsrd                    ; divide by 8 to calc color/attribute-table position
+        lsrd
+        lsrd
+        addd #COLORTABLE        ; add VRAM position
+        VDPWRITEADDRESS         ; set VRAM write address to D = Colortable
+        jsr VDP_Wait16c
+        clra
+        sta IO_VDPRAM
+        rts
+
+VDP_CursorOn
+        lda BIOS_CursorY        ; load cursor line
+        ldb BIOS_Columns        ; load columns
+        mul                     ; calc line position
+        ldf BIOS_CursorX        ; load Cursor column
+        addr f,d                ; calc screen position
+        tfr a,e                 ; safe low byte of screen position in E
+        lsrd                    ; divide by 8 to calc color/attribute-table position
+        lsrd
+        lsrd
+        addd #COLORTABLE        ; add VRAM position
+        VDPWRITEADDRESS         ; set VRAM write address to D = Colortable
+        tfr e,a                 ; restore low byte
+        anda #$07               ; isolate byte position
+        clrb
+        tfr d,x
+        lda REVERSETABLE,x      ; load bit for screen position
+        VDPWAITC 10
+        sta IO_VDPRAM
+        rts
+REVERSETABLE    FCB $80,$40,$20,$10,$08,$04,$02,$01
 
 VDP_ReadStatus                  ; *** read status register in A - return status in A
         lda #1
