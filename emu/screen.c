@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 #include <ncurses.h>
+#include "main.h"
 
 int Win_Rows = 26;
 int Win_Cols = 80;
@@ -18,6 +19,7 @@ void Init_SEM()
    nocbreak();
    keypad(stdscr,TRUE);
    clear();
+   atexit(Exit_SEM);
 
    // Create outer windows for borders
 
@@ -33,7 +35,9 @@ void Init_SEM()
    Win = derwin(BoW, Win_Rows, Win_Cols, 1, 1);
    Deb = derwin(BoD, Win_Rows, Win_Cols, 1, 1);
    immedok(Win,TRUE);
+   scrollok(Win,TRUE);
    immedok(Deb,TRUE);
+   scrollok(Deb,TRUE);
    wclear(Win);
    wclear(Deb);
 
