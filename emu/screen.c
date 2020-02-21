@@ -6,6 +6,7 @@
 
 int Win_Rows = 26;
 int Win_Cols = 80;
+int Deb_Rows;
 
 WINDOW *BoW;
 WINDOW *BoD;
@@ -24,7 +25,8 @@ void Init_SEM()
    // Create outer windows for borders
 
    BoW = newwin(Win_Rows+2, Win_Cols+2, 0, 0);
-   BoD = newwin(Win_Rows+2, Win_Cols+2, Win_Rows+2, 0);
+   Deb_Rows = LINES - 26 - 2 - 2;
+   BoD = newwin(Deb_Rows+2, Win_Cols+2, Win_Rows+2, 0);
    box(BoW,ACS_VLINE,ACS_HLINE);
    box(BoD,ACS_VLINE,ACS_HLINE);
    mvwaddstr(BoW,0,33,"Kolibri Window");
@@ -33,7 +35,7 @@ void Init_SEM()
    // Create inner windows for content
 
    Win = derwin(BoW, Win_Rows, Win_Cols, 1, 1);
-   Deb = derwin(BoD, Win_Rows, Win_Cols, 1, 1);
+   Deb = derwin(BoD, Deb_Rows, Win_Cols, 1, 1);
    immedok(Win,TRUE);
    scrollok(Win,TRUE);
    immedok(Deb,TRUE);
