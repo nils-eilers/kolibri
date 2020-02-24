@@ -35,24 +35,36 @@ uint8_t read8(uint16_t addr)
 {
    uint8_t val;
 
-   if ((addr  < 0xFE2C) || (addr >= 0xFF00)) {
+   if ((addr >= 0xFE00 && addr < 0xFE2C) ||  // VDP area
+       (addr >= 0x4000 && addr < 0x4004))    // VDP test
+   {
       val = mem[addr];
 #ifdef SEM
-      if (addr >= 0xFE00 && addr < 0xFE2C)
-         wprintw(Deb,"%2.2x <- %4.4x\n",val,addr);
+//    if (val >= ' ' && val < 0x7f) wprintw(Deb,"  %c ",val);
+//    else                          waddstr(Deb,"    ");
+//    wprintw(Deb,"%2.2x << [%4.4x]",val,addr);
+#else
+      if (val >= ' ' && val < 0x7f) printf("  %c ",val);
+      else                          printf("    ");
+      printf("%2.2x << [%4.4x]",val,addr);
 #endif
       return val;
    }
+   else return mem[addr];
 
    // I/O area FExx
 
    switch (addr) {
       case FT245R:
+#ifdef SEM
          touchwin(Win);
          return wgetch(Win);
+#else
+         return getchar();
+#endif
 
       default:
-         //fprintf(stderr, "Warning: read from undefined I/O address $%04X\n", addr);
+         //fprintf(stderr, "read from undefined I/O address $%04X\n", addr);
          //exit(EXIT_FAILURE);
          sim_error("Warning: read from undefined I/O address $%04X\n", addr);
          return 0xFF;
@@ -62,18 +74,27 @@ uint8_t read8(uint16_t addr)
 
 void write8(uint16_t addr, uint8_t val)
 {
+   if ((addr >= 0xFE00 && addr < 0xFE2C) ||  // VDP area
+       (addr >= 0x4000 && addr < 0x4004))    // VDP test
+   {
+      mem[addr] = val;
+#ifdef SEM
+//    if (val >= ' ' && val < 0x7f) wprintw(Deb,"  %c ",val);
+//    else                          waddstr(Deb,"    ");
+//    wprintw(Deb,"%2.2x >> {%4.4x}",val,addr);
+#else
+      if (val >= ' ' && val < 0x7f) printf("  %c ",val);
+      else                          printf("    ");
+      printf("%2.2x >> {%4.4x}",val,addr);
+#endif
+      return;
+   }
+
    if (addr < 0x8000) {
       mem[addr] = val;
       return;
    }
 
-   if (addr >= 0xFE00 && addr < 0xFE2C) {
-      mem[addr] = val;
-#ifdef SEM
-      wprintw(Deb,"%2.2x -> %4.4x\n",val,addr);
-#endif
-      return;
-   }
 
    switch (addr) {
       case FT245R:
@@ -85,8 +106,8 @@ void write8(uint16_t addr, uint8_t val)
 #endif
          return;
 
-      default:
-         sim_error("Warning: write $%02X to $%04X\n", val, addr);
+      default:;
+         // sim_error("Warning: write $%02X to $%04X\n", val, addr);
          //fprintf(stderr, "Warning: write $%02X to $%04X\n", val, addr);
    }
 }
