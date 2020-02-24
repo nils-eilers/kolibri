@@ -33,8 +33,16 @@ void coredump(void)
 
 uint8_t read8(uint16_t addr)
 {
-   if ((addr  < 0xFE00) || (addr >= 0xFF00))
-      return mem[addr];
+   uint8_t val;
+
+   if ((addr  < 0xFE2C) || (addr >= 0xFF00)) {
+      val = mem[addr];
+#ifdef SEM
+      if (addr >= 0xFE00 && addr < 0xFE2C)
+         wprintw(Deb,"%2.2x <- %4.4x\n",val,addr);
+#endif
+      return val;
+   }
 
    // I/O area FExx
 
