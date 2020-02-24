@@ -40,7 +40,8 @@ uint8_t read8(uint16_t addr)
 
    switch (addr) {
       case FT245R:
-         return getchar();
+         touchwin(Win);
+         return wgetch(Win);
 
       default:
          //fprintf(stderr, "Warning: read from undefined I/O address $%04X\n", addr);
@@ -58,6 +59,14 @@ void write8(uint16_t addr, uint8_t val)
       return;
    }
 
+   if (addr >= 0xFE00 && addr < 0xFE2C) {
+      mem[addr] = val;
+#ifdef SEM
+      wprintw(Deb,"%2.2x -> %4.4x\n",val,addr);
+#endif
+      return;
+   }
+
    switch (addr) {
       case FT245R:
 #ifdef SEM
@@ -67,6 +76,7 @@ void write8(uint16_t addr, uint8_t val)
          fflush(stdout);
 #endif
          return;
+
       default:
          sim_error("Warning: write $%02X to $%04X\n", val, addr);
          //fprintf(stderr, "Warning: write $%02X to $%04X\n", val, addr);

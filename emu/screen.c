@@ -13,9 +13,10 @@ WINDOW *BoD;
 WINDOW *Win;
 WINDOW *Deb;
 
+FILE *wp;
+
 void Init_SEM()
 {
-   printf("Init SEM\n");
    initscr();
    nocbreak();
    keypad(stdscr,TRUE);
@@ -24,8 +25,8 @@ void Init_SEM()
 
    // Create outer windows for borders
 
+   Deb_Rows = LINES - Win_Rows - 4;
    BoW = newwin(Win_Rows+2, Win_Cols+2, 0, 0);
-   Deb_Rows = LINES - 26 - 2 - 2;
    BoD = newwin(Deb_Rows+2, Win_Cols+2, Win_Rows+2, 0);
    box(BoW,ACS_VLINE,ACS_HLINE);
    box(BoD,ACS_VLINE,ACS_HLINE);
