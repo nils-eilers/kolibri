@@ -1,8 +1,9 @@
 // screen emulator for kolibri
 
+#include "main.h"
+#ifdef SEM
 #include <stdlib.h>
 #include <ncurses.h>
-#include "main.h"
 
 int Win_Rows = 26;
 int Win_Cols = 80;
@@ -55,4 +56,5 @@ void Exit_SEM()
 {
    endwin();
 }
+#endif
 
