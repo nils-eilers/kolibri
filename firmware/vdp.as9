@@ -236,12 +236,14 @@ VDP_ReadLine            ; *** store line A in LINEBUF
         mul                     ; calc line position
         addd #SCREENTABLE       ; add VRAM position
         VDPREADADDRESS          ; set VRAM read address to D = Screentable
-        ldx #0                  ; clear columns counter
-VDPREAD jsr VDP_Wait11c         ; 11c + 13c = 8us
+        ldy #LINEBUF            ; load buffer address in Y
+        ldb BIOS_Columns        ; load columns in x-counter
+VDPREAD jsr VDP_Wait11c
+        VDPWAITC 2              ; 11c + 11c +2c = 8us
         lda IO_VDPRAM           ; read char
-        sta LINEBUF,x+          ; write to buffer
-        cmpx BIOS_Columns       ; check if end of line reached
-        bne VDPREAD
+        sta ,y+                 ; write to buffer
+        decb                    ; dec x-counter
+        bne VDPREAD             ; read next char
         rts
 
 VDP_ScrollUp            ; *** scroll screen up
@@ -255,19 +257,21 @@ VDP_ScrollUp            ; *** scroll screen up
         tfr d,x                 ; copy target address to X
 VDPSCRL ADDD8 BIOS_Columns      ; add columns for source address
         VDPREADADDRESS
-        ldy #0
-        ldb BIOS_Columns
+        ldy #LINEBUF            ; load buffer address in Y
+        ldb BIOS_Columns        ; load columns in x-counter
 VDPSCRS jsr VDP_Wait11c
-        lda IO_VDPRAM
-        sta LINEBUF,y+
+        VDPWAITC 2              ; 11c + 11c +2c = 8us
+        lda IO_VDPRAM           ; load from VRAM
+        sta ,y+                 ; write to buffer
         decb
         bne VDPSCRS             ; end of line? 
         tfr x,d                 ; move stored target address to D    
         VDPWRITEADDRESS
-        ldy #0
-        ldb BIOS_Columns
+        ldy #LINEBUF            ; load buffer address in Y
+        ldb BIOS_Columns        ; load columns in x-counter
 VDPSCRT jsr VDP_Wait11c
-        lda LINEBUF,y+
+        VDPWAITC 2              ; 11c + 11c +2c = 8us
+        lda ,y+
         sta IO_VDPRAM
         decb
         bne VDPSCRT
@@ -283,12 +287,12 @@ VDPSCRN lda BIOS_RowBottom      ; bottom row löschen
         mul
         addd #SCREENTABLE       ; calc screen address
         VDPWRITEADDRESS
-        lda BIOS_Columns
-        ldb #' '                ; clear line with SPACE
+        ldb BIOS_Columns        ; load columns in x-counter
+        lda #' '                ; clear line with SPACE
 VDPSCRC jsr VDP_Wait11c
-        VDPWAITC 2
+        VDPWAITC 6              ; 7c + 11c +6c = 8us
         stb IO_VDPRAM
-        deca
+        decb
         bne VDPSCRC
         rts 
 
@@ -425,19 +429,19 @@ VDP_Delete              ; *** delete character
         incd                    ; calc read address
         VDPREADADDRESS          ; set VRAM write address to D = Screentable
         tfr e,b                 ; move x-counter to B
-        ldy #0
+        ldy #LINEBUF            ; load buffer address in Y
 VDPDELR jsr VDP_Wait11c
         lda IO_VDPRAM           ; load char
-        sta LINEBUF,y+          ; write char to buffer
+        sta ,y+                 ; write char to buffer
         incb
         cmpb BIOS_Columns       ; check reached end of line ?
         bne VDPDELR             ; read next char
         tfr x,d                 ; restore write address
         VDPWRITEADDRESS
         tfr e,b                 ; move x-counter to B
-        ldy #0
+        ldy #LINEBUF             ; load buffer address in Y
 VDPDELW jsr VDP_Wait11c
-        lda LINEBUF,y+          ; read char from buffer
+        lda ,y+                 ; read char from buffer
         sta IO_VDPRAM           ; write char
         incb
         cmpb BIOS_Columns       ; check reached end of chars in buffer ?
