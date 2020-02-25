@@ -16,6 +16,7 @@
 ; VDP_CursorUp            ; *** Move cursor up
 ; VDP_ScrollUp            ; *** scroll screen up
 ; VDP_SetCursor           ; *** set cursor to E=X, F=Y
+; VDP_GetCursor           ; *** get cursor to E=X, F=Y
 ; VDP_CursorOff           ; *** set cursor attribute byte in color table
 ; VDP_CursorOn            ; *** set cursor attribute bit in color table
 ; VDP_Backspace           ; *** backspace
@@ -358,6 +359,11 @@ VDP_SetCursor           ; *** set cursor to E=X, F=Y
         ste BIOS_CursorX
         stf BIOS_CursorY
         bsr VDP_CursorOn
+        rts
+
+VDP_GetCursor           ; *** get cursor to E=X, F=Y
+        lde BIOS_CursorX
+        ldf BIOS_CursorY
         rts
 
 VDP_CursorOff            ; *** set cursor attribute byte in color table
