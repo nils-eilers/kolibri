@@ -427,7 +427,7 @@ VDP_Delete              ; *** delete character
         cmpe BIOS_Columns       ; check if last char in line
         beq VDPDELN             ; skip srolling
         incd                    ; calc read address
-        VDPREADADDRESS          ; set VRAM write address to D = Screentable
+        VDPREADADDRESS          ; set VRAM read address to D = Screentable
         tfr e,b                 ; move x-counter to B
         ldy #LINEBUF            ; load buffer address in Y
 VDPDELR jsr VDP_Wait11c
@@ -439,7 +439,7 @@ VDPDELR jsr VDP_Wait11c
         tfr x,d                 ; restore write address
         VDPWRITEADDRESS
         tfr e,b                 ; move x-counter to B
-        ldy #LINEBUF             ; load buffer address in Y
+        ldy #LINEBUF            ; load buffer address in Y
 VDPDELW jsr VDP_Wait11c
         lda ,y+                 ; read char from buffer
         sta IO_VDPRAM           ; write char
@@ -447,12 +447,53 @@ VDPDELW jsr VDP_Wait11c
         cmpb BIOS_Columns       ; check reached end of chars in buffer ?
         bne VDPDELW             ; write  next char
 VDPDELS lda #' '                ; fill last char in line with SPACE
+        jsr VDP_Wait11c
+        VDPWAITC 1              ; add 1c to get 8us minimum
         sta IO_VDPRAM           ; write char
         rts
-VDPDELN tfr x,d                 ; restore write address
+VDPDELN VDPWRITEADDRESS
+        bra VDPDELS             ; clear last char in line   
+
+VDP_Insert              ; *** insert character
+        lda BIOS_CursorY        ; load cursor line
+        ldb BIOS_Columns        ; load columns
+        mul                     ; calc line position
+        ADDD8 BIOS_CursorX      ; add Cursor column to D
+        addd #SCREENTABLE       ; add VRAM position
+        tfr d,x                 ; safe read address in X
+        lde BIOS_CursorX        ; Load Cursor column
+        ince                    ; add 1 because last col is 79 and columns is 80 !
+        cmpe BIOS_Columns       ; check if last char in line
+        beq VDPINSN             ; skip srolling
+        dece                    ; restore cursor column
+        VDPREADADDRESS          ; set VRAM read address to D = Screentable
+        tfr e,b                 ; move x-counter to B
+        ldy #LINEBUF            ; load buffer address in Y
+VDPINSR jsr VDP_Wait11c
+        lda IO_VDPRAM           ; load char
+        sta ,y+                 ; write char to buffer
+        incb
+        cmpb BIOS_Columns       ; check reached end of line ?
+        bne VDPINSR             ; read next char
+        tfr x,d                 ; restore read address
+        incd                    ; add 1 to get write address
         VDPWRITEADDRESS
+        tfr e,b                 ; move x-counter to B
+        ldy #LINEBUF             ; load buffer address in Y
+VDPINSW jsr VDP_Wait11c
+        lda ,y+                 ; read char from buffer
+        sta IO_VDPRAM           ; write char
+        incb
+        cmpb BIOS_Columns       ; check reached end of chars in buffer ?
+        bne VDPINSW             ; write  next char
+        tfr x,d                 ; restore write address - cursor position
+        VDPWAITC 6              ; add 6c to get 8us
+VDPINSN VDPWRITEADDRESS
+        lda #' '                ; fill last char in line with SPACE
         jsr VDP_Wait11c
-        bra VDPDELS             ; clear last char     
+        VDPWAITC 4              ; add 4c to get 8us minimum
+        sta IO_VDPRAM           ; write char
+        rts
 
 VDP_ReadStatus          ; *** read status register in A - return status in A
         lda #1
