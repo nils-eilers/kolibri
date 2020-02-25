@@ -141,7 +141,7 @@ VDPLPAL lda ,x+                 ; load palette-color to write
         ldd #SCREENTABLE
         VDPWRITEADDRESS         ; set VRAM write address to D = Screentable
         ldw #(ROWS+1)*COLUMNS
-        lda #'#'                ; fill with SPACE
+        lda #' '                ; fill with SPACE
 VDPCLRS jsr VDP_Wait11c         ; loop-write=8c + 11c wait
         VDPWAITC 5              ; add. 5c for 8us
         sta IO_VDPRAM
