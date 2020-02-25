@@ -40,9 +40,9 @@ uint8_t read8(uint16_t addr)
    {
       val = mem[addr];
 #ifdef SEM
-//    if (val >= ' ' && val < 0x7f) wprintw(Deb,"  %c ",val);
-//    else                          waddstr(Deb,"    ");
-//    wprintw(Deb,"%2.2x << [%4.4x]",val,addr);
+      if (val >= ' ' && val < 0x7f) wprintw(Deb,"  %c ",val);
+      else                          waddstr(Deb,"    ");
+      wprintw(Deb,"%2.2x << [%4.4x]",val,addr);
 #else
       if (val >= ' ' && val < 0x7f) printf("  %c ",val);
       else                          printf("    ");
@@ -50,7 +50,6 @@ uint8_t read8(uint16_t addr)
 #endif
       return val;
    }
-   else return mem[addr];
 
    // I/O area FExx
 
@@ -64,10 +63,11 @@ uint8_t read8(uint16_t addr)
 #endif
 
       default:
+          return mem[addr];
          //fprintf(stderr, "read from undefined I/O address $%04X\n", addr);
          //exit(EXIT_FAILURE);
-         sim_error("Warning: read from undefined I/O address $%04X\n", addr);
-         return 0xFF;
+         // sim_error("Warning: read from undefined I/O address $%04X\n", addr);
+         // return 0xFF;
    }
 }
 
@@ -79,9 +79,9 @@ void write8(uint16_t addr, uint8_t val)
    {
       mem[addr] = val;
 #ifdef SEM
-//    if (val >= ' ' && val < 0x7f) wprintw(Deb,"  %c ",val);
-//    else                          waddstr(Deb,"    ");
-//    wprintw(Deb,"%2.2x >> {%4.4x}",val,addr);
+      if (val >= ' ' && val < 0x7f) wprintw(Deb,"  %c ",val);
+      else                          waddstr(Deb,"    ");
+      wprintw(Deb,"%2.2x >> {%4.4x}",val,addr);
 #else
       if (val >= ' ' && val < 0x7f) printf("  %c ",val);
       else                          printf("    ");
@@ -99,7 +99,8 @@ void write8(uint16_t addr, uint8_t val)
    switch (addr) {
       case FT245R:
 #ifdef SEM
-         waddch(Win,val);
+         if (val <= 0x7f) waddch(Win,val);
+         else wprintw(Win,"<%2.2x>",val);
 #else
          putchar(val);
          fflush(stdout);
