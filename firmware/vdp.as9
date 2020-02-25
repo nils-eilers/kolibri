@@ -291,7 +291,7 @@ VDPSCRN lda BIOS_RowBottom      ; bottom row löschen
         lda #' '                ; clear line with SPACE
 VDPSCRC jsr VDP_Wait11c
         VDPWAITC 6              ; 7c + 11c +6c = 8us
-        stb IO_VDPRAM
+        sta IO_VDPRAM
         decb
         bne VDPSCRC
         rts 
