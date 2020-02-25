@@ -3,10 +3,11 @@
 ; VDP_Init                ; *** initialize VDP ***
 ; VDP_On                  ; *** enable screen ***
 ; VDP_Off                 ; *** disable screen ***
+; VDP_SetWindow           ; *** set window to E=TopRow, F=BottomRow
 ; VDP_ClearWindow         ; *** clear window
 ; VDP_SetBGColor          ; *** set background-color from A to register 7 + revers in 12
 ; VDP_SetColor            ; *** set text-color from A to register 7 + revers in 12
-; VDP_ReadChar            ; *** return char at actual cursor position in A
+; VDP_ReadChar            ; *** return at actual cursor position in A
 ; VDP_ReadLine            ; *** store line A in LINEBUF
 ; VDP_PutChar             ; *** puts char from A to screen at actual cursor position and moves cursor
 ; VDP_CursorRight         ; *** Move cursor right
@@ -14,7 +15,7 @@
 ; VDP_CursorDown          ; *** Move cursor down
 ; VDP_CursorUp            ; *** Move cursor up
 ; VDP_ScrollUp            ; *** scroll screen up
-; VDP_SetCursor           ; *** set cursor to A=X, B=Y
+; VDP_SetCursor           ; *** set cursor to E=X, F=Y
 ; VDP_CursorOff           ; *** set cursor attribute byte in color table
 ; VDP_CursorOn            ; *** set cursor attribute bit in color table
 ; VDP_Backspace           ; *** backspace
@@ -141,7 +142,7 @@ VDPLPAL lda ,x+                 ; load palette-color to write
         ldd #SCREENTABLE
         VDPWRITEADDRESS         ; set VRAM write address to D = Screentable
         ldw #(ROWS+1)*COLUMNS
-        lda #' '                ; fill with SPACE
+        lda #'#'                ; fill with SPACE
 VDPCLRS jsr VDP_Wait11c         ; loop-write=8c + 11c wait
         VDPWAITC 5              ; add. 5c for 8us
         sta IO_VDPRAM
@@ -170,6 +171,11 @@ VDP_On                  ; *** enable screen ***
 VDP_Off                 ; *** disable screen ***
         lda #VDPREG1 & $bf      ; set mode reg 1 (M1+M2), bit#6 = 1 enables screen
         VDPSETREG 1
+        rts
+
+VDP_SetWindow           ; *** set window to E=TopRow, F=BottomRow
+        ste BIOS_RowTop
+        stf BIOS_RowBottom
         rts
 
 VDP_ClearWindow         ; *** clear window
@@ -347,8 +353,7 @@ VDP_CursorUp            ; *** Move cursor up
         bsr VDP_CursorOn
 VDPCRSU rts
 
-VDP_SetCursor           ; *** set cursor to A=X, B=Y
-        tfr d,w
+VDP_SetCursor           ; *** set cursor to E=X, F=Y
         bsr VDP_CursorOff
         ste BIOS_CursorX
         stf BIOS_CursorY

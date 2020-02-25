@@ -148,7 +148,7 @@ PUTS_80 RTS
 * VDP Definitions + Subroutines *
 *********************************
 
-        INCLUDE "vdp.as9"
+;        INCLUDE "vdp.as9"
 
 
 ****************************************
