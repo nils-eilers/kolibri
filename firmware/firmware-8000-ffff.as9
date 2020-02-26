@@ -47,7 +47,6 @@ Greet_20
         JSR     VDP_SetBGColor
         LDA     #$0F            ; white
         JSR     VDP_SetColor
-        JSR     VDP_ClearWindow
 
         LDX     #BOOTPRM
 GRTLP2  LDA     ,X+
