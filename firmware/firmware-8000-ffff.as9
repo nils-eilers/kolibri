@@ -140,7 +140,7 @@ VO_10   CMPA    #' '
         JMP     VDP_PutChar   ; printable
 
 VO_20   ASLA
-        LDX     #VDP_TAB
+        LDX     #VDP_TABLE
         JMP     [A,X]         ; VDP control
 
 *******

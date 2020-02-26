@@ -574,9 +574,9 @@ VDPPALETTEDATA ; ***** Color Palette - 16 colors, 2 byte/color RB, 0G each 3bit 
         FCB $73,$03,$77,$03,$73,$07,$77,$07 ;   c=lightred  d=ltmagenta e=yellow      f=white
 VDPPALETTEDATAEND
 
-*******
-VDP_TAB
-*******
+*********
+VDP_TABLE
+*********
 
         FDB VDP_Delete      ;NUL      = $00 ; Ctrl @  DEL
         FDB VDP_Ignore      ;PAG_UP   = $01 ; Ctrl A  Page Up
