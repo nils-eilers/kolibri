@@ -572,7 +572,7 @@ VDP_TAB
         FDB VDP_Ignore      ;REVERSE  = $15 ; Ctrl U  Reverse FG/BG
         FDB VDP_Ignore      ;TOG_INS  = $16 ; Ctrl V  Toggle Insert    (WS)
         FDB VDP_Ignore      ;SCR_DWN  = $17 ; Ctrl W  Scroll Down      (WS)
-        FDB VDP_Ignore      ;CUR_DWN  = $18 ; Ctrl X  Cursor Down      (WS)
+        FDB VDP_CursorDown  ;CUR_DWN  = $18 ; Ctrl X  Cursor Down      (WS)
         FDB VDP_Ignore      ;DEL_ROW  = $19 ; Ctrl Y  Delete Row       (WS)
         FDB VDP_ScrollUp    ;SCR_UP   = $1A ; Ctrl-Z  Scroll Up        (WS)
         FDB VDP_Ignore      ;ESC      = $1B ; ESCAPE                   (ASCII)
