@@ -122,7 +122,26 @@ To_Upper
         EORA    #$20
 TU_80   RTS
 
+*******
+VDP_Out
+*******
 
+*************************************************
+* Output a byte to the VDP or call VDP function *
+* --------------------------------------------- *
+* Input : A = character or control code (00-1F) *
+*************************************************
+
+        CMPA    #DEL          ; delete char right
+        BNE     VO_10
+        CLRA                  ; map DEL to NULL
+VO_10   CMPA    #' '
+        BLO     VO_20         ; -> control code
+        JMP     VDP_PutChar   ; printable
+
+VO_20   ASLA
+        LDX     #VDP_TAB
+        JMP     [A,X]         ; VDP control
 
 *******
 USB_Out
