@@ -23,17 +23,41 @@ Do_Reset                        ; cold start machine
                                 ; FIRQ-handling as on the 6809
 
 
+*****
+Greet
+*****
+
 ; No high level code here, the output shall work even with broken RAM chip
-        LDX     #BOOTPROMPT
-PROMPT  LDA     ,X+
-        BEQ     PROMPT80
+; Write greeter to USB virtual COM port
+        LDX     #FT245PR
+GRTLP   LDA     ,X+
+        BEQ     Greet_20
 ; TODO: check if chip is ready
         STA     IO_FT245R
-        BRA     PROMPT
-BOOTPROMPT FCC "\r\n\r\nkolibri.computer\r\n\0"
-PROMPT80
+        BRA     GRTLP
+
+FT245PR FCC "\r\n\r\n"
+BOOTPRM FCC "kolibri.computer BIOS 2020-02-26\n\0"
+Greet_20
+
+; Write greeter to V9958 screen
+        JSR     VDP_Init
+        JSR     VDP_On
+        LDA     #$01            ; blue
+        JSR     VDP_SetBGColor
+        LDA     #$0F            ; white
+        JSR     VDP_SetColor
+        JSR     VDP_ClearWindow
+
+        LDX     #BOOTPRM
+GRTLP2  LDA     ,X+
+        BEQ     Greet_80
+        JSR     VDP_PutChar
+        BRA     GRTLP2
+Greet_80
 
 
+; Further machine initialization
         JSR     Init_Vectors
 
 *****************************
@@ -71,8 +95,13 @@ Init_Vectors
         RTS
 
 
-        INCLUDE "monitor.as9"
-        INCLUDE "edit.as9"
+**********************************
+* Include library of subroutines *
+**********************************
+
+        INCLUDE "vdp.as9"       ; VDP Definitions + Subroutines
+        INCLUDE "monitor.as9"   ; Machine Language Monitor
+        INCLUDE "edit.as9"      ; Screen editor
 
 
 ********
@@ -142,13 +171,6 @@ Do_PUTS
         JSR     [VECTBL+PUTC*2]
         BRA     Do_PUTS
 PUTS_80 RTS
-
-
-*********************************
-* VDP Definitions + Subroutines *
-*********************************
-
-;        INCLUDE "vdp.as9"
 
 
 ****************************************
