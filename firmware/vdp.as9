@@ -10,15 +10,18 @@
 ; VDP_ReadChar            ; *** return char at actual cursor position in A
 ; VDP_ReadLine            ; *** store line A in LINEBUF
 ; VDP_PutChar             ; *** puts char from A to screen at actual cursor position and moves cursor
-; VDP_CursorRight         ; *** Move cursor right
-; VDP_CursorLeft          ; *** Move cursor left
-; VDP_CursorDown          ; *** Move cursor down
-; VDP_CursorUp            ; *** Move cursor up
+; VDP_CursorRight         ; *** move cursor right
+; VDP_CursorLeft          ; *** move cursor left
+; VDP_CursorDown          ; *** move cursor down
+; VDP_CursorUp            ; *** move cursor up
 ; VDP_ScrollUp            ; *** scroll screen up
-; VDP_SetCursor           ; *** set cursor to E=X, F=Y
-; VDP_GetCursor           ; *** get cursor to E=X, F=Y
+; VDP_SetCursor           ; *** set cursor to E=X, F=Y (E/F untouched)
+; VDP_GetCursor           ; *** get cursor to E=X, F=Y (E/F untouched)
 ; VDP_CursorOff           ; *** set cursor attribute byte in color table
 ; VDP_CursorOn            ; *** set cursor attribute bit in color table
+; VDP_CR                  ; *** carriage return - moves cursor to column 0
+; VDP_LF                  ; *** line feed - cursor down + CR
+; VDP_TAB                 ; *** moves cursor to next tab (columns AND $f8 = 0)
 ; VDP_Backspace           ; *** backspace
 ; VDP_Delete              ; *** delete character
 ; VDP_Insert              ; *** insert SPACE
@@ -143,7 +146,7 @@ VDPLPAL lda ,x+                 ; load palette-color to write
         ldd #SCREENTABLE
         VDPWRITEADDRESS         ; set VRAM write address to D = Screentable
         ldw #(ROWS+1)*COLUMNS
-        lda #'#'                ; fill with SPACE
+        lda #' '                ; fill with SPACE
 VDPCLRS jsr VDP_Wait11c         ; loop-write=8c + 11c wait
         VDPWAITC 5              ; add. 5c for 8us
         sta IO_VDPRAM
@@ -271,8 +274,8 @@ VDPSCRS jsr VDP_Wait11c
         lda IO_VDPRAM           ; load from VRAM
         sta ,y+                 ; write to buffer
         decb
-        bne VDPSCRS             ; end of line?
-        tfr x,d                 ; move stored target address to D
+        bne VDPSCRS             ; end of line? 
+        tfr x,d                 ; move stored target address to D    
         VDPWRITEADDRESS
         ldy #LINEBUF            ; load buffer address in Y
         ldb BIOS_Columns        ; load columns in x-counter
@@ -301,10 +304,10 @@ VDPSCRC jsr VDP_Wait11c
         sta IO_VDPRAM
         decb
         bne VDPSCRC
-        rts
+        rts 
 
 VDP_PutChar             ; *** puts char from A to screen at actual cursor position and moves cursor
-        tfr a,e                 ; safe char in E
+        tfr a,e                 ; safe char in E 
         lda BIOS_CursorY        ; load cursor line
         ldb BIOS_Columns        ; load columns
         mul                     ; calc line position
@@ -314,7 +317,7 @@ VDP_PutChar             ; *** puts char from A to screen at actual cursor positi
         jsr VDP_Wait11c
         VDPWAITC 5              ; add 5c to get 8us
         ste IO_VDPRAM
-VDP_CursorRight         ; *** Move cursor right
+VDP_CursorRight         ; *** move cursor right
         bsr VDP_CursorOff
         lda BIOS_CursorX
         inca                    ; move right
@@ -325,14 +328,14 @@ VDP_CursorRight         ; *** Move cursor right
         bne VDPCRRS             ; no scroll neccessary
         jsr VDP_ScrollUp
         bra VDPCRRE
-VDPCRRS inca
+VDPCRRS inca 
         sta BIOS_CursorY
 VDPCRRE clra
 VDPCRSR sta BIOS_CursorX
         bsr VDP_CursorOn
         rts
 
-VDP_CursorDown          ; *** Move cursor down
+VDP_CursorDown          ; *** move cursor down
         lda BIOS_CursorY
         cmpa BIOS_RowBottom     ; reached window bottom row ?
         bne VDPCRSD
@@ -344,7 +347,7 @@ VDPCRSD bsr VDP_CursorOff
         bsr VDP_CursorOn
         rts
 
-VDP_CursorUp            ; *** Move cursor up
+VDP_CursorUp            ; *** move cursor up
         lda BIOS_CursorY
         cmpa BIOS_RowTop        ; reached window top row ?
         beq VDPCRSU
@@ -354,14 +357,14 @@ VDP_CursorUp            ; *** Move cursor up
         bsr VDP_CursorOn
 VDPCRSU rts
 
-VDP_SetCursor           ; *** set cursor to E=X, F=Y
+VDP_SetCursor           ; *** set cursor to E=X, F=Y (E/F untouched)
         bsr VDP_CursorOff
         ste BIOS_CursorX
         stf BIOS_CursorY
         bsr VDP_CursorOn
         rts
 
-VDP_GetCursor           ; *** get cursor to E=X, F=Y
+VDP_GetCursor           ; *** get cursor to E=X, F=Y (E/F untouched)
         lde BIOS_CursorX
         ldf BIOS_CursorY
         rts
@@ -386,13 +389,13 @@ VDP_CursorOn            ; *** set cursor attribute bit in color table
         ldb BIOS_Columns        ; load columns
         mul                     ; calc line position
         ADDD8 BIOS_CursorX      ; add Cursor column to D
-        tfr b,e                 ; safe low byte of screen position in E
+        pshu b                  ; safe low byte of screen position on stack
         lsrd                    ; divide by 8 to calc color/attribute-table position
         lsrd
         lsrd
         addd #COLORTABLE        ; add VRAM position
         VDPWRITEADDRESS         ; set VRAM write address to D = Colortable
-        tfr e,b                 ; restore low byte
+        pulu b                  ; restore low byte
         andb #$07               ; isolate byte position
         clra
         tfr d,x
@@ -402,8 +405,26 @@ VDP_CursorOn            ; *** set cursor attribute bit in color table
         rts
 REVERSETABLE    FCB $80,$40,$20,$10,$08,$04,$02,$01
 
-VDP_CursorLeft          ; *** Move cursor left
+VDP_CR                  ; *** carriage return - moves cursor to column 0
         bsr VDP_CursorOff
+VDPCR   lda #0
+VDPCRT  sta BIOS_CursorX
+        bsr VDP_CursorOn
+        rts
+
+VDP_LF                  ; *** line feed - cursor down + CR
+        bsr VDP_CursorOff
+VDPLF   lda BIOS_CursorY
+        cmpa BIOS_RowBottom     ; reached window bottom row ?
+        bne VDPLFNS
+        jsr VDP_ScrollUp        ; scroll up
+        bra VDPCR
+VDPLFNS inca
+        sta BIOS_CursorY        ; move down
+        bra VDPCR               ; jump to CR
+
+VDP_CursorLeft          ; *** move cursor left
+        jsr VDP_CursorOff
         lda BIOS_CursorX
         bne VDPCRSL             ; not column 0 ?
         lda BIOS_CursorY
@@ -417,10 +438,19 @@ VDPCRSL deca                    ; move left
 VDPCRLE bsr VDP_CursorOn
         rts
 
-VDP_Backspace              ; *** backspace
+VDP_TAB                 ; *** moves cursor to next tab (columns AND $f8 = 0)
+        jsr VDP_CursorOff
+        lda BIOS_CursorX
+        adda #8                 ; add 8 columns
+        anda #$f8               ; clear bits 0-2 to set on tab position
+        cmpa BIOS_Columns       ; check if beyond line end?
+        bcs VDPCRT              ; column is lower then columns
+        bra VDPLF               ; jump to line feed
+
+VDP_Backspace           ; *** backspace
         bsr VDP_CursorLeft
         lda BIOS_CursorY
-        cmpa BIOS_RowTop        ; check if window top row
+        cmpa BIOS_RowTop        ; check if window top row    
         bne VDP_Delete
         lda BIOS_CursorX        ; check if first char in window
         bne VDP_Delete
@@ -463,7 +493,7 @@ VDPDELS lda #' '                ; fill last char in line with SPACE
         sta IO_VDPRAM           ; write char
         rts
 VDPDELN VDPWRITEADDRESS
-        bra VDPDELS             ; clear last char in line
+        bra VDPDELS             ; clear last char in line   
 
 VDP_Insert              ; *** insert character
         lda BIOS_CursorY        ; load cursor line
