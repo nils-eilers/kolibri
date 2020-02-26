@@ -16,7 +16,7 @@ PUTS            = $02
 
 BIOS_DP = $00                   ; BIOS Direct Page
 
-      & = BIOS_DP               ; set BSS counter
+      & = BIOS_DP << 8          ; set BSS counter
 
 BIOS_ADR        BSS 2           ; JSR vector for SWI
 BIOS_CursorX    BSS 1

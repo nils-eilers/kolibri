@@ -225,8 +225,9 @@ DO_SWI
         TFR     A,DP            ; set DP
         SETDP   BIOS_DP         ; inform assembler
         LDX     #VECTBL         ; switch table
-        ABX                     ; X = table + function number
-        LDD     B,X             ; D = function address [X+B+B]
+        ABX
+        ABX                     ; X += 2 * BL
+        LDD     ,X              ; D = function address [X+B+B]
         STD     BIOS_ADR        ; store function address
         LDD     1,S             ; restore D from stack
         LDX     6,S             ; restore X from stack
