@@ -274,8 +274,8 @@ VDPSCRS jsr VDP_Wait11c
         lda IO_VDPRAM           ; load from VRAM
         sta ,y+                 ; write to buffer
         decb
-        bne VDPSCRS             ; end of line? 
-        tfr x,d                 ; move stored target address to D    
+        bne VDPSCRS             ; end of line?
+        tfr x,d                 ; move stored target address to D
         VDPWRITEADDRESS
         ldy #LINEBUF            ; load buffer address in Y
         ldb BIOS_Columns        ; load columns in x-counter
@@ -304,10 +304,10 @@ VDPSCRC jsr VDP_Wait11c
         sta IO_VDPRAM
         decb
         bne VDPSCRC
-        rts 
+        rts
 
 VDP_PutChar             ; *** puts char from A to screen at actual cursor position and moves cursor
-        tfr a,e                 ; safe char in E 
+        tfr a,e                 ; safe char in E
         lda BIOS_CursorY        ; load cursor line
         ldb BIOS_Columns        ; load columns
         mul                     ; calc line position
@@ -328,7 +328,7 @@ VDP_CursorRight         ; *** move cursor right
         bne VDPCRRS             ; no scroll neccessary
         jsr VDP_ScrollUp
         bra VDPCRRE
-VDPCRRS inca 
+VDPCRRS inca
         sta BIOS_CursorY
 VDPCRRE clra
 VDPCRSR sta BIOS_CursorX
@@ -450,7 +450,7 @@ VDP_TAB                 ; *** moves cursor to next tab (columns AND $f8 = 0)
 VDP_Backspace           ; *** backspace
         bsr VDP_CursorLeft
         lda BIOS_CursorY
-        cmpa BIOS_RowTop        ; check if window top row    
+        cmpa BIOS_RowTop        ; check if window top row
         bne VDP_Delete
         lda BIOS_CursorX        ; check if first char in window
         bne VDP_Delete
@@ -493,7 +493,7 @@ VDPDELS lda #' '                ; fill last char in line with SPACE
         sta IO_VDPRAM           ; write char
         rts
 VDPDELN VDPWRITEADDRESS
-        bra VDPDELS             ; clear last char in line   
+        bra VDPDELS             ; clear last char in line
 
 VDP_Insert              ; *** insert character
         lda BIOS_CursorY        ; load cursor line
@@ -581,21 +581,21 @@ VDP_TABLE
         FDB VDP_Delete      ;NUL      = $00 ; Ctrl @  DEL
         FDB VDP_Ignore      ;PAG_UP   = $01 ; Ctrl A  Page Up
         FDB VDP_Ignore      ;PAG_DWN  = $02 ; Ctrl B  Page Down
-        FDB VDP_ReadStatus  ;BREAK    = $03 ; Ctrl C  Read Status
+        FDB VDP_Ignore      ;BREAK    = $03 ; Ctrl C
         FDB VDP_CursorRight ;CUR_RIG  = $04 ; Ctrl D  Cursor Right     (WS)
         FDB VDP_CursorUp    ;CUR_UP   = $05 ; Ctrl E  Cursor Up        (WS)
         FDB VDP_Ignore      ;ERA_EOL  = $06 ; CTRL F  Erase To EOL
         FDB VDP_Ignore      ;BEL      = $07 ; Ctrl G  Bell             (ASCII)
         FDB VDP_Backspace   ;BS       = $08 ; Ctrl H  Backspace        (ASCII)
-        FDB VDP_Ignore      ;HT       = $09 ; Ctrl I  Tab              (ASCII)
-        FDB VDP_Ignore      ;LF       = $0A ; Ctrl J  Line Feed        (ASCII)
+        FDB VDP_TAB         ;HT       = $09 ; Ctrl I  Tab              (ASCII)
+        FDB VDP_LF          ;LF       = $0A ; Ctrl J  Line Feed        (ASCII)
         FDB VDP_ClearWindow ;CLEAR    = $0B ; Ctrl K  Window Clear
         FDB VDP_Ignore      ;HOME     = $0C ; Ctrl L  Window Home
-        FDB VDP_Ignore      ;CR       = $0D ; Ctrl M  Return           (ASCII)
+        FDB VDP_CR          ;CR       = $0D ; Ctrl M  Return           (ASCII)
         FDB VDP_Ignore      ;INS_ROW  = $0E ; Ctrl N  Insert Row       (WS)
-        FDB VDP_Ignore      ;CUR_LM   = $0F ; Ctrl O  Cursor Left Margin
+        FDB VDP_Insert      ;INS_SPA  = $0F ; Ctrl O  Insert Space
         FDB VDP_SetWindow   ;SET_WIN  = $10 ; Ctrl P  Set Window
-        FDB VDP_GetCursor   ;GET_CUR  = $11 ; Ctrl Q  Get Cursor
+        FDB VDP_Ignore      ;         = $11 ; Ctrl Q
         FDB VDP_SetCursor   ;SET_CUR  = $12 ; Ctrl R  Set Cursor
         FDB VDP_CursorLeft  ;CUR_LEF  = $13 ; Ctrl S  Cursor Left      (WS)
         FDB VDP_Ignore      ;TOG_STA  = $14 ; Ctrl T  Toggle Status Row
@@ -606,10 +606,10 @@ VDP_TABLE
         FDB VDP_Ignore      ;DEL_ROW  = $19 ; Ctrl Y  Delete Row       (WS)
         FDB VDP_ScrollUp    ;SCR_UP   = $1A ; Ctrl-Z  Scroll Up        (WS)
         FDB VDP_Ignore      ;ESC      = $1B ; ESCAPE                   (ASCII)
-        FDB VDP_Ignore      ;FS       = $1C ;         -
-        FDB VDP_Ignore      ;GS       = $1D ;         -
-        FDB VDP_Ignore      ;RS       = $1E ;         -
-        FDB VDP_Ignore      ;US       = $1F ;         -
+        FDB VDP_SetColor    ;FS       = $1C ;         Foreground Color
+        FDB VDP_SetBGColor  ;GS       = $1D ;         Background Color
+        FDB VDP_CursorOn    ;RS       = $1E ;         Show Cursor
+        FDB VDP_CursorOff   ;US       = $1F ;         Hide Cursor
 
 **********
 VDP_Ignore
