@@ -19,6 +19,7 @@ BIOS_DP = $00                   ; BIOS Direct Page
       & = BIOS_DP << 8          ; set BSS counter
 
 BIOS_ADR        BSS 2           ; JSR vector for SWI
+BIOS_EMU_Flag   BSS 1           ; 1 = EMU active
 BIOS_CursorX    BSS 1
 BIOS_CursorY    BSS 1
 BIOS_Color      BSS 1
