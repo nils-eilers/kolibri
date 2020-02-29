@@ -58,6 +58,8 @@ uint8_t read8(uint16_t addr)
 #ifdef SEM
          touchwin(Win);
          return wgetch(Win);
+      case 0xFEFF:
+         return 0xAA; // tell kolibri, that emu is running
 #else
          return getchar();
 #endif

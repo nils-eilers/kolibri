@@ -21,7 +21,13 @@ Do_Reset                        ; cold start machine
         LDU     #USERSTACK
         LDMD    #$01            ; Switch to 6309 native mode,
                                 ; FIRQ-handling as on the 6809
-
+        CLR     BIOS_EMU_Flag
+        LDA     #$55
+        STA     $FEFF
+        LDA     $FEFF
+        CMPA    #$aa
+        BNE     Greet
+        INC     BIOS_EMU_Flag   ; don't use VDP
 
 *****
 Greet
