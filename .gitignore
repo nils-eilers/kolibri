@@ -9,3 +9,13 @@
 *.pdf
 emu/kolibri
 firmware/tools/char2asm
+*.vcd
+*.vvp
+cpld/db
+cpld/incremental_db
+cpld/simulation
+cpld/output_files/*.rpt
+cpld/output_files/*.cdf
+cpld/output_files/*.done
+cpld/output_files/*.summary
+cpld/output_files/*.jdi
