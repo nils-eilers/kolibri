@@ -19,11 +19,11 @@ kolibri.bin: firmware-8000-ffff.bin empty-16k-page.bin
 	cat \
 	empty-16k-page.bin \
 	empty-16k-page.bin \
-	empty-16k-page.bin \
-	empty-16k-page.bin \
-	empty-16k-page.bin \
-	empty-16k-page.bin \
 	firmware-8000-ffff.bin \
+	empty-16k-page.bin \
+	empty-16k-page.bin \
+	empty-16k-page.bin \
+	empty-16k-page.bin \
 	> $@
 
 # Upload firmware to EPROM emulator
