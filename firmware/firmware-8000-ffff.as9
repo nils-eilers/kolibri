@@ -43,7 +43,7 @@ GRTLP   LDA     ,X+
         BRA     GRTLP
 
 FT245PR FCC "\r\n\r\n"
-BOOTPRM FCC "kolibri.computer BIOS 2020-02-26\n\0"
+BOOTPRM FCC "kolibri.computer BIOS 2020-03-06\n\0"
 Greet_20
 
 ; Write greeter to V9958 screen
@@ -57,7 +57,9 @@ Greet_20
         LDX     #BOOTPRM
 GRTLP2  LDA     ,X+
         BEQ     Greet_80
-        JSR     VDP_PutChar
+        PSHS    X
+        JSR     VDP_Out
+        PULS    X
         BRA     GRTLP2
 Greet_80
 
@@ -174,9 +176,14 @@ USB_In
 * Output: A: read character            *
 ****************************************
 
+        LDA     IO_INPORT       ; Data available?
+        BITA    #IO_INRXF       ; /RXF: 0=data available
+        BNE     UI_90           ; branch if no data
         LDA     IO_FT245R
-        STA     SOFF_A,S        ; Return character in stacked A
+UI_80   STA     SOFF_A,S        ; Return character in stacked A
         RTS
+UI_90   CLRA
+        BRA UI_80
 
 
 *******
