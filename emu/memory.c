@@ -76,6 +76,7 @@ uint8_t read8(uint16_t addr)
 
 void write8(uint16_t addr, uint8_t val)
 {
+#ifdef LOG_VDP
    if ((addr >= 0xFE00 && addr < 0xFE2C) ||  // VDP area
        (addr >= 0x4000 && addr < 0x4004))    // VDP test
    {
@@ -91,6 +92,7 @@ void write8(uint16_t addr, uint8_t val)
 #endif
       return;
    }
+#endif
 
    if (addr < 0x8000) {
       mem[addr] = val;
@@ -101,6 +103,7 @@ void write8(uint16_t addr, uint8_t val)
    switch (addr) {
       case FT245R:
 #ifdef SEM
+         if (!val) return;
          if (val <= 0x7f) waddch(Win,val);
          else wprintw(Win,"<%2.2x>",val);
 #else

@@ -176,10 +176,12 @@ USB_In
 * Output: A: read character            *
 ****************************************
 
+        TST     BIOS_EMU_Flag
+        BNE     UI_70           ; -> emu active
         LDA     IO_INPORT       ; Data available?
         BITA    #IO_INRXF       ; /RXF: 0=data available
         BNE     UI_90           ; branch if no data
-        LDA     IO_FT245R
+UI_70   LDA     IO_FT245R
 UI_80   STA     SOFF_A,S        ; Return character in stacked A
         RTS
 UI_90   CLRA
