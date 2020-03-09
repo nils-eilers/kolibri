@@ -182,6 +182,7 @@ int load_program(uint16_t addr, char *filename)
    FILE *in;
    size_t size;
    uint16_t load_address;
+   uint8_t labytes[2];
 
    if ((in = fopen(filename, "rb")) == NULL)
    {
@@ -192,7 +193,8 @@ int load_program(uint16_t addr, char *filename)
    fseek(in,0,SEEK_END);
    size = ftell(in) - sizeof(load_address);
    rewind(in);
-   fread(&load_address,sizeof(load_address),1,in);
+   fread(labytes,1,2,in); // big endian (6309)
+   load_address = (labytes[0] << 8) | labytes[1];
    if (addr) load_address = addr; // overwrite
    fread(&mem[addr], size, 1, in);
    if (ferror(in))
