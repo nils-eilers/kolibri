@@ -148,22 +148,67 @@ uint32_t read32(uint16_t addr)
 int load_rom(uint16_t addr, char *filename)
 {
    FILE *in;
+   size_t size;
 
-   if ((in = fopen(filename, "rb")) == NULL) {
+   if ((in = fopen(filename, "rb")) == NULL)
+   {
       fprintf(stderr, "Can't read ROM file '%s': %s\n", filename, strerror(errno));
       exit(EXIT_FAILURE);
    }
-   /* size_t size = */ fread(&mem[addr], 1, 65536 - addr, in);
-   if (ferror(in)) {
+   fseek(in,0,SEEK_END);
+   size = ftell(in);
+   rewind(in);
+   fread(&mem[addr], size, 1, in);
+   if (ferror(in))
+   {
       fprintf(stderr, "Error reading '%s'\n", filename);
       exit(EXIT_FAILURE);
    }
    fclose(in);
 #ifdef SEM
-   wprintw(Deb,"Loaded ROM file '%s' to address $%04X.\n", filename, addr);
+   wprintw(Deb,"Loaded ROM file '%s' to $%4.4X - $%4.4X\n",
+           filename, addr, addr+size-1);
    wrefresh(Deb);
 #else
-   printf("Loaded ROM file '%s' to address $%04X.\n", filename, addr);
+   printf(Deb,"Loaded ROM file '%s' to $%4.4X - $%4.4X\n",
+           filename, addr, addr+size-1);
 #endif
    return 0;
 }
+
+
+int load_program(uint16_t addr, char *filename)
+{
+   FILE *in;
+   size_t size;
+   uint16_t load_address;
+
+   if ((in = fopen(filename, "rb")) == NULL)
+   {
+      fprintf(stderr, "Can't read program file '%s': %s\n",
+              filename, strerror(errno));
+      exit(EXIT_FAILURE);
+   }
+   fseek(in,0,SEEK_END);
+   size = ftell(in) - sizeof(load_address);
+   rewind(in);
+   fread(&load_address,sizeof(load_address),1,in);
+   if (addr) load_address = addr; // overwrite
+   fread(&mem[addr], size, 1, in);
+   if (ferror(in))
+   {
+      fprintf(stderr, "Error loading '%s'\n", filename);
+      exit(EXIT_FAILURE);
+   }
+   fclose(in);
+#ifdef SEM
+   wprintw(Deb,"Loaded program '%s' to $%4.4X - $%4.4X\n",
+           filename, addr, addr+size-1);
+   wrefresh(Deb);
+#else
+   printf(Deb,"Loaded program '%s' to $%4.4X - $%4.4X\n",
+           filename, addr, addr+size-1);
+#endif
+   return 0;
+}
+
