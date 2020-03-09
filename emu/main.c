@@ -9,6 +9,7 @@
 #include "kbhit.h"
 
 static bool load_rom_given = false;
+char *lopt = NULL; // pointer to program name to load
 
 void die(char *errmsg)
 {
@@ -47,23 +48,25 @@ void process_args(int argc, char *argv[])
             exit(EXIT_FAILURE);
          }
          // Everything below this line is an option
-         if (strlen(argv[i]) == 1) {
+         if (strlen(argv[i]) < 2) {
             fprintf(stderr, "Illegal empty option\n");
             exit(EXIT_FAILURE);
          }
 
-         for (size_t j = 1; j < strlen(argv[i]); j++) {
-            switch (argv[i][j]) {
-               case 'h':
-               case '?':
-                  printf("Usage:\n\n   -h\tThis help text\n\n"
-                         "   --load-rom <address> <filename>\t\tLoads a binary ROM image\n");
-                  exit(EXIT_SUCCESS);
+         switch (argv[i][1]) {
+            case 'p': lopt = argv[i] + 2;
+                      while (*lopt == ' ') ++lopt;
+                      break;
+            case 'h':
+               printf("Usage: emu [-h][--load-rom firmware][-p program]\n\n");
+               printf("   -h\tThis help text\n"
+                      "   --load-rom <address> <filename>\tloads a binary ROM image\n");
+               printf("   -p <filename>\tloads a program after firmware loading\n");
+               exit(EXIT_SUCCESS);
 
-               default:
-                  fprintf(stderr, "Error: Unknown option %s\n", argv[i]);
-                  exit(EXIT_FAILURE);
-            }
+            default:
+               fprintf(stderr, "Error: Unknown option %s\n", argv[i]);
+               exit(EXIT_FAILURE);
          }
       }
    }
@@ -101,6 +104,7 @@ int main(int argc, char *argv[])
 
    (void) _kbhit(); // Init terminal on Linux
    if (!load_rom_given) load_rom(0x8000, "firmware.bin");
+   if (lopt) load_program(0,lopt);
    cpu6809_reset();
    h6809_mainloop();
 }

@@ -11,4 +11,5 @@ void write8(uint16_t addr, uint8_t val);
 
 void mem_init(int c);
 int load_rom(uint16_t addr, char *filename);
+int load_program(uint16_t addr, char *filename);
 void coredump(void);
