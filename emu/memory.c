@@ -196,7 +196,7 @@ int load_program(uint16_t addr, char *filename)
    fread(labytes,1,2,in); // big endian (6309)
    load_address = (labytes[0] << 8) | labytes[1];
    if (addr) load_address = addr; // overwrite
-   fread(&mem[addr], size, 1, in);
+   fread(&mem[load_address], size, 1, in);
    if (ferror(in))
    {
       fprintf(stderr, "Error loading '%s'\n", filename);
@@ -205,11 +205,11 @@ int load_program(uint16_t addr, char *filename)
    fclose(in);
 #ifdef SEM
    wprintw(Deb,"Loaded program '%s' to $%4.4X - $%4.4X\n",
-           filename, addr, addr+size-1);
+           filename, load_address, load_address+size-1);
    wrefresh(Deb);
 #else
    printf(Deb,"Loaded program '%s' to $%4.4X - $%4.4X\n",
-           filename, addr, addr+size-1);
+           filename, load_address, load_address+size-1);
 #endif
    return 0;
 }
