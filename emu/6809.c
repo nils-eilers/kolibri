@@ -594,6 +594,10 @@ static uint16_t get_reg(uint8_t nro)
             val = (DP >> 8) & 0xffff;
             break;
 #ifdef H6309
+        case 12:
+        case 13:
+            val = 0;
+            break;
         case 14:
             val = E & 0xffff;
             break;
@@ -647,6 +651,9 @@ static void set_reg(uint8_t nro, uint16_t val)
             DP = (val & 0xff) << 8;
             break;
 #ifdef H6309
+        case 12:
+        case 13:
+            break;
         case 14:
             E = val & 0xff;
             break;
@@ -971,12 +978,18 @@ static void tfr(void)
 {
     uint16_t tmp1 = 0xff;
     uint8_t post = imm_byte();
+    uint8_t r0,r1;
 
-    if (((post ^ (post << 4)) & 0x80) == 0) {
-        tmp1 = get_reg ((uint8_t)(post >> 4));
+    r0 = post >> 4;
+    r1 = post & 15;
+
+    if (r0 == 12 || r0 == 13) tmp1 = 0;
+    else if (((post ^ (post << 4)) & 0x80) == 0)
+    {
+        tmp1 = get_reg(r0);
     }
 
-    set_reg((uint8_t)(post & 15), tmp1);
+    set_reg(r1, tmp1);
 
     CLK_ADD(4, 2);
 }
@@ -2093,9 +2106,15 @@ static int tfm_reg_type(uint8_t rnr)
         case 0x2:
         case 0x3:
         case 0x4:
+#ifdef H6309
+        case 0xd:
+#endif
             return 2;
         case 0x8:
         case 0x9:
+#ifdef H6309
+        case 0xc:
+#endif
         case 0xe:
         case 0xf:
             return 1;
@@ -2120,6 +2139,10 @@ static uint16_t tfm_get_reg(uint8_t rnr)
             return (uint16_t)A;
         case 0x9:
             return (uint16_t)B;
+        case 0xc:
+            return 0;
+        case 0xd:
+            return 0;
         case 0xe:
             return (uint16_t)E;
         case 0xf:
