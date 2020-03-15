@@ -526,26 +526,27 @@ VDP_SetCursorHeigh      ; *** set cursor heigh to A lines
         rts
 
 VDP_CursorDown          ; *** move cursor down
+        bsr VDP_CursorOff
         lda BIOS_CursorY
         cmpa BIOS_RowBottom     ; reached window bottom row ?
-        bne VDPCRSD
+        bne VDPCRDD
         jsr VDP_ScrollUp        ; scroll up
-        rts
-VDPCRSD bsr VDP_CursorOff
+        bra VDPCRDS
+VDPCRDD lda BIOS_CursorY
         inca
         sta BIOS_CursorY        ; move down
-        bsr VDP_CursorOn
+VDPCRDS bsr VDP_CursorOn
         rts
 
 VDP_CursorUp            ; *** move cursor up
+        bsr VDP_CursorOff
         lda BIOS_CursorY
         cmpa BIOS_RowTop        ; reached window top row ?
         beq VDPCRSU
-        bsr VDP_CursorOff
         deca
         sta BIOS_CursorY        ; move up
-        bsr VDP_CursorOn
-VDPCRSU rts
+VDPCRSU bsr VDP_CursorOn
+        rts
 
 VDP_SetCursor           ; *** set cursor to E=X, F=Y
         bsr VDP_CursorOff
