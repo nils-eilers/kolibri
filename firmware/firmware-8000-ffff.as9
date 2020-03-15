@@ -50,10 +50,15 @@ Greet_20
         JSR     VDP_Init
         JSR     VDP_On
         LDA     #$01            ; blue
-        JSR     VDP_SetBGColor
+        JSR     VDP_BGColor1
         LDA     #$0F            ; white
-        JSR     VDP_SetColor
+        JSR     VDP_Color1
+        LDA     #$01            ; blue
+        JSR     VDP_BGColor2
+        LDA     #$0C            ; lightred
+        JSR     VDP_Color2
 
+        jsr     VDP_PutColor2
         LDX     #BOOTPRM
 GRTLP2  LDA     ,X+
         BEQ     Greet_80
@@ -62,6 +67,13 @@ GRTLP2  LDA     ,X+
         PULS    X
         BRA     GRTLP2
 Greet_80
+
+;        clra 
+;LOOPASC pshu A
+;        jsr VDP_PutChar
+;        pulu A
+;        inca 
+;        bra LOOPASC
 
 
 ; Further machine initialization
