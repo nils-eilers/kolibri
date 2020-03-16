@@ -71,6 +71,7 @@ Greet_80
 
 ; Further machine initialization
         JSR     Init_Vectors
+        CALL    FLUSH
 
 *****************************
 * Little emulator test/demo *
@@ -227,6 +228,26 @@ Do_PUTS
 PUTS_80 RTS
 
 
+********
+Do_Flush
+********
+
+*************************************
+* Flush all buffers including stdin *
+*************************************
+
+        TST     BIOS_EMU_Flag
+        BNE     DFL_20          ; -> emu active
+DFL_10  LDA     IO_INPORT       ; data from USB serial port available?
+        BITA    #IO_INRXF
+        BNE     DFL_20          ; branch if no data available
+        LDA     IO_FT245R       ; read available data
+        BRA     DFL_10
+DFL_20  CLRA                    ; Clear text buffer
+        STA     BUF_TXT
+        RTS
+
+
 ****************************************
 * Default values for vectored routines *
 ****************************************
@@ -235,6 +256,7 @@ VECT_ROMTBL
         FDB     USB_Out         ; STDOUT
         FDB     USB_In          ; STDIN
         FDB     Do_PUTS
+        FDB     Do_Flush
 VECT_ROMTBL_END
 
         IF ((VECT_ROMTBL_END - VECT_ROMTBL) >> 1) > 255
