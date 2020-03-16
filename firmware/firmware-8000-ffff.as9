@@ -68,13 +68,6 @@ GRTLP2  LDA     ,X+
         BRA     GRTLP2
 Greet_80
 
-;        clra 
-;LOOPASC pshu A
-;        jsr VDP_PutChar
-;        pulu A
-;        inca 
-;        bra LOOPASC
-
 
 ; Further machine initialization
         JSR     Init_Vectors
@@ -96,10 +89,23 @@ Greet_80
 
         ILLOP                   ; Call monitor
 
+
 QUESTION FCC    "What's your name? \0"
 HELLO   FCC     "Hi \0"
 
-DIE     SYNC                    ; stop execution
+
+DIE
+
+    IF 1                        ; some last pre-mortal actions
+        clra
+LOOPASC pshs A
+        jsr VDP_PutChar
+        puls A
+        inca
+        bra LOOPASC
+   ENDIF
+
+        SYNC                    ; stop execution
         BRA     DIE             ; just in case
 
 
@@ -182,22 +188,25 @@ USB_Out
 USB_In
 ******
 
-****************************************
-* Read a byte from the USB serial port *
-* ------------------------------------ *
-* Output: A: read character            *
-****************************************
+*****************************************
+* Read a byte from the USB serial port  *
+* ------------------------------------- *
+* Output: A:  read character            *
+*         B:  zero if no data available *
+*****************************************
 
+        LDB     #$01            ; data available flag
         TST     BIOS_EMU_Flag
         BNE     UI_70           ; -> emu active
-        LDA     IO_INPORT       ; Data available?
-        BITA    #IO_INRXF       ; /RXF: 0=data available
-        BNE     UI_90           ; branch if no data
-UI_70   LDA     IO_FT245R
-UI_80   STA     SOFF_A,S        ; Return character in stacked A
+        LDA     IO_INPORT       ; data available?
+        BITA    #IO_INRXF
+        BEQ     UI_70           ; branch if data available
+        CLRD                    ; return '\0' and no data available flag
+        BRA     UI_80
+UI_70   LDA     IO_FT245R       ; read character from USB serial port
+UI_80   STA     SOFF_A,S        ; return character in stacked A
+        STB     SOFF_B,S        ; return flag in stacked B
         RTS
-UI_90   CLRA
-        BRA UI_80
 
 
 *******

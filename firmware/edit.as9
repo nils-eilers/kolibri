@@ -6,6 +6,8 @@ Edit_Get_Line
         LDX     #BUF_TXT
         STA     ,X+
 EGL_10  CALL    GETC
+        TSTB
+        BEQ     EGL_10
         CMPA    #CR
         BEQ     EGL_80
         CMPA    #LF
