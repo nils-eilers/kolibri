@@ -174,7 +174,7 @@ Mon_Modify_Memory
 
         BSR     Mon_Get_Word
         TFR     W,Y             ; Y = start address
-        LDB     #8
+        LDB     #16
 MoMM_10 BSR     Mon_Get_Byte
         STA     ,Y+
         DECB
@@ -273,7 +273,7 @@ Mon_Get_Byte
 
 ****************************************
 * Convert two hex digits to byte value *
-* skipping an optional leading blank   *
+* skipping leading blanks              *
 * ------------------------------------ *
 * Input :  X = pointer to input buffer *
 * Output:  A = byte value              *
@@ -281,10 +281,11 @@ Mon_Get_Byte
 ****************************************
 
         PSHS    B               ; save B
-        LDB     ,X              ; next char
+MoGB_05 LDB     ,X              ; next char
         CMPB    #' '            ; leading blank ?
         BNE     MoGB_10         ; -> no
         LEAX    1,X             ; skip blank
+        BRA     MoGB_05
 MoGB_10 BSR     Mon_Get_Nibble  ; get high nibble
         TFR     B,A             ; store in A
         LSLA                    ; shift to high
