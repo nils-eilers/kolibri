@@ -1,6 +1,6 @@
 ; ***** First 6309 Test with Kolibri *****
 
-; ToDo: delete+insert with colortable scrolling
+; ToDo: insert with colortable scrolling
 
 ; VDP_Init                ; *** initialize VDP ***
 ; VDP_On                  ; *** enable screen ***
