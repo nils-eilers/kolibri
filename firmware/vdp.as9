@@ -653,13 +653,20 @@ VDP_TAB                 ; *** moves cursor to next tab (columns AND $f8 = 0)
         bcs VDPCRT              ; column is lower then columns
         bra VDPLF               ; jump to line feed
 
-VDP_Backspace              ; *** backspace
-        bsr VDP_CursorLeft
+VDP_Backspace           ; *** backspace
+        jsr VDP_CursorOff
+        lda BIOS_CursorX
+        bne VDPBACL             ; not column 0 ?
         lda BIOS_CursorY
-        cmpa BIOS_RowTop        ; check if window top row    
-        bne VDP_Delete
-        lda BIOS_CursorX        ; check if first char in window
-        bne VDP_Delete
+        cmpa BIOS_RowTop        ; reached window top row ?
+        beq VDPBACE
+        deca                    ; move one row up
+        sta BIOS_CursorY
+        lda #COLUMNS            ; load last column+1
+VDPBACL deca                    ; move left
+        sta BIOS_CursorX
+        bra VDP_Delete          ; delete
+VDPBACE jsr VDP_CursorOn
         rts                     ; no delete possible in uper left corner !
 
 VDPDELN VDPWRITEADDRESS
@@ -709,43 +716,44 @@ VDPDELS lda #' '                ; fill last char in line with SPACE
         lde #CTCOLUMNS          ; set counter to colortable columns
         ldx #LINEBUF            ; set X to linebuffer
         jsr VDP_Wait11c
-VDPDELA ldf #8                  ; set bitcounter
+VDPDERY ldf #8                  ; set bitcounter
         ldb IO_VDPRAM           ; load byte from colortable
-VDPDELB asld                    ; shift left bit from B to A
+VDPDERB asld                    ; shift left bit from B to A
         anda #01                ; isolate bit #0
         sta ,x+                 ; write colorbit to linebuffer
         decf                    ; reduce bit counter
-        bne VDPDELB             ; next bit
+        bne VDPDERB             ; next bit
         dece                    ; reduce byte counter
-        bne VDPDELA             ; next byte
+        bne VDPDERY             ; next byte
 
-        lde BIOS_CursorX        ; Load Cursor column
-        ince                    ; add 1 because last col is 79 and columns is 80 !
-        cmpe #COLUMNS           ; check if last char in line
-        beq VDPDELL             ; skip srolling
+        ldb BIOS_CursorX        ; Load Cursor column
+        ldx #LINEBUF            ; load buffer address in X
+        abx                     ; add Cursor column for buffer write address
+        leay 1,x                ; add 1 for buffer read address in Y
+        incb                    ; add 1 because last col is 79 and columns is 80 !
+        cmpb #COLUMNS           ; check if last char in line
+        beq VDPDECS             ; skip srolling
+VDPDECR lda ,y+                 ; load char from buffer
+        sta ,x+                 ; write char to buffer
+        incb
+        cmpb #COLUMNS           ; check reached end of line ?
+        bne VDPDECR             ; read next char
 
-;        pulu b                  ; restore low byte
-;        andb #$07               ; isolate byte position
-;        clra
-;        tfr d,x
-;        lda SETBITTABLE,x       ; load bit for screen position
-;        VDPWAITC 8
-;        sta IO_VDPRAM
-
-VDPDELL clr LINEBUF+COLUMNS-1   ; clear last colorbit in line        
+VDPDECS clr LINEBUF+COLUMNS-1   ; clear last colorbit in line        
         pulu d                  ; restore VRAM position
         VDPWRITEADDRESS         ; set VRAM write address to D = Colortable
         lde #CTCOLUMNS          ; set counter to colortable columns
         ldx #LINEBUF            ; set X to linebuffer
-        jsr VDP_Wait11c
-VDPDELC ldf #8                  ; set bitcounter
-VDPDELD lda ,x+                 ; load colorbit from linebuffer
-        lsrd                    ; shift bit from A to B
+VDPDEWY ldf #8                  ; set bitcounter
+VDPDEWB ldb ,x+                 ; load colorbit from linebuffer
+        rorb                    ; shift colorbit in C
+        rola                    ; shift colorbit from C to A
         decf                    ; reduce bit counter
-        bne VDPDELD             ; next bit
-        stb IO_VDPRAM           ; load byte from colortable
+        bne VDPDEWB             ; next bit
+        sta IO_VDPRAM           ; write byte to colortable
         dece                    ; reduce byte counter
-        bne VDPDELC             ; next byte
+        bne VDPDEWY             ; next byte
+        jsr VDP_CursorOn
         rts
 
 VDP_Insert              ; *** insert character
@@ -787,6 +795,7 @@ VDPINSN VDPWRITEADDRESS
         jsr VDP_Wait11c
         VDPWAITC 4              ; add 4c to get 8us minimum
         sta IO_VDPRAM           ; write char
+        jsr VDP_CursorOn
         rts
 
 VDP_ReadStatus          ; *** read status register in A - return status in A
