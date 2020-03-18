@@ -70,6 +70,7 @@ Mon_Go
         LDW     MON_PC          ; preset
         JSR     Mon_Get_Word
         LDS     MON_S           ; S
+        LEAS    -14,S           ; trap offset
         STW     10+2,S          ; PC
         LDA     MON_CC
         STA     ,S              ; CC
@@ -97,7 +98,9 @@ Monitor
         STQ     MON_X
         LDD     8+2,S           ; U
         STD     MON_U
-        STS     MON_S           ; S
+        TFR     S,D
+        ADDD    #14             ; trap offset
+        STD     MON_S           ; S
         TFR     V,D
         STD     MON_V
         LDA     3+2,S           ; DP
