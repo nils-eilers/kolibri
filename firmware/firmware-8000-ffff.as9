@@ -99,8 +99,11 @@ HELLO   FCC     "Hi \0"
 
 
 DIE
+        SYNC                    ; stop execution
+        BRA     DIE             ; just in case
 
-    IF 1                        ; some last pre-mortal actions
+; ***** VDP Char Demo - start with G xxxx from Monitor *****
+VDPDEMO
         clra
 LOOPASC pshs A
         jsr VDP_PutChar
@@ -113,10 +116,7 @@ LOOPASC pshs A
         puls A
         inca
         bra LOOPASC
-   ENDIF
 
-        SYNC                    ; stop execution
-        BRA     DIE             ; just in case
 
 
 ************
