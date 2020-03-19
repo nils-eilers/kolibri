@@ -347,7 +347,8 @@ MDR_20  INCE
         BNE     MDR_10
         BSR     Mon_Blank       ; E = 16
 MDR_30  LDA     ,X+
-        BMI     MDR_40
+        CMPA    #$7E
+        BHI     MDR_40
         CMPA    #' '            ; printable ?
         BHS     MDR_50
 MDR_40  LDA     #'.'
