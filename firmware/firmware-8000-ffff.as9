@@ -67,7 +67,10 @@ GRTLP2  LDA     ,X+
         PULS    X
         BRA     GRTLP2
 Greet_80
-
+        LDE #2
+        LDF #25
+        JSR VDP_SetWindow
+        JSR VDP_ClearWindow
 
 ; Further machine initialization
         JSR     Init_Vectors
@@ -101,6 +104,12 @@ DIE
         clra
 LOOPASC pshs A
         jsr VDP_PutChar
+        jsr VDP_PutColor2
+        puls A
+        inca
+        pshs A
+        jsr VDP_PutChar
+        jsr VDP_PutColor1
         puls A
         inca
         bra LOOPASC
