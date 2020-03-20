@@ -37,28 +37,32 @@ BIOS_RowBottom  BSS 1
 * Memory map *
 **************
 
-VECTBL          = $0200
+                ORG $0200
 
-BUF_TXT         = $0300
+VECTBL          RMB $0100
 
-MONBUF          = $0352         ; Monitor buffer
-MON_PC          = MONBUF
-MON_DP          = MONBUF+2
-MON_CC          = MONBUF+3
-MON_A           = MONBUF+4
-MON_B           = MONBUF+5
-MON_W           = MONBUF+6
-MON_X           = MONBUF+8
-MON_Y           = MONBUF+10
-MON_U           = MONBUF+12
-MON_S           = MONBUF+14
-MON_V           = MONBUF+16
-MON_MEM         = MONBUF+18
-MON_TMP         = MONBUF+20
+BUF_TXT         RMB $52
 
-LINEBUF         = MONBUF+22     ; 80 Chars scrollbuffer
+MONBUF                          ; Monitor buffer
+MON_PC          RMB 2
+MON_DP          RMB 1
+MON_CC          RMB 1
+MON_A           RMB 1
+MON_B           RMB 1
+MON_W           RMB 2
+MON_X           RMB 2
+MON_Y           RMB 2
+MON_U           RMB 2
+MON_S           RMB 2
+MON_V           RMB 2
+MON_MEM         RMB 2
+MON_ByteCount
+MON_CRC         = MON_ByteCount + 1
+MON_TMP         RMB 2
 
-DUMMY           = MONBUF+102    ; from here available
+LINEBUF         RMB 80          ; 80 Chars scrollbuffer
+
+DUMMY                           ; from here available
 
 MACHINESTACK    = $7FFF
 USERSTACK       = $7EFF
