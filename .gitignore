@@ -19,3 +19,4 @@ cpld/output_files/*.cdf
 cpld/output_files/*.done
 cpld/output_files/*.summary
 cpld/output_files/*.jdi
+cpld/kolibri.qws
