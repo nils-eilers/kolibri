@@ -14,6 +14,7 @@
 ; VDP_ReadChar            ; *** return char at actual cursor position in A
 ; VDP_ReadLine            ; *** store line A in LINEBUF
 ; VDP_PutChar             ; *** puts char from A to screen at actual cursor position and moves cursor
+; VDP_PutS                ; *** puts zero terminated string from X to screen at actual cursor position
 ; VDP_PutColor1           ; *** set color 1 to actual cursor position (E/F untouched)
 ; VDP_PutColor2           ; *** set color 2 to actual cursor position (E/F untouched)
 ; VDP_SetChar             ; *** set char from A to screen at E=X and F=Y (E/F untouched - no scroll)
@@ -500,6 +501,15 @@ VDP_PutChar             ; *** puts char from A to screen at actual cursor positi
         VDPWAITC 5              ; add 5c to get 8us
         ste IO_VDPRAM
         bra VDPCRSM             ; move cursor right
+
+VDP_PutS                ; *** puts zero terminated string from X to screen at actual cursor position
+        lda ,x+                 ; fetch character and increment pointer
+        beq VDPPS80             ; -> zero terminator
+        pshs x
+        jsr  VDP_Out            ; write character to screen
+        puls x
+        bra VDP_PutS
+VDPPS80 rts
 
 VDP_CursorRight         ; *** move cursor right
         bsr VDP_CursorOff
