@@ -1,6 +1,6 @@
 ; ***** First 6309 Test with Kolibri *****
 
-; ToDo: none
+; ToDo: delete line, insert line
 
 ; VDP_Init                ; *** initialize VDP ***
 ; VDP_On                  ; *** enable screen ***
@@ -24,7 +24,8 @@
 ; VDP_CursorLeft          ; *** Move cursor left
 ; VDP_CursorDown          ; *** Move cursor down
 ; VDP_CursorUp            ; *** Move cursor up
-; VDP_ScrollUp            ; *** scroll screen up
+; VDP_ScrollUp            ; *** scroll screen up E=TopRow, F=BottomRow
+; VDP_ScrollDown          ; *** scroll screen down E=TopRow, F=BottomRow
 ; VDP_SetCursor           ; *** set cursor to E=X, F=Y (E/F untouched)
 ; VDP_GetCursor           ; *** get cursor to E=X, F=Y (E/F untouched)
 ; VDP_SetCursorHeigh      ; *** set cursor heigh to A lines
@@ -36,6 +37,8 @@
 ; VDP_Backspace           ; *** backspace
 ; VDP_Delete              ; *** delete character
 ; VDP_Insert              ; *** insert SPACE
+; VDP_DeleteRow           ; *** delete row (only in window) at cursor position
+; VDP_InsertRow           ; *** insert row (only in window) at cursor position
 ; VDP_ReadStatus          ; *** read status register in A - return status in A
 
 ; ***** VDP-Definitions
@@ -71,6 +74,11 @@ VDPWAITC MACRO ARG      ; *** wait ARG cycles
 ADDD8   MACRO ARG       ; *** adds 8bit value/memory to D
         addb ARG                ; add low-byte
         adca #$00               ; add carry to high-byte
+        ENDM
+
+SUBD8   MACRO ARG       ; *** sub 8bit value/memory to D
+        subb ARG                ; sub low-byte
+        sbca #$00               ; sub carry from high-byte
         ENDM
 
 VDPSETREG MACRO ARG     ; *** set VDP Register ARG to A
@@ -301,11 +309,32 @@ VDPREAD jsr VDP_Wait11c
         bne VDPREAD             ; read next char
         rts
 
-VDP_ScrollUp            ; *** scroll screen up
-        lde BIOS_RowTop         ; load top row as line counter in E
-        cmpe BIOS_RowBottom     ; check lines to scroll?
+VDP_DeleteRow           ; *** delete row (only in window) at cursor position
+        lde BIOS_CursorY        ; scroll up to actual line
+        cmpe BIOS_RowTop
+        bcs VDPDRWS             ; Y above top row
+        cmpe BIOS_RowBottom
+        bhi VDPDRWS             ; Y below bottom row
+        ldf BIOS_RowBottom      ; scroll up from bottom row
+        jsr VDP_ScrollUp
+VDPDRWS rts
+
+VDP_InsertRow           ; *** insert row (only in window) at cursor position
+        lde BIOS_CursorY        ; scroll down to actual line
+        cmpe BIOS_RowTop
+        bcs VDPIRWS             ; Y above top row
+        cmpe BIOS_RowBottom
+        bhi VDPIRWS             ; Y below bottom row
+        ldf BIOS_RowBottom      ; scroll up from bottom row
+        jsr VDP_ScrollDown
+VDPIRWS rts
+
+
+VDP_ScrollUp            ; *** scroll screen up E=TopRow, F=BottomRow
+        tfr e,a                 ; copy top row to A for calc
+        pshu a                  ; save top row on stack
+        cmpr f,e                ; check lines to scroll?
         beq VDPSCRN             ; skip scrolling if only one line to scroll
-        tfr e,a                 ; copy toprow to A for calc
         ldb #COLUMNS
         mul                     ; calc line position
         addd #SCREENTABLE       ; calc target line screen address
@@ -331,13 +360,13 @@ VDPSCRT jsr VDP_Wait11c
         decb
         bne VDPSCRT
         ince                    ; next row
-        cmpe BIOS_RowBottom
+        cmpr f,e
         beq VDPSCRN             ; last row - finished scrolling
         tfr x,d                 ; copy last target address to D
         ADDD8 #COLUMNS          ; add columns
         tfr d,x                 ; copy next traget address to X
         bra VDPSCRL             ; scroll netxt line
-VDPSCRN lda BIOS_RowBottom      ; bottom row löschen
+VDPSCRN tfr f,a                 ; bottom row löschen
         ldb #COLUMNS
         mul
         addd #SCREENTABLE       ; calc screen address
@@ -349,16 +378,13 @@ VDPSCRC jsr VDP_Wait11c
         sta IO_VDPRAM
         decb
         bne VDPSCRC
-
-        lde BIOS_RowTop         ; load top row as line counter in E
-        cmpe BIOS_RowBottom     ; check lines to scroll?
+                              ; scroll colortable
+        pulu a                  ; restore top row to A
+        tfr a,e                 ; move top row as line counter to E
+        cmpr f,e                ; check lines to scroll?
         beq VDPSCAN             ; skip scrolling if only one line to scroll
-        tfr e,a                 ; copy toprow to A for calc
-        ldb #COLUMNS
+        ldb #CTCOLUMNS          ; load colortable columns
         mul                     ; calc line position
-        lsrd                    ; divide by 8 - 1 byte per screen char
-        lsrd
-        lsrd
         addd #COLORTABLE        ; calc target line color address
         tfr d,x                 ; copy target address to X
 VDPSCAL ADDD8 #CTCOLUMNS        ; add color table columns for source address
@@ -382,13 +408,13 @@ VDPSCAT jsr VDP_Wait11c
         decb
         bne VDPSCAT
         ince                    ; next row
-        cmpe BIOS_RowBottom
+        cmpr f,e
         beq VDPSCAN             ; last row - finished scrolling
         tfr x,d                 ; copy last target address to D
         ADDD8 #CTCOLUMNS        ; add columns
         tfr d,x                 ; copy next traget address to X
         bra VDPSCAL             ; scroll netxt line
-VDPSCAN lda BIOS_RowBottom      ; bottom row löschen
+VDPSCAN tfr f,a                 ; bottom row löschen
         ldb #CTCOLUMNS
         mul
         addd #COLORTABLE        ; calc color-table address
@@ -400,6 +426,104 @@ VDPSCAC jsr VDP_Wait11c
         sta IO_VDPRAM
         decb
         bne VDPSCAC
+        rts 
+
+VDP_ScrollDown            ; *** scroll screen down E=TopRow, F=BottomRow
+        tfr f,a                 ; copy bottom row to A for calc
+        pshu a                  ; save bottom row on stack
+        cmpr f,e                ; check lines to scroll?
+        beq VDPSDWN             ; skip scrolling if only one line to scroll
+        ldb #COLUMNS
+        mul                     ; calc line position
+        addd #SCREENTABLE       ; calc target line screen address
+        tfr d,x                 ; copy target address to X
+VDPSDWL SUBD8 #COLUMNS          ; sub columns for source address
+        VDPREADADDRESS
+        ldy #LINEBUF            ; load buffer address in Y
+        ldb #COLUMNS            ; load columns in x-counter
+VDPSDWS jsr VDP_Wait11c
+        VDPWAITC 2              ; 11c + 11c +2c = 8us
+        lda IO_VDPRAM           ; load from VRAM
+        sta ,y+                 ; write to buffer
+        decb
+        bne VDPSDWS             ; end of line? 
+        tfr x,d                 ; move stored target address to D    
+        VDPWRITEADDRESS
+        ldy #LINEBUF            ; load buffer address in Y
+        ldb #COLUMNS            ; load columns in x-counter
+VDPSDWT jsr VDP_Wait11c
+        VDPWAITC 2              ; 11c + 11c +2c = 8us
+        lda ,y+
+        sta IO_VDPRAM
+        decb
+        bne VDPSDWT
+        decf                    ; next row
+        cmpr f,e
+        beq VDPSDWN             ; last row - finished scrolling
+        tfr x,d                 ; copy last target address to D
+        SUBD8 #COLUMNS          ; sub columns
+        tfr d,x                 ; copy next traget address to X
+        bra VDPSDWL             ; scroll netxt line
+VDPSDWN tfr e,a                 ; top row löschen
+        ldb #COLUMNS
+        mul
+        addd #SCREENTABLE       ; calc screen address
+        VDPWRITEADDRESS
+        ldb #COLUMNS            ; load columns in x-counter
+        lda #' '                ; clear line with SPACE
+VDPSDWC jsr VDP_Wait11c
+        VDPWAITC 6              ; 7c + 11c +6c = 8us
+        sta IO_VDPRAM
+        decb
+        bne VDPSDWC
+                              ; scroll colortable
+        pulu a                  ; restore bottom row to A
+        tfr a,f                 ; move bottom row as line counter to F
+        cmpr f,e                ; check lines to scroll?
+        beq VDPSDAN             ; skip scrolling if only one line to scroll
+        ldb #CTCOLUMNS          ; load colortable columns
+        mul                     ; calc line position
+        addd #COLORTABLE        ; calc target line color address
+        tfr d,x                 ; copy target address to X
+VDPSDAL SUBD8 #CTCOLUMNS        ; sub color table columns for source address
+        VDPREADADDRESS
+        ldy #LINEBUF            ; load buffer address in Y
+        ldb #CTCOLUMNS          ; load color table columns in x-counter
+VDPSDAS jsr VDP_Wait11c
+        VDPWAITC 2              ; 11c + 11c +2c = 8us
+        lda IO_VDPRAM           ; load from VRAM
+        sta ,y+                 ; write to buffer
+        decb
+        bne VDPSDAS             ; end of line? 
+        tfr x,d                 ; move stored target address to D    
+        VDPWRITEADDRESS
+        ldy #LINEBUF            ; load buffer address in Y
+        ldb #CTCOLUMNS          ; load columns in x-counter
+VDPSDAT jsr VDP_Wait11c
+        VDPWAITC 2              ; 11c + 11c +2c = 8us
+        lda ,y+
+        sta IO_VDPRAM
+        decb
+        bne VDPSDAT
+        decf                    ; next row
+        cmpr f,e
+        beq VDPSDAN             ; last row - finished scrolling
+        tfr x,d                 ; copy last target address to D
+        SUBD8 #CTCOLUMNS        ; sub columns
+        tfr d,x                 ; copy next traget address to X
+        bra VDPSDAL             ; scroll netxt line
+VDPSDAN tfr e,a                 ; top row löschen
+        ldb #CTCOLUMNS
+        mul
+        addd #COLORTABLE        ; calc color-table address
+        VDPWRITEADDRESS
+        ldb #CTCOLUMNS          ; load columns in x-counter
+        lda #0                  ; clear line to color 1
+VDPSDAC jsr VDP_Wait11c
+        VDPWAITC 6              ; 7c + 11c +6c = 8us
+        sta IO_VDPRAM
+        decb
+        bne VDPSDAC
         rts 
 
 VDP_PutColor1       ; *** set color 1 to actual cursor position (E/F untouched)
@@ -520,6 +644,8 @@ VDPCRSM lda BIOS_CursorX
         lda BIOS_CursorY
         cmpa BIOS_RowBottom     ; reached window bottom row ?
         bne VDPCRRS             ; no scroll neccessary
+        lde BIOS_RowTop         ; scroll up to top row
+        ldf BIOS_RowBottom      ; scroll up from bottom row
         jsr VDP_ScrollUp
         bra VDPCRRE
 VDPCRRS inca 
@@ -540,7 +666,9 @@ VDP_CursorDown          ; *** move cursor down
         lda BIOS_CursorY
         cmpa BIOS_RowBottom     ; reached window bottom row ?
         bne VDPCRDD
-        jsr VDP_ScrollUp        ; scroll up
+        lde BIOS_RowTop         ; scroll up to top row
+        ldf BIOS_RowBottom      ; scroll up from bottom row
+        jsr VDP_ScrollUp
         bra VDPCRDS
 VDPCRDD lda BIOS_CursorY
         inca
@@ -633,7 +761,9 @@ VDP_LF                  ; *** line feed - cursor down + CR
 VDPLF   lda BIOS_CursorY
         cmpa BIOS_RowBottom     ; reached window bottom row ?
         bne VDPLFNS
-        jsr VDP_ScrollUp        ; scroll up
+        lde BIOS_RowTop         ; scroll up to top row
+        ldf BIOS_RowBottom      ; scroll up from bottom row
+        jsr VDP_ScrollUp
         bra VDPCR
 VDPLFNS inca
         sta BIOS_CursorY        ; move down
