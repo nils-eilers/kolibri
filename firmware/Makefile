@@ -8,15 +8,15 @@ firmware-8000-ffff.bin: firmware-8000-ffff.as9 kolibri-definitions.as9 macros.as
 
 # Alias filename for emulator
 firmware.bin: firmware-8000-ffff.bin
-	ln -sf $< $@
+	@ln -sf $< $@
 
 # Just 16 KB of empty space to fill up binary for ROM chip
 empty-16k-page.bin: empty-16k-page.as9
 	bs9 -n $< -l 0xff
 
 # Build binary for 128KB 29C010 Flash ROM chip
-kolibri.bin: firmware-8000-ffff.bin empty-16k-page.bin
-	cat \
+kolibri.bin: empty-16k-page.bin firmware-8000-ffff.bin
+	@cat \
 	empty-16k-page.bin \
 	empty-16k-page.bin \
 	firmware-8000-ffff.bin \
