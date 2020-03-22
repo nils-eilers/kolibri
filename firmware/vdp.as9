@@ -222,7 +222,7 @@ VDP_ClearWindow         ; *** clear window and color table to color 1
         lda BIOS_RowBottom      ; load window bottom row
         adda #1                 ; add one line to bottom
         suba BIOS_RowTop        ; calc lines to clear (Carry flag already 0 from adda)
-        pshu a                  ; safe lines to clear in A
+        pshs a                  ; safe lines to clear in A
         ldb #COLUMNS
         mul                     ; calc bytes to clear
         lde #' '                ; fill with SPACE
@@ -237,7 +237,7 @@ VDPCLRW jsr VDP_Wait11c
         lsrd
         addd #COLORTABLE        ; add colortable address
         VDPWRITEADDRESS         ; set VRAM write address
-        pulu a                  ; restore lines from A
+        puls a                  ; restore lines from A
         ldb #CTCOLUMNS          ; load Colortable columns
         mul                     ; calc bytes to clear
         lde #0                  ; fill with SPACE
@@ -332,7 +332,7 @@ VDPIRWS rts
 
 VDP_ScrollUp            ; *** scroll screen up E=TopRow, F=BottomRow
         tfr e,a                 ; copy top row to A for calc
-        pshu a                  ; save top row on stack
+        pshs a                  ; save top row on stack
         cmpr f,e                ; check lines to scroll?
         beq VDPSCRN             ; skip scrolling if only one line to scroll
         ldb #COLUMNS
@@ -379,7 +379,7 @@ VDPSCRC jsr VDP_Wait11c
         decb
         bne VDPSCRC
                               ; scroll colortable
-        pulu a                  ; restore top row to A
+        puls a                  ; restore top row to A
         tfr a,e                 ; move top row as line counter to E
         cmpr f,e                ; check lines to scroll?
         beq VDPSCAN             ; skip scrolling if only one line to scroll
@@ -430,7 +430,7 @@ VDPSCAC jsr VDP_Wait11c
 
 VDP_ScrollDown            ; *** scroll screen down E=TopRow, F=BottomRow
         tfr f,a                 ; copy bottom row to A for calc
-        pshu a                  ; save bottom row on stack
+        pshs a                  ; save bottom row on stack
         cmpr f,e                ; check lines to scroll?
         beq VDPSDWN             ; skip scrolling if only one line to scroll
         ldb #COLUMNS
@@ -477,7 +477,7 @@ VDPSDWC jsr VDP_Wait11c
         decb
         bne VDPSDWC
                               ; scroll colortable
-        pulu a                  ; restore bottom row to A
+        puls a                  ; restore bottom row to A
         tfr a,f                 ; move bottom row as line counter to F
         cmpr f,e                ; check lines to scroll?
         beq VDPSDAN             ; skip scrolling if only one line to scroll
@@ -539,24 +539,24 @@ VDP_SetColor1       ; *** set color 1 to screen at E=X and F=Y (E/F untouched)
         mul                     ; calc line position
         addr e,b                ; add column to low-byte
 VDPSCO1 adca #$00               ; add carry to high-byte
-        pshu b                  ; safe low byte of screen position on stack
+        pshs b                  ; safe low byte of screen position on stack
         lsrd                    ; divide by 8 to calc color/attribute-table position
         lsrd
         lsrd
         addd #COLORTABLE        ; add VRAM position
         tfr d,y                 ; safe VRAM address in Y
         VDPREADADDRESS
-        pulu b                  ; restore low byte
+        puls b                  ; restore low byte
         andb #$07               ; isolate byte position
         clra
         tfr d,x                 ; store table offset in X
         lda CLEARBITTABLE,x     ; load bit-mask to clear
         anda IO_VDPRAM          ; calc new attribute-byte
-        pshu a                  ; safe attribute-byte
+        pshs a                  ; safe attribute-byte
         tfr y,d                 ; restore write address
         VDPWAITC 9
         VDPWRITEADDRESS         ; set VRAM write address
-        pulu a                  ; restore atribute-byte
+        puls a                  ; restore atribute-byte
         jsr VDP_Wait11c
         VDPWAITC 2
         sta IO_VDPRAM
@@ -575,31 +575,31 @@ VDP_SetColor2       ; *** set color 2 to screen at E=X and F=Y (E/F untouched)
         mul                     ; calc line position
         addr e,b                ; add column to low-byte
 VDPSCO2 adca #$00               ; add carry to high-byte
-        pshu b                  ; safe low byte of screen position on stack
+        pshs b                  ; safe low byte of screen position on stack
         lsrd                    ; divide by 8 to calc color/attribute-table position
         lsrd
         lsrd
         addd #COLORTABLE        ; add VRAM position
         tfr d,y                 ; safe VRAM address in Y
         VDPREADADDRESS
-        pulu b                  ; restore low byte
+        puls b                  ; restore low byte
         andb #$07               ; isolate byte position
         clra
         tfr d,x                 ; store table offset in X
         lda SETBITTABLE,x       ; load bit-mask to set bit
         ora IO_VDPRAM           ; calc new attribute-byte
-        pshu a                  ; safe attribute-byte
+        pshs a                  ; safe attribute-byte
         tfr y,d                 ; restore write address
         VDPWAITC 9
         VDPWRITEADDRESS         ; set VRAM write address
-        pulu a                  ; restore atribute-byte
+        puls a                  ; restore atribute-byte
         jsr VDP_Wait11c
         VDPWAITC 2
         sta IO_VDPRAM
         rts
 
 VDP_SetChar             ; *** set char from A to screen at E=X and F=Y
-        pshu a                  ; safe char on stack
+        pshs a                  ; safe char on stack
         tfr f,a                 ; load cursor line
         ldb #COLUMNS            ; load columns
         mul                     ; calc line position
@@ -609,7 +609,7 @@ VDP_SetChar             ; *** set char from A to screen at E=X and F=Y
         VDPWRITEADDRESS         ; set VRAM write address to D = Screentable
         jsr VDP_Wait11c
         VDPWAITC 2              ; add 2c to get 8us
-        pulu a                  ; restore char from stack
+        puls a                  ; restore char from stack
         sta IO_VDPRAM
         rts
 
@@ -717,7 +717,7 @@ VDP_CursorOn            ; *** set cursor at actual position
         mul                     ; calc line position
         ADDD8 BIOS_CursorX      ; add Cursor column to D
         addd #SCREENTABLE       ; add VRAM position
-        pshu d                  ; safe screentable position
+        pshs d                  ; safe screentable position
         VDPREADADDRESS          ; set VRAM read address to D = Screentable
         jsr VDP_Wait11c
         VDPWAITC 6              ; add 6c to get 8us
@@ -741,7 +741,7 @@ VDPCRSO VDPWAITC 5              ; add nops to reach 8us
 VDPCRSN sta IO_VDPRAM           ; write char line to patterntable in VRAM
         cmpb #0                 ; last line done?
         bne VDPCRSO             ; copy next char line
-        pulu d                  ; restore screentable position
+        puls d                  ; restore screentable position
         VDPWRITEADDRESS         ; set VRAM write address to D = Screentable
         jsr VDP_Wait11c
         VDPWAITC 3              ; add 3c to get 8us
@@ -869,7 +869,7 @@ VDP_ReadColorLine       ; * read colortable line
         ldb #CTCOLUMNS          ; load colortable columns
         mul                     ; calc line position
         addd #COLORTABLE        ; add VRAM position
-        pshu d                  ; safe VRAM position on stack
+        pshs d                  ; safe VRAM position on stack
         VDPREADADDRESS          ; set VRAM read address to D = Colortable
         lde #CTCOLUMNS          ; set counter to colortable columns
         ldx #LINEBUF            ; set X to linebuffer
@@ -886,7 +886,7 @@ VDPRDBI asld                    ; shift left bit from B to A
         rts
 
 VDP_WriteColorLine      ; * write colortable line
-        pulu d                  ; restore VRAM position
+        puls d                  ; restore VRAM position
         VDPWRITEADDRESS         ; set VRAM write address to D = Colortable
         lde #CTCOLUMNS          ; set counter to colortable columns
         ldx #LINEBUF            ; set X to linebuffer
