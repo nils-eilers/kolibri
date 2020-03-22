@@ -109,7 +109,7 @@ VDPREADADDRESS MACRO    ; *** set VDP read vram address-pointer to D
         stb IO_VDPCONTROL       ; read address low-byte
         nop                     ; adds 2 nops to reach 2us pause
         nop
-        nop 
+        nop
         nop
         sta IO_VDPCONTROL       ; read address high-byte
         puls cc                 ; restore flags
@@ -348,8 +348,8 @@ VDPSCRS jsr VDP_Wait11c
         lda IO_VDPRAM           ; load from VRAM
         sta ,y+                 ; write to buffer
         decb
-        bne VDPSCRS             ; end of line? 
-        tfr x,d                 ; move stored target address to D    
+        bne VDPSCRS             ; end of line?
+        tfr x,d                 ; move stored target address to D
         VDPWRITEADDRESS
         ldy #LINEBUF            ; load buffer address in Y
         ldb #COLUMNS            ; load columns in x-counter
@@ -396,8 +396,8 @@ VDPSCAS jsr VDP_Wait11c
         lda IO_VDPRAM           ; load from VRAM
         sta ,y+                 ; write to buffer
         decb
-        bne VDPSCAS             ; end of line? 
-        tfr x,d                 ; move stored target address to D    
+        bne VDPSCAS             ; end of line?
+        tfr x,d                 ; move stored target address to D
         VDPWRITEADDRESS
         ldy #LINEBUF            ; load buffer address in Y
         ldb #CTCOLUMNS          ; load columns in x-counter
@@ -426,7 +426,7 @@ VDPSCAC jsr VDP_Wait11c
         sta IO_VDPRAM
         decb
         bne VDPSCAC
-        rts 
+        rts
 
 VDP_ScrollDown            ; *** scroll screen down E=TopRow, F=BottomRow
         tfr f,a                 ; copy bottom row to A for calc
@@ -446,8 +446,8 @@ VDPSDWS jsr VDP_Wait11c
         lda IO_VDPRAM           ; load from VRAM
         sta ,y+                 ; write to buffer
         decb
-        bne VDPSDWS             ; end of line? 
-        tfr x,d                 ; move stored target address to D    
+        bne VDPSDWS             ; end of line?
+        tfr x,d                 ; move stored target address to D
         VDPWRITEADDRESS
         ldy #LINEBUF            ; load buffer address in Y
         ldb #COLUMNS            ; load columns in x-counter
@@ -494,8 +494,8 @@ VDPSDAS jsr VDP_Wait11c
         lda IO_VDPRAM           ; load from VRAM
         sta ,y+                 ; write to buffer
         decb
-        bne VDPSDAS             ; end of line? 
-        tfr x,d                 ; move stored target address to D    
+        bne VDPSDAS             ; end of line?
+        tfr x,d                 ; move stored target address to D
         VDPWRITEADDRESS
         ldy #LINEBUF            ; load buffer address in Y
         ldb #CTCOLUMNS          ; load columns in x-counter
@@ -524,7 +524,7 @@ VDPSDAC jsr VDP_Wait11c
         sta IO_VDPRAM
         decb
         bne VDPSDAC
-        rts 
+        rts
 
 VDP_PutColor1       ; *** set color 1 to actual cursor position (E/F untouched)
         lda BIOS_CursorY        ; load cursor line
@@ -551,7 +551,7 @@ VDPSCO1 adca #$00               ; add carry to high-byte
         clra
         tfr d,x                 ; store table offset in X
         lda CLEARBITTABLE,x     ; load bit-mask to clear
-        anda IO_VDPRAM          ; calc new attribute-byte 
+        anda IO_VDPRAM          ; calc new attribute-byte
         pshu a                  ; safe attribute-byte
         tfr y,d                 ; restore write address
         VDPWAITC 9
@@ -587,7 +587,7 @@ VDPSCO2 adca #$00               ; add carry to high-byte
         clra
         tfr d,x                 ; store table offset in X
         lda SETBITTABLE,x       ; load bit-mask to set bit
-        ora IO_VDPRAM           ; calc new attribute-byte 
+        ora IO_VDPRAM           ; calc new attribute-byte
         pshu a                  ; safe attribute-byte
         tfr y,d                 ; restore write address
         VDPWAITC 9
@@ -614,7 +614,7 @@ VDP_SetChar             ; *** set char from A to screen at E=X and F=Y
         rts
 
 VDP_PutChar             ; *** puts char from A to screen at actual cursor position and moves cursor
-        tfr a,e                 ; safe char in E 
+        tfr a,e                 ; safe char in E
         lda BIOS_CursorY        ; load cursor line
         ldb #COLUMNS            ; load columns
         mul                     ; calc line position
@@ -648,7 +648,7 @@ VDPCRSM lda BIOS_CursorX
         ldf BIOS_RowBottom      ; scroll up from bottom row
         jsr VDP_ScrollUp
         bra VDPCRRE
-VDPCRRS inca 
+VDPCRRS inca
         sta BIOS_CursorY
 VDPCRRE clra
 VDPCRSR sta BIOS_CursorX
@@ -739,7 +739,7 @@ VDPCRSO VDPWAITC 5              ; add nops to reach 8us
         bcc VDPCRSN             ; skip eor if not reverse line
         eora #$FF               ; reverse char line
 VDPCRSN sta IO_VDPRAM           ; write char line to patterntable in VRAM
-        cmpb #0                 ; last line done? 
+        cmpb #0                 ; last line done?
         bne VDPCRSO             ; copy next char line
         pulu d                  ; restore screentable position
         VDPWRITEADDRESS         ; set VRAM write address to D = Screentable
@@ -810,7 +810,7 @@ VDPBACE jsr VDP_CursorOn
         rts                     ; no delete possible in uper left corner !
 
 VDPDELN VDPWRITEADDRESS
-        bra VDPDELS             ; clear last char in line   
+        bra VDPDELS             ; clear last char in line
 VDP_Delete              ; *** delete character
         lda BIOS_CursorY        ; load cursor line
         ldb #COLUMNS            ; load columns
@@ -859,7 +859,7 @@ VDPDECL lda ,y+                 ; load char from buffer
         incb
         cmpb #COLUMNS-1         ; check reached end of line ?
         bne VDPDECL             ; read next char
-VDPDECS clr LINEBUF+COLUMNS-1   ; clear last colorbit in line        
+VDPDECS clr LINEBUF+COLUMNS-1   ; clear last colorbit in line
         bsr VDP_WriteColorLine  ; write back line to colortable
         jsr VDP_CursorOn
         rts
@@ -983,7 +983,7 @@ VDPINITDATA                         ; ***** VDP init data table *****
         ; reg  4: $02 pattern (character) generator table base address $1000 (* $800)
         ; reg  5: $3f sprite attribute table base address $1e00 (* $80 - bit#0+1 = 1)
         ; reg  6: $03 sprite pattern (data) generator base address = $1800 (* $800)
-        ; reg  7: $10 text/overscan-backdrop color 
+        ; reg  7: $10 text/overscan-backdrop color
         ; reg  8: $08 bit#3 = 1: 64k VRAM chips, bit#1 = 0 sprites disable, bit#5 0=transparent
         ; reg  9: $80 bit#1 = NTSC/PAL, #2 = EVEN/ODD, #3 = interlace, #7 = 192/212 lines
         ; reg 10: $00 color table base address $0000 bit#0-2 = A14-A16
@@ -1006,8 +1006,8 @@ VDP_TABLE
 *********
 
         FDB VDP_Delete      ;NUL      = $00 ; Ctrl @  DEL
-        FDB VDP_Ignore      ;PAG_UP   = $01 ; Ctrl A  Page Up
-        FDB VDP_Ignore      ;PAG_DWN  = $02 ; Ctrl B  Page Down
+        FDB VDP_Color2      ;SOH      = $01 ; Ctrl A  Foreground Color 2
+        FDB VDP_BGColor2    ;STX      = $02 ; Ctrl B  Background Color 2
         FDB VDP_Ignore      ;BREAK    = $03 ; Ctrl C
         FDB VDP_CursorRight ;CUR_RIG  = $04 ; Ctrl D  Cursor Right     (WS)
         FDB VDP_CursorUp    ;CUR_UP   = $05 ; Ctrl E  Cursor Up        (WS)
@@ -1019,7 +1019,7 @@ VDP_TABLE
         FDB VDP_ClearWindow ;CLEAR    = $0B ; Ctrl K  Window Clear
         FDB VDP_Ignore      ;HOME     = $0C ; Ctrl L  Window Home
         FDB VDP_CR          ;CR       = $0D ; Ctrl M  Return           (ASCII)
-        FDB VDP_Ignore      ;INS_ROW  = $0E ; Ctrl N  Insert Row       (WS)
+        FDB VDP_InsertRow   ;INS_ROW  = $0E ; Ctrl N  Insert Row       (WS)
         FDB VDP_Insert      ;INS_SPA  = $0F ; Ctrl O  Insert Space
         FDB VDP_SetWindow   ;SET_WIN  = $10 ; Ctrl P  Set Window
         FDB VDP_Ignore      ;         = $11 ; Ctrl Q
@@ -1028,13 +1028,13 @@ VDP_TABLE
         FDB VDP_Ignore      ;TOG_STA  = $14 ; Ctrl T  Toggle Status Row
         FDB VDP_Ignore      ;REVERSE  = $15 ; Ctrl U  Reverse FG/BG
         FDB VDP_Ignore      ;TOG_INS  = $16 ; Ctrl V  Toggle Insert    (WS)
-        FDB VDP_Ignore      ;SCR_DWN  = $17 ; Ctrl W  Scroll Down      (WS)
+        FDB VDP_ScrollDown  ;SCR_DWN  = $17 ; Ctrl W  Scroll Down      (WS)
         FDB VDP_CursorDown  ;CUR_DWN  = $18 ; Ctrl X  Cursor Down      (WS)
-        FDB VDP_Ignore      ;DEL_ROW  = $19 ; Ctrl Y  Delete Row       (WS)
+        FDB VDP_DeleteRow   ;DEL_ROW  = $19 ; Ctrl Y  Delete Row       (WS)
         FDB VDP_ScrollUp    ;SCR_UP   = $1A ; Ctrl-Z  Scroll Up        (WS)
         FDB VDP_Ignore      ;ESC      = $1B ; ESCAPE                   (ASCII)
-        FDB VDP_SetColor    ;FS       = $1C ;         Foreground Color
-        FDB VDP_SetBGColor  ;GS       = $1D ;         Background Color
+        FDB VDP_Color1      ;FS       = $1C ;         Foreground Color
+        FDB VDP_BGColor1    ;GS       = $1D ;         Background Color
         FDB VDP_CursorOn    ;RS       = $1E ;         Show Cursor
         FDB VDP_CursorOff   ;US       = $1F ;         Hide Cursor
 
