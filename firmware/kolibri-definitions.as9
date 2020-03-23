@@ -41,7 +41,8 @@ BIOS_RowBottom  BSS 1
 
 VECTBL          RMB $0100
 
-BUF_TXT         RMB $52
+BUF_TXT         RMB 82
+BUF_TXT_BYND    = *-1           ; allow extra space for terminating zero
 
 MONBUF                          ; Monitor buffer
 MON_PC          RMB 2
@@ -56,9 +57,13 @@ MON_U           RMB 2
 MON_S           RMB 2
 MON_V           RMB 2
 MON_MEM         RMB 2
-MON_ByteCount
-MON_CRC         = MON_ByteCount + 1
 MON_TMP         RMB 2
+Mon_ByteCount   = MON_TMP
+Mon_CRC         = MON_TMP+1
+Mon_Received_S5 RMB 1
+Mon_Received_S9 RMB 1
+Mon_Records     RMB 2           ; compared against S5
+Mon_Entry       RMB 2           ; set by S9
 
 LINEBUF         RMB 80          ; 80 Chars scrollbuffer
 

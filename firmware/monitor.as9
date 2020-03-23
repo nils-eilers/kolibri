@@ -46,6 +46,8 @@ TRAPMON
 * Machine Language Monitor for 6309 CPU *
 *****************************************
 
+Msg_MonHello
+        FCB     "Bit Shifter's M/L Monitor\n\0"
 Msg_Mon FCB     "  PC  DP CC  A B  E F    X    Y    U    S    V"
         FCB     " EFHINZVC\n;\0"
 
@@ -56,6 +58,7 @@ Mon_Commands
         FCB     ':',Mon_Modify_Memory
         FCB     ';',Mon_Modify_Register
         FCB     'G',Mon_Go
+        FCB     'L',Mon_Load
         FCB     'M',Mon_Show_Memory
         FCB     'R',Mon_Show_Register
         FCB     'X',Mon_Exit
@@ -178,7 +181,7 @@ Mon_Modify_Memory
         BSR     Mon_Get_Word
         TFR     W,Y             ; Y = start address
         LDB     #16
-MoMM_10 BSR     Mon_Get_Byte
+MoMM_10 LBSR    Mon_Get_Byte
         STA     ,Y+
         DECB
         BNE     MoMM_10
@@ -199,6 +202,8 @@ MoMR_10 BSR     Mon_Get_Byte
 Mon_Show_Register
 *****************
 
+        LDX     #Msg_MonHello
+        JSR     [VECTBL+PUTS*2]
         LDX     #Msg_Mon
         JSR     [VECTBL+PUTS*2]
 
@@ -434,3 +439,233 @@ MoNH_10 ADDA    #'0'
         CALL    PUTC
         RTS
 
+
+*********
+Mon_Getch
+*********
+
+****************************
+* Wait for character input *
+* ------------------------ *
+* Output: A = character    *
+****************************
+
+        CALL    GETC
+        TSTB
+        BEQ     Mon_Getch
+        JMP     Mon_CheckAbort
+
+
+**************
+Mon_CheckAbort
+**************
+
+*******************************************
+* Check A register for Ctrl-C and Escape, *
+* return to caller's caller on match      *
+*******************************************
+
+        CMPA    #ETX            ; Ctrl-C aborts
+        BEQ     MCA_90
+        CMPA    #ESC            ; Escape too
+        BEQ     MCA_90
+        RTS                     ; don't abort, just return
+MCA_90  PULS    D               ; drop check routine return address
+        LDX     #Msg_Aborted
+        CALL    PUTS
+        RTS                     ; return to whatever called load routine
+
+
+********
+Mon_Load
+********
+
+**********************************************************************
+* Load S-Record aka S19 file from virtual USB serial port            *
+* If a start address / program entry is given, start execution there *
+**********************************************************************
+
+        CLRD                    ; init
+        STA     Mon_Received_S5 ; flag: S5 record counter received
+        STD     Mon_Records     ; record counter
+        STA     Mon_Received_S9 ; flag: S9 program entry received
+        STD     Mon_Entry
+
+; main loop entry:
+
+ML_10   JSR     Mon_Getch       ; read next character of S-Record
+        CMPA    #CR
+        BEQ     ML_10           ; ignore CR
+        CMPA    #LF             ; LF here indicates empty line,
+        BNE     ML_20           ; which means end of transmission
+        RTS                     ; LF -> we're done
+ML_20   CMPA    #'S'            ; lines with content must start with 'S'
+        LBNE    ML_90           ; this line doesn't
+        JSR     Mon_Getch       ; read next character
+        CMPA    #'0'
+        LBEQ     Mon_Load_S0    ; -> S0 record
+        CMPA    #'1'
+        LBEQ     Mon_Load_S1    ; -> S1 record
+        CMPA    #'5'
+        LBEQ     Mon_Load_S5    ; -> S5 record
+        CMPA    #'9'
+        LBEQ     Mon_Load_S9    ; -> S9 record
+ML_90   LDX     #Msg_Bad_SRec   ; Output error message
+        CALL    PUTS            ; and abort
+        RTS
+
+
+****************
+Mon_ReadSRecords
+****************
+
+***************************************************
+* Read all S record fields into BUF_TXT,          *
+* abort on invalid characters and buffer overflow *
+* ----------------------------------------------- *
+* Output: X = BUF_TXT                             *
+*         Y = pointer to terminating '\0'         *
+***************************************************
+
+        LDX     #BUF_TXT
+RSR_10  JSR     Mon_Getch
+        CMPA    #CR             ; Ignore CR
+        BEQ     RSR_10
+        CMPA    #LF             ; LF -> end of line
+        BEQ     RSR_80
+RSR_20  CMPA    #'0'
+        LBLO    ML_90           ; abort on forbidden characters < '0'
+        CMPA    #'F'
+        LBHI    ML_90           ; abort on forbidden characters > 'F'
+        CMPA    #'9'
+        BLS     RSR_30           ; character is digit, accept it
+        CMPA    #'A'
+        LBLO    ML_90           ; not a letter, abort
+RSR_30  STA     ,X+             ; store character, fetch next
+        CMPX    BUF_TXT_BYND    ; buffer full?
+        BNE     RSR_10
+        LDX     #Msg_LineTooLong
+        CALL    PUTS
+        RTS
+RSR_80  CLRA                    ; zero-terminate line
+        STA     ,X
+        TFR     X,Y
+        LDX     #BUF_TXT
+        RTS                     ; and return
+
+
+**************
+Mon_ReadHeader
+**************
+
+        PSHS    X,Y
+        JSR     Mon_Get_Byte    ; Compare S1 byte count against actual number
+        STA     Mon_ByteCount   ; of bytes provided by this S-record
+        PULS    X,Y
+        SUBR    X,Y
+        LEAY    -2,Y            ; length bytes don't count
+        TFR     Y,D
+        ASRD                    ; divide by two, two characters per byte
+        STB     Mon_CRC         ; init CRC
+        CMPB    Mon_ByteCount
+        LBNE    ML_90           ; mismatch, output error message
+        SUBB    #3              ; two address bytes and one checksum byte
+        STB     Mon_ByteCount   ; don't count in in the number of data bytes
+        LDX     #BUF_TXT+2      ; point to start address of payload
+        JSR     Mon_Get_Byte    ; MSB of start address
+        LDB     Mon_CRC
+        ADDR    A,B
+        STB     Mon_CRC
+        TFR     A,E
+        JSR     Mon_Get_Byte    ; LSB of start address
+        LDB     Mon_CRC
+        ADDR    A,B
+        STB     Mon_CRC
+        TFR     A,F
+        TFR     W,Y             ; Y is now our storage pointer
+        RTS
+
+
+***********
+Mon_Load_S0
+***********
+
+        JSR     Mon_Getch       ; Ignore file header information
+        CMPA    #LF
+        BNE     Mon_Load_S0
+        JMP     ML_10
+
+
+***********
+Mon_Load_S1
+***********
+
+        JSR     Mon_ReadSRecords; Load and store data
+        JSR     Mon_ReadHeader
+MLS1_10 JSR     Mon_Get_Byte    ; get data byte
+        LDB     Mon_CRC
+        ADDR    A,B
+        STB     Mon_CRC
+        STA     ,Y+             ; store byte and increment pointer
+        DEC     Mon_ByteCount
+        BNE     MLS1_10
+        JSR     Mon_Get_Byte    ; get CRC
+        LDB     Mon_CRC
+        COMB
+        CMPR    A,B             ; compare against computed CRC
+        BNE     MSL1_20         ; -> checksum error
+        LDD     Mon_Records     ; Increment S5 record counter
+        INCD
+        STD     Mon_Records
+        JMP     ML_10
+MSL1_20 LDX     #Msg_Checksum_Error
+        CALL    PUTS
+        RTS
+
+
+***********
+Mon_Load_S5
+***********
+
+        JSR     Mon_ReadSRecords; Receive number of S1 records
+        JSR     Mon_ReadHeader  ; to ensure data integrity
+        CMPY    Mon_Records
+        LBEQ    ML_10           ; -> number of records matches
+        LDX     #Msg_ExtraOrMissingData
+        CALL    PUTS
+        RTS
+
+
+***********
+Mon_Load_S9
+***********
+
+        JSR     Mon_ReadSRecords; Receive start address / entry point
+        JSR     Mon_ReadHeader
+        STY     Mon_Entry
+        LDX     #Msg_StartingExAt
+        CALL    PUTS
+        LDD     Mon_Entry
+        JSR     Mon_Show_Word
+        LDX     #Msg_Dots
+        CALL    PUTS
+        JSR     [Mon_Entry]
+        LDX     #Msg_MonHello
+        CALL    PUTS
+        RTS
+
+
+Msg_Bad_SRec
+        FCC "\nError: bad or unsupported S-record\n\0"
+Msg_Checksum_Error
+        FCC "\nChecksum error\n\0"
+Msg_Aborted
+        FCC "\n\n*** Aborted ***\n\n\0"
+Msg_LineTooLong
+        FCC "\nLine too long error\n\0"
+Msg_ExtraOrMissingData
+        FCC "\nExtra or missing data\n\0"
+Msg_StartingExAt
+        FCC "\nStarting execution at $\0"
+Msg_Dots
+        FCC "...\n\0"
