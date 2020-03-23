@@ -446,6 +446,8 @@ Mon_Getch
 
 ****************************
 * Wait for character input *
+* Convert CR to LF         *
+* Ignore incoming LF       *
 * ------------------------ *
 * Output: A = character    *
 ****************************
@@ -453,7 +455,17 @@ Mon_Getch
         CALL    GETC
         TSTB
         BEQ     Mon_Getch
-        JMP     Mon_CheckAbort
+
+        TST     BIOS_EMU_Flag
+        BNE     MGC_80          ; -> emu active
+
+        CMPA    #CR             ; convert CR --> LF
+        BNE     MGC_10
+        LDA     #LF
+        BRA     MGC_80
+MGC_10  CMPA    #LF             ; ignore incoming LF
+        BEQ     Mon_Getch
+MGC_80  JMP     Mon_CheckAbort
 
 
 **************
