@@ -1,6 +1,8 @@
 *.o
 *.lst
 *.bin
+*.s19
+*.S19
 *.opt
 *.pp
 *.exe
