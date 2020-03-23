@@ -109,6 +109,8 @@ Monitor
         LDA     3+2,S           ; DP
         LDB     ,S              ; CC
         STD     MON_DP
+        LDX     #Msg_MonHello
+        JSR     [VECTBL+PUTS*2]
         JSR     Mon_Show_Register
 
 *********
@@ -202,8 +204,6 @@ MoMR_10 BSR     Mon_Get_Byte
 Mon_Show_Register
 *****************
 
-        LDX     #Msg_MonHello
-        JSR     [VECTBL+PUTS*2]
         LDX     #Msg_Mon
         JSR     [VECTBL+PUTS*2]
 
