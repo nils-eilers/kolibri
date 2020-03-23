@@ -1,0 +1,29 @@
+*****************************
+* Little emulator test/demo *
+*****************************
+        INCLUDE "macros.as9"
+        INCLUDE "kolibri-definitions.as9"
+
+        ORG     $1000
+        STORE   $1000,EOP-$1000,"whatsyourname.s19",S19,$1000
+
+        LDX     #QUESTION
+        CALL    PUTS
+        JSR     Edit_Get_Line
+        LDA     #LF
+        CALL    PUTC
+
+        LDX     #HELLO
+        CALL    PUTS
+        LDX     #BUF_TXT+1
+        CALL    PUTS
+        LDA     #LF
+        CALL    PUTC
+        RTS
+
+        INCLUDE "edit.as9"      ; FIXME: we need a better way to read a line
+
+QUESTION FCC    "What's your name? \0"
+HELLO   FCC     "Hi \0"
+
+EOP     END     ; End Of Program

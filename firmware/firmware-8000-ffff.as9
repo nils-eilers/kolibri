@@ -43,7 +43,7 @@ GRTLP   LDA     ,X+
         BRA     GRTLP
 
 FT245PR FCC "\r\n\r\n"
-BOOTPRM FCC "kolibri.computer BIOS 2020-03-06\n\0"
+BOOTPRM FCC "kolibri.computer BIOS 2020-03-23\n\0"
 Greet_20
 
 ; Write greeter to V9958 screen
@@ -76,26 +76,7 @@ Greet_80
         JSR     Init_Vectors
         CALL    FLUSH
 
-*****************************
-* Little emulator test/demo *
-*****************************
-
-        LDX     #QUESTION
-        CALL    PUTS
-        JSR     Edit_Get_Line
-        JSR     Mon_CRLF
-
-        LDX     #HELLO
-        CALL    PUTS
-        LDX     #BUF_TXT+1
-        CALL    PUTS
-        JSR     Mon_CRLF
-
         ILLOP                   ; Call monitor
-
-
-QUESTION FCC    "What's your name? \0"
-HELLO   FCC     "Hi \0"
 
 
 DIE

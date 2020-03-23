@@ -30,6 +30,11 @@ kolibri.bin: empty-16k-page.bin firmware-8000-ffff.bin
 sim: kolibri.bin
 	memsim2 $<
 
+# Assemle test-demo files
+test:
+	bs9 test-demo/hello.as9
+	bs9 test-demo/whatsyourname.as9
+
 # Delete all generated files
 clean:
 	rm -f kolibri.bin firmware.bin coredump.bin Debug.lst

@@ -1,0 +1,14 @@
+        INCLUDE "macros.as9"
+        INCLUDE "kolibri-definitions.as9"
+
+        ORG     $1000
+        STORE   $1000,EOP-$1000,"test-demo/hello.s19",S19,$1000
+
+        LDX     #MSG
+        CALL    PUTS
+
+        RTS
+
+MSG     BYTE    "Kolibri welcomes you\n", 0
+
+EOP     END     ; End Of Program
