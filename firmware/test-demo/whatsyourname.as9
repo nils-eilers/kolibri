@@ -5,7 +5,7 @@
         INCLUDE "kolibri-definitions.as9"
 
         ORG     $1000
-        STORE   $1000,EOP-$1000,"whatsyourname.s19",S19,$1000
+        STORE   $1000,EOP-$1000,"test-demo/whatsyourname.s19",S19,$1000
 
         LDX     #QUESTION
         CALL    PUTS
