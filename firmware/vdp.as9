@@ -125,28 +125,28 @@ VDP_Init                ; *** initialize VDP ***
         VDPSETREG 17            ; write VDP regs fast indirect
         ldx #VDPINITDATA
 VDPINIT lda ,x+
-        jsr VDP_Wait11c         ; loop-write=13c + 11c wait
+        bsr VDP_Wait11c         ; loop-write=13c + 11c wait
         sta IO_VDPINDIRECT
         cmpx #VDPINITDATAEND
         bne VDPINIT
 
-        jsr VDP_Wait11c
+        bsr VDP_Wait11c
         lda #VDPREG18
         VDPSETREG 18            ; set register 18 V/H display adjust L 7-1,0,f-8 R
                                 ; * clear 16kB VRAM
-        jsr VDP_Wait11c
+        bsr VDP_Wait11c
         clrd
         VDPWRITEADDRESS         ; set VRAM write address to D = $0000, Bank Reg already $00
         ldw #$4000              ; set counter W to $4000
-VDPCLRR jsr VDP_Wait11c         ; loop-write=8c + 11c wait - >5us is OK
+VDPCLRR bsr VDP_Wait11c         ; loop-write=8c + 11c wait - >5us is OK
         stb IO_VDPRAM           ; B = VRAM init value = $00
         decw
         bne VDPCLRR
-        jsr VDP_Wait11c
+        bsr VDP_Wait11c
         clra
         VDPSETREG 14            ; set VRAM bank reg back to 0
                                 ; * copy font to pattern generator table
-        jsr VDP_Wait11c
+        bsr VDP_Wait11c
         ldd #PATTERNTABLE
         VDPWRITEADDRESS         ; set VRAM write address to D = Patterntable
         ldx #VDPFONTDATA
@@ -316,7 +316,7 @@ VDP_DeleteRow           ; *** delete row (only in window) at cursor position
         cmpe BIOS_RowBottom
         bhi VDPDRWS             ; Y below bottom row
         ldf BIOS_RowBottom      ; scroll up from bottom row
-        jsr VDP_ScrollUp
+        bsr VDP_ScrollUp
 VDPDRWS rts
 
 VDP_InsertRow           ; *** insert row (only in window) at cursor position
@@ -750,14 +750,14 @@ VDPCRSN sta IO_VDPRAM           ; write char line to patterntable in VRAM
         rts
 
 VDP_CR                  ; *** carriage return - moves cursor to column 0
-        lbsr VDP_CursorOff
+        jsr VDP_CursorOff
 VDPCR   lda #0
 VDPCRT  sta BIOS_CursorX
-        lbsr VDP_CursorOn
+        jsr VDP_CursorOn
         rts
 
 VDP_LF                  ; *** line feed - cursor down + CR
-        lbsr VDP_CursorOff
+        jsr VDP_CursorOff
 VDPLF   lda BIOS_CursorY
         cmpa BIOS_RowBottom     ; reached window bottom row ?
         bne VDPLFNS
