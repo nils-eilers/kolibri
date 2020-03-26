@@ -57,6 +57,7 @@ Mon_Commands
 
         FCB     ':',Mon_Modify_Memory
         FCB     ';',Mon_Modify_Register
+        FCB     'E',Mon_Execute
         FCB     'G',Mon_Go
         FCB     'L',Mon_Load
         FCB     'M',Mon_Show_Memory
@@ -64,6 +65,20 @@ Mon_Commands
         FCB     'X',Mon_Exit
         FCB     0
 
+
+******************************
+* Execute a subroutine       *
+* Read a hex address and JSR *
+******************************
+
+***********
+Mon_Execute
+***********
+
+        LDW     #Mon_Hello      ; preset
+        JSR     Mon_Get_Word
+        JSR     ,W
+        BRA     Mon_Hello
 
 ******
 Mon_Go
@@ -109,6 +124,11 @@ Monitor
         LDA     3+2,S           ; DP
         LDB     ,S              ; CC
         STD     MON_DP
+
+*********
+Mon_Hello
+*********
+
         LDX     #Msg_MonHello
         JSR     [VECTBL+PUTS*2]
         JSR     Mon_Show_Register
