@@ -13,6 +13,7 @@ emu/kolibri
 firmware/tools/char2asm
 *.vcd
 *.vvp
+*.DS_Store
 cpld/db
 cpld/incremental_db
 cpld/simulation
