@@ -2,6 +2,7 @@ module kolibri (
     input       MHZ48,      // master clock
     input       nWAIT,      // V9958 wait signal
 
+    output      MHZ24,      // 24 MHz clock output
     output      MHZ12,      // 12 MHz clock output
     output      nQ,         // clock signals for 6309E
     output      nE,
@@ -50,7 +51,7 @@ module kolibri (
 );
 
 
-    clock clock_gen(MHZ48, nWAIT, MHZ12, nQ, nE);
+    clock clock_gen(MHZ48, nWAIT, MHZ24, MHZ12, nQ, nE);
 
     assign nRD      = nE | ~RW;
     assign nWR      = nE |  RW;

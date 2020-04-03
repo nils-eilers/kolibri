@@ -61,7 +61,7 @@ CHIP  "kolibri"  ASSIGNED TO AN: EPM7128SLC84-15
 
 Pin Name/Usage               : Location  : Dir.   : I/O Standard      : Voltage : I/O Bank  : User Assignment
 -------------------------------------------------------------------------------------------------------------
-GND+                         : 1         :        :                   :         :           :                
+nRES                         : 1         : input  : TTL               :         :           : N              
 MA[21]                       : 2         : input  : TTL               :         :           : Y              
 VCCINT                       : 3         : power  :                   : 5.0V    :           :                
 nPORT                        : 4         : output : TTL               :         :           : Y              
@@ -129,7 +129,7 @@ MA[19]                       : 65        : input  : TTL               :         
 VCCIO                        : 66        : power  :                   : 5.0V    :           :                
 MA[20]                       : 67        : input  : TTL               :         :           : Y              
 nIOEN                        : 68        : output : TTL               :         :           : Y              
-nRES                         : 69        : input  : TTL               :         :           : N              
+MHZ24                        : 69        : output : TTL               :         :           : N              
 nRD245                       : 70        : output : TTL               :         :           : Y              
 TDO                          : 71        : output : TTL               :         :           : Y              
 GND                          : 72        : gnd    :                   :         :           :                

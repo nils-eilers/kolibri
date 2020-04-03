@@ -4,6 +4,7 @@ module clock_tb;
     output reg MHZ48;
     output reg nWAIT;
 
+    input wire MHZ24;
     input wire MHZ12;
     input wire nQ;
     input wire nE;
@@ -13,7 +14,7 @@ module clock_tb;
     assign Q = ~nQ;
     assign E = ~nE;
 
-    clock clock_tb(MHZ48, nWAIT, MHZ12, nQ, nE);
+    clock clock_tb(MHZ48, nWAIT, MHZ24, MHZ12, nQ, nE);
 
     always
     #10.41666666 MHZ48 = ~MHZ48;
