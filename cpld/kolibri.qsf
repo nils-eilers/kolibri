@@ -52,8 +52,6 @@ set_global_assignment -name EDA_SIMULATION_TOOL "ModelSim-Altera (SystemVerilog)
 set_global_assignment -name EDA_OUTPUT_DATA_FORMAT "SYSTEMVERILOG HDL" -section_id eda_simulation
 set_global_assignment -name TIMEQUEST_REPORT_SCRIPT_INCLUDE_DEFAULT_ANALYSIS OFF
 set_global_assignment -name DEVICE_FILTER_SPEED_GRADE 15
-set_location_assignment PIN_20 -to BS
-set_location_assignment PIN_18 -to BA
 set_location_assignment PIN_44 -to nRAMCS
 set_location_assignment PIN_45 -to nROMCS
 set_location_assignment PIN_31 -to RW
@@ -93,7 +91,6 @@ set_location_assignment PIN_2 -to MA[21]
 set_location_assignment PIN_4 -to nPORT
 set_location_assignment PIN_5 -to nE
 set_location_assignment PIN_6 -to nSD0
-set_location_assignment PIN_8 -to LIC
 set_location_assignment PIN_9 -to nQ
 set_location_assignment PIN_10 -to nSD1
 set_location_assignment PIN_11 -to nCSR
@@ -123,5 +120,6 @@ set_location_assignment PIN_23 -to TMS
 set_location_assignment PIN_62 -to TCK
 set_location_assignment PIN_14 -to TDI
 set_location_assignment PIN_71 -to TDO
-set_location_assignment PIN_69 -to /ME
 set_global_assignment -name CDF_FILE "output_files/kolibri-cpld.cdf"
+set_location_assignment PIN_69 -to MHZ24
+set_location_assignment PIN_1 -to nRES

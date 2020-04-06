@@ -9,9 +9,6 @@ module kolibri (
 
     input       nRES,       // system reset
     output      nNMI,       // non maskable interrupt
-    input       BA,         // 6309E BA
-    input       BS,         // 6309E BS
-    input       LIC,        // 6309 last instruction cycle
 
     inout       [7:0] D,    // data bus
     input       [15:0] A,   // address bus
@@ -53,25 +50,25 @@ module kolibri (
 
     clock clock_gen(MHZ48, nWAIT, MHZ24, MHZ12, nQ, nE);
 
-    assign nRD      = nE | ~RW;
-    assign nWR      = nE |  RW;
-    assign nIOEN    = nE | !(A[15:8] == 8'hFE);
+    assign nRD     = nE | ~RW;
+    assign nWR     = nE |  RW;
+    assign nIOEN   = nE | !(A[15:8] == 8'hFE);
 
     // Pass Mode
-    assign nRAMCS = nE |  A[15];                            //  0-32 KB
-    assign nROMCS = nE | ~A[15] | ~nIOEN;                   // 32-64 KB \ $FExx
+    assign nRAMCS  = nE |  A[15];                           //  0-32 KB
+    assign nROMCS  = nE | ~A[15] | ~nIOEN;                  // 32-64 KB \ $FExx
 
-    assign nCSR     = nIOEN | ~RW | !(A[7:2] == 6'b001010); // $FE28-$FE2B
-    assign nCSW     = nIOEN |  RW | !(A[7:2] == 6'b001010); // $FE28-$FE2B
-    assign nRD245   = nIOEN | ~RW | !(A[7:0] == 8'h2C);     // $FE2C
-    assign WR245    = nIOEN |  RW | !(A[7:0] == 8'h2C);     // $FE2C
-    assign nPORT    = nIOEN | ~RW | !(A[7:0] == 8'h2D);     // $FE2D
+    assign nCSR    = nIOEN | ~RW | !(A[7:2] == 6'b001010);  // $FE28-$FE2B
+    assign nCSW    = nIOEN |  RW | !(A[7:2] == 6'b001010);  // $FE28-$FE2B
+    assign nRD245  = nIOEN | ~RW | !(A[7:0] == 8'h2C);      // $FE2C
+    assign WR245   = nIOEN |  RW | !(A[7:0] == 8'h2C);      // $FE2C
+    assign nPORT   = nIOEN | ~RW | !(A[7:0] == 8'h2D);      // $FE2D
 
 
-    // assign nMMUCS    = nIOEN | !(A[7:4] == 4'h0);
-    // assign nRTC      = ~( ~nIOEN & A[7:4] == 4'h1);
-    // assign nCS8742   = ~( ~nIOEN & A[7:1] == 7'b0010010);
-    // assign nOPL2 = ~( ~nIOEN & A[7:1] == 7'b0010011);
+    assign nMMUCS  = nIOEN |       !(A[7:4] == 4'b0000);    // $FE00-$FE0F
+    assign nRTC    = nIOEN |       !(A[7:4] == 4'h0001);    // $FE10-$FE1F
+    assign nCS8742 = nIOEN |       !(A[7:1] == 7'b0010010); // $FE24-$FE25
+    assign nOPL2   = nIOEN |       !(A[7:1] == 7'b0010011); // $FE26-$FE27
 
 
     // ===== Static assignments ========================================
@@ -89,10 +86,6 @@ module kolibri (
     assign MOSI = 1;
     assign SCLK = 1;
 
-    assign nMMUCS = 1;
-    assign nOPL2 = 1;
-    assign nRTC = 1;
-    assign nCS8742 = 1;
 
 endmodule
 

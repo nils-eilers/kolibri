@@ -61,14 +61,14 @@ CHIP  "kolibri"  ASSIGNED TO AN: EPM7128SLC84-15
 
 Pin Name/Usage               : Location  : Dir.   : I/O Standard      : Voltage : I/O Bank  : User Assignment
 -------------------------------------------------------------------------------------------------------------
-nRES                         : 1         : input  : TTL               :         :           : N              
+nRES                         : 1         : input  : TTL               :         :           : Y              
 MA[21]                       : 2         : input  : TTL               :         :           : Y              
 VCCINT                       : 3         : power  :                   : 5.0V    :           :                
 nPORT                        : 4         : output : TTL               :         :           : Y              
 nE                           : 5         : output : TTL               :         :           : Y              
 nSD0                         : 6         : output : TTL               :         :           : Y              
 GND                          : 7         : gnd    :                   :         :           :                
-LIC                          : 8         : input  : TTL               :         :           : Y              
+RESERVED                     : 8         :        :                   :         :           :                
 nQ                           : 9         : output : TTL               :         :           : Y              
 nSD1                         : 10        : output : TTL               :         :           : Y              
 nCSR                         : 11        : output : TTL               :         :           : Y              
@@ -78,9 +78,9 @@ TDI                          : 14        : input  : TTL               :         
 nWAIT                        : 15        : input  : TTL               :         :           : Y              
 A[14]                        : 16        : input  : TTL               :         :           : Y              
 A[15]                        : 17        : input  : TTL               :         :           : Y              
-BA                           : 18        : input  : TTL               :         :           : Y              
+RESERVED                     : 18        :        :                   :         :           :                
 GND                          : 19        : gnd    :                   :         :           :                
-BS                           : 20        : input  : TTL               :         :           : Y              
+RESERVED                     : 20        :        :                   :         :           :                
 nMM                          : 21        : output : TTL               :         :           : Y              
 nNMI                         : 22        : output : TTL               :         :           : Y              
 TMS                          : 23        : input  : TTL               :         :           : Y              
@@ -129,7 +129,7 @@ MA[19]                       : 65        : input  : TTL               :         
 VCCIO                        : 66        : power  :                   : 5.0V    :           :                
 MA[20]                       : 67        : input  : TTL               :         :           : Y              
 nIOEN                        : 68        : output : TTL               :         :           : Y              
-MHZ24                        : 69        : output : TTL               :         :           : N              
+MHZ24                        : 69        : output : TTL               :         :           : Y              
 nRD245                       : 70        : output : TTL               :         :           : Y              
 TDO                          : 71        : output : TTL               :         :           : Y              
 GND                          : 72        : gnd    :                   :         :           :                
