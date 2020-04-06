@@ -7,6 +7,7 @@
         ORG     $1000
         STORE   $1000,EOP-$1000,"test-demo/whatsyourname.s19",S19,$1000
 
+        CALL    FLUSH
         LDX     #QUESTION
         CALL    PUTS
         JSR     Edit_Get_Line

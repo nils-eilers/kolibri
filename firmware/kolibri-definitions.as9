@@ -99,6 +99,7 @@ IO_INWP0        = 1
 IO_INWP1        = 2
 IO_INCD0        = 4
 IO_INCD1        = 8
+IO_INBOOT       = 16
 IO_INIBF        = 32
 IO_INTXE        = 64
 IO_INRXF        = 128

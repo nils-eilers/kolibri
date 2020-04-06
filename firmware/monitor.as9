@@ -517,6 +517,8 @@ Mon_Load
 * If a start address / program entry is given, start execution there *
 **********************************************************************
 
+        LDX     #Msg_LoadSRec   ; Load message
+        CALL    PUTS
         CLRD                    ; init
         STA     Mon_Received_S5 ; flag: S5 record counter received
         STD     Mon_Records     ; record counter
@@ -687,6 +689,8 @@ Mon_Load_S9
         RTS
 
 
+Msg_LoadSRec
+        FCC "\nLoading S-Record...\n\0"
 Msg_Bad_SRec
         FCC "\nError: bad or unsupported S-record\n\0"
 Msg_Checksum_Error

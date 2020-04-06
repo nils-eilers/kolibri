@@ -43,7 +43,7 @@ GRTLP   LDA     ,X+
         BRA     GRTLP
 
 FT245PR FCC "\r\n\r\n"
-BOOTPRM FCC "kolibri.computer BIOS 2020-03-23\n\0"
+BOOTPRM FCC "kolibri.computer BIOS 2020-04-06\n\0"
 Greet_20
 
 ; Write greeter to V9958 screen
@@ -75,6 +75,13 @@ Greet_80
 ; Further machine initialization
         JSR     Init_Vectors
         CALL    FLUSH
+
+; Call S-record loader if BOOT switch is pressed
+        LDA     IO_INPORT
+        BITA    #IO_INBOOT
+        BNE     +               ; branch if switch is not pressed
+        JSR     Mon_Load
++
 
         ILLOP                   ; Call monitor
 
