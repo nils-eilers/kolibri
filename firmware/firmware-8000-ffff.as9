@@ -77,8 +77,7 @@ Greet_80
         CALL    FLUSH
 
 ; Call S-record loader if BOOT switch is pressed
-        LDA     IO_INPORT
-        BITA    #IO_INBOOT
+        TIM     #IO_INBOOT,IO_INPORT
         BNE     +               ; branch if switch is not pressed
         JSR     Mon_Load
 +
