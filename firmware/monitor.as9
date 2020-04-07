@@ -731,11 +731,12 @@ Msg_Dots
 Mon_Time
 ********
 
-*********************************************
-* T? shows real time clock's date and time  *
-* T= sets date and time                     *
-* time and date format is YYMMDDhhmmss      *
-*********************************************
+***********************************************
+* T? shows real time clock's date and time    *
+* T= sets date and time                       *
+* time and date format is YYYY-MM-DD hh:mm:ss *
+* e.g. T=2020-06-19 19:21:53                  *
+***********************************************
 
         LDA     ,X+             ; Read or set clock?
         CMPA    #'?'
