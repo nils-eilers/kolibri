@@ -1,0 +1,75 @@
+***********************************
+* Epson RTC-72421 Real Time Clock *
+***********************************
+
+; Based on Z80 code by Tilman Reh originally written for the GIDE interface
+
+
+; Init the RTC for normal operation.
+; If the RTC is battery backed, this is needed only for
+; the first time the RTC is powered up
+
+RTC_Init
+        LDA     #IO_RTC_24_12+IO_RTC_RESET      ; 24h + reset
+        STA     IO_RTC_CF
+        DECA                                    ; release reset
+        STA     IO_RTC_CF
+        LDA     #IO_RTC_IRQ                     ; interrupt not used
+        STA     IO_RTC_CD
+        RTS
+
+
+; Prepare for R/W access to the RTC. The hold bit is set,
+; and the busy flag is checked to see if accesses are allowed.
+
+RTC_Wait
+        PSHS    A
+-       LDA     #IO_RTC_HOLD
+        STA     IO_RTC_CD                       ; set hold bit
+        LDA     #IO_RTC_BUSY
+        BITA    IO_RTC_CD
+        BEQ     +                               ; not busy: return
+        CLRA
+        STA     IO_RTC_CD                       ; reset hold bit
+        BRA     -                               ; try again
++       PULS    A
+        RTS
+
+
+RTC_Read
+        JSR     RTC_Wait                        ; check for RTC non-busy
+        LDB     #6
+        LDX     #IO_RTC_Y10+1                   ; start with year tens
+-       LDA     ,-X                             ; read tens digit
+        ANDA    #$0F                            ; mask unused bits
+        LSLA                                    ; shift into upper digit
+        LSLA
+        LSLA
+        LSLA
+        TFR     A,E
+        LDA     ,-X                             ; read units digit
+        ANDA    #$0F                            ; mask unused bits
+        ORR     E,A                             ; combine with tens
+        STA     ,Y+                             ; store BCD result
+        DECB                                    ; repeat until seconds done
+        BNE     -
+RTC_80  CLRA                                    ; reset hold bit
+        STA     IO_RTC_CD
+        RTS
+
+RTC_Set
+        JSR     RTC_Wait                        ; check for RTC non-busy
+        LDB     #6
+        LDX     #IO_RTC_Y10+1                   ; start with year tens
+-       LDA     ,Y                              ; get BCD value
+        LSRA                                    ; use tens only
+        LSRA
+        LSRA
+        LSRA
+        STA     ,-X                             ; write BCD digit to RTC
+        LDA     ,Y+                             ; get BCD value again
+        ANDA    #$0F                            ; mask unused bits
+        STA     ,-X                             ; write BCD digit to RTC
+        DECB                                    ; repeat until seconds done
+        BNE     -
+        BRA     RTC_80

@@ -83,8 +83,8 @@ IO_MEMCONF0     = $FE20
 IO_MEMCONF1     = $FE21
 IO_MEMCONF2     = $FE22
 IO_MEMCONF3     = $FE23
-IO_COPRODATA    = $FE24
-IO_COPROCMD     = $FE25
+IO_KBD_DATA     = $FE24
+IO_KBD_CMD      = $FE25
 IO_OPL2REGSEL   = $FE26         ; write access
 IO_OPL2STATUS   = $FE26         ; read access
 IO_OPL2DATA     = $FE27         ; write only
@@ -99,10 +99,47 @@ IO_INWP0        = 1
 IO_INWP1        = 2
 IO_INCD0        = 4
 IO_INCD1        = 8
-IO_INBOOT       = 16
+IO_INBOOT       = 16            ; low if boot switch pressed
 IO_INIBF        = 32
 IO_INTXE        = 64
 IO_INRXF        = 128
+
+IO_RTC_S1       ENUM IO_RTC
+IO_RTC_S10      ENUM
+IO_RTC_MI1      ENUM
+IO_RTC_MI10     ENUM
+IO_RTC_H1       ENUM
+IO_RTC_H10      ENUM
+IO_RTC_D1       ENUM
+IO_RTC_D10      ENUM
+IO_RTC_MO1      ENUM
+IO_RTC_MO10     ENUM
+IO_RTC_Y1       ENUM
+IO_RTC_Y10      ENUM
+IO_RTC_W        ENUM
+IO_RTC_CD       ENUM
+IO_RTC_CE       ENUM
+IO_RTC_CF       ENUM
+
+; IO_RTC_CF     Control Register F
+IO_RTC_RESET    = 1
+IO_RTC_STOP     = 2
+IO_RTC_24_12    = 4
+IO_RTC_TEST     = 8
+
+
+; IO_RTC_CE     Control Register E
+IO_RTC_MASK     = 1
+IO_RTC_ITRPT    = 2
+IO_RTC_T0       = 4
+IO_RTC_T1       = 8
+
+; IO_RTC_CD     Control Register D
+IO_RTC_HOLD     = 1
+IO_RTC_BUSY     = 2
+IO_RTC_IRQ      = 4
+IO_RTC_30SADJ   = 8
+
 
 
 *************

@@ -62,6 +62,7 @@ Mon_Commands
         FCB     'L',Mon_Load
         FCB     'M',Mon_Show_Memory
         FCB     'R',Mon_Show_Register
+        FCB     'T',Mon_Time
         FCB     'X',Mon_Exit
         FCB     0
 
@@ -158,6 +159,7 @@ Moni_20 LDB     ,X+             ; command char
         JSR     ,U
         BRA     Main_Loop
 
+Mon_Syntax_Error
 Moni_30 JSR     Mon_CRLF
         LDA     #'?'
         CALL    PUTC
@@ -400,6 +402,24 @@ Mon_Blank
         LDA     #' '
         CALL    PUTC
         RTS
+
+*********
+Mon_Minus
+*********
+
+        LDA     #'-'
+        CALL    PUTC
+        RTS
+
+
+*********
+Mon_Colon
+*********
+
+        LDA     #':'
+        CALL    PUTC
+        RTS
+
 
 *************
 Mon_Show_Word
@@ -705,3 +725,78 @@ Msg_StartingExAt
         FCC "\nStarting execution at $\0"
 Msg_Dots
         FCC "...\n\0"
+
+
+********
+Mon_Time
+********
+
+*********************************************
+* T? shows real time clock's date and time  *
+* T= sets date and time                     *
+* time and date format is YYMMDDhhmmss      *
+*********************************************
+
+        LDA     ,X+             ; Read or set clock?
+        CMPA    #'?'
+        BEQ     Mon_Time_Get
+        CMPA    #'='
+        BEQ     Mon_Time_Set
+        JMP     Mon_Syntax_Error
+
+Mon_Time_Get
+        LDY     #BUF_TXT
+        JSR     RTC_Read
+        LDA     #'2'
+        CALL    PUTC
+        LDA     #'0'
+        CALL    PUTC
+        LDY     #BUF_TXT
+        LDA     ,Y+             ; YY
+        JSR     Mon_Show_Byte
+        JSR     Mon_Minus
+        LDA     ,Y+             ; MM
+        JSR     Mon_Show_Byte
+        JSR     Mon_Minus
+        LDA     ,Y+             ; DD
+        JSR     Mon_Show_Byte
+        JSR     Mon_Blank
+        LDA     ,Y+             ; mm
+        JSR     Mon_Show_Byte
+        JSR     Mon_Colon
+        LDA     ,Y+             ; hh
+        JSR     Mon_Show_Byte
+        JSR     Mon_Colon
+        LDA     ,Y+             ; ss
+        JSR     Mon_Show_Byte
+        JSR     Mon_CRLF
+        RTS
+
+Mon_Time_Set
+        LEAS    -6,S
+        TFR     S,Y
+        PSHS    Y
+        LEAX    +2,X            ; skip century
+        JSR     Mon_Get_Byte    ; YY
+        STA     ,Y+
+        LEAX    1,X             ; skip -
+        JSR     Mon_Get_Byte    ; MM
+        STA     ,Y+
+        LEAX    1,X             ; skip -
+        JSR     Mon_Get_Byte    ; DD
+        STA     ,Y+
+        LEAX    1,X             ; skip space
+        JSR     Mon_Get_Byte    ; hh
+        STA     ,Y+
+        LEAX    1,X             ; skip colon
+        JSR     Mon_Get_Byte    ; mm
+        STA     ,Y+
+        LEAX    1,X             ; skip colon
+        JSR     Mon_Get_Byte    ; ss
+        STA     ,Y+
+        LEAX    1,X             ; skip colon
+        PULS    Y
+        JSR     RTC_Set
+        LEAS    +6,S
+        RTS
+

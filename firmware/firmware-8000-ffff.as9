@@ -74,6 +74,7 @@ Greet_80
 
 ; Further machine initialization
         JSR     Init_Vectors
+        JSR     RTC_Init
         CALL    FLUSH
 
 ; Call S-record loader if BOOT switch is pressed
@@ -124,6 +125,7 @@ Init_Vectors
         INCLUDE "vdp.as9"       ; VDP Definitions + Subroutines
         INCLUDE "monitor.as9"   ; Machine Language Monitor
         INCLUDE "edit.as9"      ; Screen editor
+        INCLUDE "rtc.as9"       ; Real Time Clock
 
 
 ********
