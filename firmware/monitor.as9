@@ -63,6 +63,7 @@ Mon_Commands
         FCB     'M',Mon_Show_Memory
         FCB     'R',Mon_Show_Register
         FCB     'T',Mon_Time
+        FCB     'U',Mon_Unassemble
         FCB     'X',Mon_Exit
         FCB     0
 

@@ -124,6 +124,7 @@ Init_Vectors
 
         INCLUDE "vdp.as9"       ; VDP Definitions + Subroutines
         INCLUDE "monitor.as9"   ; Machine Language Monitor
+        INCLUDE "unas.as9"      ; Machine Language Unassembler
         INCLUDE "edit.as9"      ; Screen editor
         INCLUDE "rtc.as9"       ; Real Time Clock
 
