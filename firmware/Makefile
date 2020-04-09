@@ -4,7 +4,7 @@ run: firmware.bin
 	kolibri
 
 firmware-8000-ffff.bin: firmware-8000-ffff.as9 kolibri-definitions.as9 \
-	macros.as9 edit.as9 monitor.as9 vdp.as9 rtc.as9
+	macros.as9 edit.as9 monitor.as9 vdp.as9 rtc.as9 opl2.as9
 	bs9 -n $< -l 0xff
 
 # Alias filename for emulator

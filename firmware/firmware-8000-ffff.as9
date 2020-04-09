@@ -75,6 +75,7 @@ Greet_80
 ; Further machine initialization
         JSR     Init_Vectors
         JSR     RTC_Init
+        JSR     OPL2_Init
         CALL    FLUSH
 
 ; Call S-record loader if BOOT switch is pressed
@@ -82,6 +83,9 @@ Greet_80
         BNE     +               ; branch if switch is not pressed
         JSR     Mon_Load
 +
+
+; Power Chime! Well, actually, right now it's just a simple beep.
+        JSR     OPL2_Beep
 
         ILLOP                   ; Call monitor
 
@@ -127,6 +131,7 @@ Init_Vectors
         INCLUDE "unas.as9"      ; Machine Language Unassembler
         INCLUDE "edit.as9"      ; Screen editor
         INCLUDE "rtc.as9"       ; Real Time Clock
+        INCLUDE "opl2.as9"      ; OPL2 sound chip routines
 
 
 ********

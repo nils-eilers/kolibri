@@ -8,7 +8,11 @@ Edit_Get_Line
 EGL_10  CALL    GETC
         TSTB
         BEQ     EGL_10
-        CMPA    #CR
+        CMPA    #BEL
+        BNE     EGL_15
+        JSR     OPL2_Beep
+        BRA     EGL_10
+EGL_15  CMPA    #CR
         BEQ     EGL_80
         CMPA    #LF
         BEQ     EGL_80

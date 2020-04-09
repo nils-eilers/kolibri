@@ -1,0 +1,86 @@
+* OPL2 Sound Chip routines
+* Many thanks to Jeffrey S. Lee, http://shipbrook.net/jeff/sb.html
+
+
+**********
+OPL2_Write
+**********
+
+*********************************************************
+* Writes value in reg B to OPL2 register specified by A *
+*********************************************************
+
+; IO_OPL2REGSEL   = $FE26         ; write access
+; IO_OPL2STATUS   = $FE26         ; read access
+; IO_OPL2DATA     = $FE27         ; write only
+
+
+        STA     IO_OPL2REGSEL   ; select OPL2 register
+        JSR     VDP_Wait11c     ; wait at least 3.3 uS (11/3=3.666)
+        STB     IO_OPL2DATA     ; write data to sound chip register
+        JSR     VDP_Wait11c     ; wait at least 23 uS
+        JSR     VDP_Wait11c     ; TODO: write a better delay routine
+        JSR     VDP_Wait11c
+        JSR     VDP_Wait11c
+        JSR     VDP_Wait11c
+        JSR     VDP_Wait11c
+        JMP     VDP_Wait11c
+
+OPL2WR  MACRO   REG,VAL
+        LDA     #REG
+        LDB     #VAL
+        JSR     OPL2_Write
+        ENDM
+
+
+**********
+OPL2_Reset
+**********
+
+************************************************************
+* Write zero to all registers. This is the quick-and-dirty *
+* method of resetting the sound card, but it works.        *
+************************************************************
+
+OPL2_Init
+        LDA     #$FB
+        CLRB
+-       JSR     OPL2_Write
+        DECA
+        BNE     -
+        RTS
+
+
+*********
+OPL2_Beep
+*********
+
+        JSR OPL2_Reset
+        OPL2WR  $20,$01         ; Set the modulator's multiple to 1
+        OPL2WR  $40,$10         ; Set the modulator's level to about 40 dB
+        OPL2WR  $60,$F0         ; Modulator attack: quick; decay: long
+        OPL2WR  $80,$77         ; Modulator sustain: medium; release: medium
+        OPL2WR  $A0,$98         ; Set voice frequency's LSB (it'll be a D#)
+        OPL2WR  $23,$01         ; Set the carrier's multiple to 1
+        OPL2WR  $43,$00         ; Set the carrier to maximum volume (about 47 dB)
+        OPL2WR  $63,$F0         ; Carrier attack: quick; decay: long
+        OPL2WR  $83,$77         ; Carrier sustain: medium; release: medium
+        OPL2WR  $B0,$35         ; Turn the voice on; set the octave and freq MSB
+        JSR OPL2_Wait_Beep
+        OPL2WR  $B0,$11         ; Turn voice off
+        RTS
+
+
+SUBROUTINE OPL2_Wait_Beep
+        LDE     #2
+.OUTER  LDD     #$FFFF
+.INNER  DECD
+        BNE     .INNER
+        DECE
+        BNE     .OUTER
+        RTS
+ENDSUB
+
+
+
+
