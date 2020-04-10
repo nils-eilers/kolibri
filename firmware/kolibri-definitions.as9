@@ -62,8 +62,27 @@ Mon_ByteCount   = MON_TMP
 Mon_CRC         = MON_TMP+1
 Mon_Received_S5 RMB 1
 Mon_Received_S9 RMB 1
-Mon_Records     RMB 2           ; compared against S5
-Mon_Entry       RMB 2           ; set by S9
+Mon_Records     RMB 2         ; compared against S5
+Mon_Entry       RMB 2         ; set by S9
+
+***********************
+* Monitor Unassembler *
+***********************
+
+Mon_Adr         RMB 2         ; Current address to disassemble
+Mon_OC          RMB 1         ; Opcode of instruction
+Mon_AM          RMB 1         ; Addressing mode of instruction
+Mon_OT          RMB 1         ; Instruction type
+Mon_PB          RMB 1         ; Post byte (for indexed addressing)
+Mon_Len         RMB 1         ; Length of instruction
+Mon_TPA         RMB 2         ; Temp variable (used by print routines)
+Mon_TPB         RMB 2         ; Temp variable
+Mon_First       RMB 1         ; Flag used to indicate first time an item printed
+Mon_Pg23        RMB 1         ; Flag indicating page2/3 instruction when non-zero
+
+*********
+* Video *
+*********
 
 LINEBUF         RMB 80          ; 80 Chars scrollbuffer
 
