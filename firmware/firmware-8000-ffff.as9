@@ -43,7 +43,7 @@ GRTLP   LDA     ,X+
         BRA     GRTLP
 
 FT245PR FCC "\r\n\r\n"
-BOOTPRM FCC "kolibri.computer BIOS 2020-04-06\n\0"
+BOOTPRM FCC "kolibri.computer BIOS 2020-04-10\n\0"
 Greet_20
 
 ; Write greeter to V9958 screen
@@ -85,7 +85,7 @@ Greet_80
 +
 
 ; Power Chime! Well, actually, right now it's just a simple beep.
-        JSR     OPL2_Beep
+        JSR     OPL2_Power_Chime
 
         ILLOP                   ; Call monitor
 

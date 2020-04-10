@@ -1012,7 +1012,7 @@ VDP_TABLE
         FDB VDP_CursorRight ;CUR_RIG  = $04 ; Ctrl D  Cursor Right     (WS)
         FDB VDP_CursorUp    ;CUR_UP   = $05 ; Ctrl E  Cursor Up        (WS)
         FDB VDP_Ignore      ;ERA_EOL  = $06 ; CTRL F  Erase To EOL
-        FDB VDP_Ignore      ;BEL      = $07 ; Ctrl G  Bell             (ASCII)
+        FDB OPL2_Beep       ;BEL      = $07 ; Ctrl G  Bell             (ASCII)
         FDB VDP_Backspace   ;BS       = $08 ; Ctrl H  Backspace        (ASCII)
         FDB VDP_TAB         ;HT       = $09 ; Ctrl I  Tab              (ASCII)
         FDB VDP_LF          ;LF       = $0A ; Ctrl J  Line Feed        (ASCII)

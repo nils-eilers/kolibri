@@ -10,9 +10,9 @@ OPL2_Write
 * Writes value in reg B to OPL2 register specified by A *
 *********************************************************
 
-; IO_OPL2REGSEL   = $FE26         ; write access
-; IO_OPL2STATUS   = $FE26         ; read access
-; IO_OPL2DATA     = $FE27         ; write only
+; IO_OPL2REGSEL   = $FE26       ; write access
+; IO_OPL2STATUS   = $FE26       ; read access
+; IO_OPL2DATA     = $FE27       ; write only
 
 
         STA     IO_OPL2REGSEL   ; select OPL2 register
@@ -25,6 +25,11 @@ OPL2_Write
         JSR     VDP_Wait11c
         JSR     VDP_Wait11c
         JMP     VDP_Wait11c
+
+
+*******************
+* OPL2_WR REG,VAL *
+*******************
 
 OPL2WR  MACRO   REG,VAL
         LDA     #REG
@@ -50,7 +55,12 @@ OPL2_Init
         BNE     -
         RTS
 
-
+****************
+OPL2_Power_Chime                ; TODO: compose an even more annoying startup sound
+****************
+;
+;       fall trough
+;
 *********
 OPL2_Beep
 *********
@@ -80,7 +90,3 @@ SUBROUTINE OPL2_Wait_Beep
         BNE     .OUTER
         RTS
 ENDSUB
-
-
-
-
