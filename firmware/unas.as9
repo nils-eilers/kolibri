@@ -571,7 +571,7 @@ DO_IMMEDIATE8
 XFREXG                          ; Handle special case of TFR and EXG
                                 ; Display "  r1,r2"
         LBSR    Print2Spaces    ; Two spaces
-        LDX     Mon_Adr        ; Get address of op code
+        LDX     Mon_Adr         ; Get address of op code
         LDA     1,X             ; Get next byte (postbyte)
         ANDA    #%11110000      ; Mask out source register bits
         LSRA                    ; Shift into low order bits
@@ -642,8 +642,9 @@ Print1Reg
         CALL    PUTC        ; Print character
         RTS
 Print2Reg
+        PSHS    B
         CALL    PUTC        ; Print first character
-        TFR    B,A
+        PULS    A
         CALL    PUTC        ; Print second character
         RTS
 ENDSUB
