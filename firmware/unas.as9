@@ -193,13 +193,13 @@ SUBROUTINE Mon_Unassemble
 * stop :XXXX WWWW                     *
 * ----------------------------------- *
 * Input : X = pointer to input buffer *
-*         MON_MEM = default start     *
+*         Mon_Adr = default start     *
 * Output: X = advanced                *
-*         MON_MEM = end address + 1   *
+*         Mon_Adr = next instruction  *
 *         D,W modified                *
 ***************************************
 
-        LDW     MON_MEM         ; preset
+        LDW     Mon_Adr         ; preset
         JSR     Mon_Get_Word
         STW     Mon_Adr         ; store start
         ADDW    #32             ; preset
@@ -304,6 +304,14 @@ SUBROUTINE PrintAddress
         PULS    D,X,PC
 ENDSUB
 
+*******************
+SUBROUTINE PrintPCR
+*******************
+        LDX     #.PCR
+        BRA     PrintString
+.PCR    FCB     "PCR",0
+ENDSUB
+
 **********************
 SUBROUTINE PrintString
 **********************
@@ -314,6 +322,34 @@ SUBROUTINE PrintString
         PSHS    D,X             ; Save registers used
         JSR     [VECTBL+PUTS*2] ; Call monitor function
         PULS    D,X,PC
+ENDSUB
+
+************************
+SUBROUTINE PrintRegister
+************************
+
+***************************************
+* Print register name encoded in bits *
+* 6 and 5 of A for indexed addressing *
+* A=.RR.....  RR: 00=X 01=Y 10=U 11=S *
+***************************************
+* Input : A = post byte               *
+***************************************
+
+        PSHS    D               ; Save used registers
+        ROLA                    ; rotate register bits
+        ROLA                    ; through carry
+        ROLA                    ; to bit 1 and bit 0
+        ROLA
+        ANDA    #%00000011      ; Mask out other bits
+        CMPA    #%00000010      ; X or Y
+        BLO     .LAB
+        INCA
+        ANDA    #%00000110
+        COMA                    ; U or S
+.LAB    ADDA    #'X'
+        CALL    PUTC            ; Print it
+        PULS    D,PC            ; Restore and return
 ENDSUB
 
 *****************
@@ -460,22 +496,16 @@ getpb   STA     Mon_PB          ; Save it
         STA     Mon_Len         ; Save new length
 
 NotIndexed
-
-; Print address followed by a space
-        LDX     Mon_Adr
-        LBSR    PrintAddress
-
-; Print one more space
-
-        LBSR    Mon_Blank
+        LDD     Mon_Adr
+        JSR     Mon_Show_Word   ; print address
 
 ; Print the op code bytes based on the instruction length
 
-        LDB     Mon_Len         ; Number of bytes in instruction
+        LDE     Mon_Len         ; Number of bytes in instruction
         LDX     Mon_Adr         ; Pointer to start of instruction
 opby    LDA     ,X+             ; Get instruction byte and increment pointer
-        LBSR    PrintByte       ; Print it, followed by a space
-        DECB                    ; Decrement byte count
+        JSR     Mon_Show_Blank_Byte
+        DECE                    ; Decrement byte count
         BNE     opby            ; Repeat until done
 
 ; Print needed remaining spaces to pad out to correct column
@@ -1074,7 +1104,7 @@ ind21
         CALL    PUTC
         CALL    PUTC
         LDA     Mon_PB         ; Get postbyte again
-        BSR     PrintRegister   ; Print register name
+        JSR     PrintRegister   ; Print register name
         LBSR    PrintRBracket   ; Print right bracket
         BRA     done
 ind22
@@ -1084,11 +1114,11 @@ ind22
         LBSR    PrintLBracket   ; Print left bracket
         LDX     Mon_Adr
         LDA     2,X             ; Get 8-bit offset
-        LBSR    PrintDollar     ; Dollar sign
-        LBSR    PrintByte       ; Display it
-        LBSR    PrintComma      ; Print comma
-        BSR     PrintPCR        ; Print PCR
-        LBSR    PrintRBracket   ; Print right bracket
+        JSR     PrintDollar     ; Dollar sign
+        JSR     PrintByte       ; Display it
+        JSR     PrintComma      ; Print comma
+        JSR     PrintPCR        ; Print PCR
+        JSR     PrintRBracket   ; Print right bracket
         BRA     done
 ind23
         CMPA    #%10011101      ; Check against pattern
@@ -1098,15 +1128,15 @@ ind23
         LDX     Mon_Adr
         LDD     2,X             ; Get 16-bit offset
         TFR     D,X
-        LBSR    PrintDollar     ; Dollar sign
-        LBSR    PrintAddress    ; Display it
-        LBSR    PrintComma      ; Print comma
-        BSR     PrintPCR        ; Print PCR
-        LBSR    PrintRBracket   ; Print right bracket
+        JSR     PrintDollar     ; Dollar sign
+        JSR     PrintAddress    ; Display it
+        JSR     PrintComma      ; Print comma
+        JSR     PrintPCR        ; Print PCR
+        JSR     PrintRBracket   ; Print right bracket
         BRA     done
 ind24
         CMPA    #%10011111      ; Check against pattern
-        BNE     ind25
+        BNE     done
                                 ; Format is 1xx11111  [n]
         LBSR    PrintLBracket   ; Print left bracket
         LDX     Mon_Adr
@@ -1115,55 +1145,23 @@ ind24
         LBSR    PrintDollar     ; Dollar sign
         LBSR    PrintAddress    ; Display it
         LBSR    PrintRBracket   ; Print right bracket
-        BRA     done
-ind25                           ; Should never be reached
-        BRA     done
 
-; Print register name encoded in bits 5 and 6 of A for indexed
-; addressing: xRRxxxxx where RR: 00=X 01=Y 10=U 11=S
-; Registers changed: X
-PrintRegister
-        PSHS    A               ; Save A
-        ANDA    #%01100000      ; Mask out other bits
-        LSRA                    ; Shift into 2 LSB
-        LSRA
-        LSRA
-        LSRA
-        LSRA
-        LDX     #REGTABLE       ; Lookup table of register name characters
-        LDA     A,X             ; Get character
-        CALL    PUTC            ; Print it
-        PULS    A               ; Restore A
-        RTS                     ; Return
-REGTABLE
-        FCC     "XYUS"
-
-; Print the string "PCR" on the console.
-; Registers changed: X
-PrintPCR
-        LDX     #MSG3            ; "PCR" string
-        LBSR    PrintString
-        RTS
-
-; Print final CR
-
-done    LBSR    Mon_CRLF
+done    LBSR    Mon_CRLF        ; Print final CR
 
 ; Update address to next instruction
 ; If it was a page 2/3 instruction, we need to subtract one from the
-; length to account for Mon_Adrbeing moved to the second byte of the
+; length to account for Mon_Adr being moved to the second byte of the
 ; instruction.
 
-        TST     Mon_Pg23          ; Flag set
+        TST     Mon_Pg23        ; Flag set
         BEQ     not23           ; Branch if not
-        DEC     Mon_Len             ; Decrement length
+        DEC     Mon_Len         ; Decrement length
 not23   CLRA                    ; Clear MSB of D
-        LDB     Mon_Len             ; Get length byte in LSB of D
-        ADDD    Mon_Adr           ; Add to address
-        STD     Mon_Adr           ; Write new address
-
-; Return
+        LDB     Mon_Len         ; Get length byte in LSB of D
+        ADDD    Mon_Adr         ; Add to address
+        STD     Mon_Adr         ; Write new address
         RTS
+ENDSUB
 
 ; *** DATA
 
@@ -1979,12 +1977,5 @@ PAGE3
 
 ; Display strings. Should be terminated in EOT character.
 
-MSG1    FCC     "; INVALID"
-        FCB     EOT
-
-MSG2    FCC     "PRESS <SPACE> TO CONTINUE, <Q> TO QUIT "
-        FCB     EOT
-
-MSG3    FCC     "PCR"
-        FCB     EOT
+MSG1    BYTE    "; INVALID",0
 
