@@ -525,18 +525,32 @@ opby    LDA     ,X+             ; Get instruction byte and increment pointer
         ADDD    #1
         STD     Mon_Adr
 
-; Get and print mnemonic (4 chars)
+; Get and print mnemonic (4 chars) (3 bytes packed)
 
 noinc   LDB     Mon_OT          ; Get instruction type to index into table
-        LDX     #MNEMONICS      ; Pointer to start of table
+        LDX     #MNEMONICS-1    ; Pointer to start of table
         ABX
         ABX
-        ABX
-        ABX
-        LEAY    4,X
-noinc10 LDA     ,X+
-        CALL    PUTC
-        CMPR    X,Y
+        ABX                     ; index * 3
+        LDQ     ,X              ; packed chars
+        LDA     #4
+        STA     MON_TMP         ; countdown
+        CLRA                    ; only 24 bits used
+
+noinc10 DIVQ    #32             ; extract 5 bits
+        TFR     B,A             ; 5 bit encoded char
+        CMPA    #1              ; blank
+        BNE     noinc15
+        LDA     #-31
+
+noinc15 ADDA    #'?'            ; add offset
+        CMPA    #'Z'
+        BLS     noinc20
+        SUBA    #$29            ; for '2' and '3'
+
+noinc20 CALL    PUTC
+        CLRD                    ; clear upper part of Q
+        DEC     MON_TMP
         BNE     noinc10
 
 ; Display any operands based on addressing mode and call appropriate
@@ -1167,139 +1181,139 @@ ENDSUB
 
 ; Table of instruction strings. 4 bytes per table entry
 MNEMONICS
-        FCC     "??? "          ; $00
-        FCC     "ABX "          ; $01
-        FCC     "ADCA"          ; $02
-        FCC     "ADCB"          ; $03
-        FCC     "ADDA"          ; $04
-        FCC     "ADDB"          ; $05
-        FCC     "ADDD"          ; $06
-        FCC     "ANDA"          ; $07
-        FCC     "ANDB"          ; $08
-        FCC     "ANDC"          ; $09 Should really  be "ANDCC"
-        FCC     "ASL "          ; $0A
-        FCC     "ASLA"          ; $0B
-        FCC     "ASLB"          ; $0C
-        FCC     "ASR "          ; $0D
-        FCC     "ASRA"          ; $0E
-        FCC     "ASRB"          ; $0F
-        FCC     "BCC "          ; $10
-        FCC     "BCS "          ; $11
-        FCC     "BEQ "          ; $12
-        FCC     "BGE "          ; $13
-        FCC     "BGT "          ; $14
-        FCC     "BHI "          ; $15
-        FCC     "BITA"          ; $16
-        FCC     "BITB"          ; $17
-        FCC     "BLE "          ; $18
-        FCC     "BLS "          ; $19
-        FCC     "BLT "          ; $1A
-        FCC     "BMI "          ; $1B
-        FCC     "BNE "          ; $1C
-        FCC     "BPL "          ; $1D
-        FCC     "BRA "          ; $1E
-        FCC     "BRN "          ; $1F
-        FCC     "BSR "          ; $20
-        FCC     "BVC "          ; $21
-        FCC     "BVS "          ; $22
-        FCC     "CLR "          ; $23
-        FCC     "CLRA"          ; $24
-        FCC     "CLRB"          ; $25
-        FCC     "CMPA"          ; $26
-        FCC     "CMPB"          ; $27
-        FCC     "CMPD"          ; $28
-        FCC     "CMPS"          ; $29
-        FCC     "CMPU"          ; $2A
-        FCC     "CMPX"          ; $2B
-        FCC     "CMPY"          ; $2C
-        FCC     "COMA"          ; $2D
-        FCC     "COMB"          ; $2E
-        FCC     "COM "          ; $2F
-        FCC     "CWAI"          ; $30
-        FCC     "DAA "          ; $31
-        FCC     "DEC "          ; $32
-        FCC     "DECA"          ; $33
-        FCC     "DECB"          ; $34
-        FCC     "EORA"          ; $35
-        FCC     "EORB"          ; $36
-        FCC     "EXG "          ; $37
-        FCC     "INC "          ; $38
-        FCC     "INCA"          ; $39
-        FCC     "INCB"          ; $3A
-        FCC     "JMP "          ; $3B
-        FCC     "JSR "          ; $3C
-        FCC     "LBCC"          ; $3D
-        FCC     "LBCS"          ; $3E
-        FCC     "LBEQ"          ; $3F
-        FCC     "LBGE"          ; $40
-        FCC     "LBGT"          ; $41
-        FCC     "LBHI"          ; $42
-        FCC     "LBLE"          ; $43
-        FCC     "LBLS"          ; $44
-        FCC     "LBLT"          ; $45
-        FCC     "LBMI"          ; $46
-        FCC     "LBNE"          ; $47
-        FCC     "LBPL"          ; $48
-        FCC     "LBRA"          ; $49
-        FCC     "LBRN"          ; $4A
-        FCC     "LBSR"          ; $4B
-        FCC     "LBVC"          ; $4C
-        FCC     "LBVS"          ; $4D
-        FCC     "LDA "          ; $4E
-        FCC     "LDB "          ; $4F
-        FCC     "LDD "          ; $50
-        FCC     "LDS "          ; $51
-        FCC     "LDU "          ; $52
-        FCC     "LDX "          ; $53
-        FCC     "LDY "          ; $54
-        FCC     "LEAS"          ; $55
-        FCC     "LEAU"          ; $56
-        FCC     "LEAX"          ; $57
-        FCC     "LEAY"          ; $58
-        FCC     "LSR "          ; $59
-        FCC     "LSRA"          ; $5A
-        FCC     "LSRB"          ; $5B
-        FCC     "MUL "          ; $5C
-        FCC     "NEG "          ; $5D
-        FCC     "NEGA"          ; $5E
-        FCC     "NEGB"          ; $5F
-        FCC     "NOP "          ; $60
-        FCC     "ORA "          ; $61
-        FCC     "ORB "          ; $62
-        FCC     "ORCC"          ; $63
-        FCC     "PSHS"          ; $64
-        FCC     "PSHU"          ; $65
-        FCC     "PULS"          ; $66
-        FCC     "PULU"          ; $67
-        FCC     "ROL "          ; $68
-        FCC     "ROLA"          ; $69
-        FCC     "ROLB"          ; $6A
-        FCC     "ROR "          ; $6B
-        FCC     "RORA"          ; $6C
-        FCC     "RORB"          ; $6D
-        FCC     "RTI "          ; $6E
-        FCC     "RTS "          ; $6F
-        FCC     "SBCA"          ; $70
-        FCC     "SBCB"          ; $71
-        FCC     "SEX "          ; $72
-        FCC     "STA "          ; $73
-        FCC     "STB "          ; $74
-        FCC     "STD "          ; $75
-        FCC     "STS "          ; $76
-        FCC     "STU "          ; $77
-        FCC     "STX "          ; $78
-        FCC     "STY "          ; $79
-        FCC     "SUBA"          ; $7A
-        FCC     "SUBB"          ; $7B
-        FCC     "SUBD"          ; $7C
-        FCC     "SWI "          ; $7D
-        FCC     "SWI2"          ; $7E
-        FCC     "SWI3"          ; $7F
-        FCC     "SYNC"          ; $80
-        FCC     "TFR "          ; $81
-        FCC     "TST "          ; $82
-        FCC     "TSTA"          ; $83
-        FCC     "TSTB"          ; $84
+        C5TO3   "??? "          ; $00
+        C5TO3   "ABX "          ; $01
+        C5TO3   "ADCA"          ; $02
+        C5TO3   "ADCB"          ; $03
+        C5TO3   "ADDA"          ; $04
+        C5TO3   "ADDB"          ; $05
+        C5TO3   "ADDD"          ; $06
+        C5TO3   "ANDA"          ; $07
+        C5TO3   "ANDB"          ; $08
+        C5TO3   "ANDC"          ; $09 Should really  be "ANDCC"
+        C5TO3   "ASL "          ; $0A
+        C5TO3   "ASLA"          ; $0B
+        C5TO3   "ASLB"          ; $0C
+        C5TO3   "ASR "          ; $0D
+        C5TO3   "ASRA"          ; $0E
+        C5TO3   "ASRB"          ; $0F
+        C5TO3   "BCC "          ; $10
+        C5TO3   "BCS "          ; $11
+        C5TO3   "BEQ "          ; $12
+        C5TO3   "BGE "          ; $13
+        C5TO3   "BGT "          ; $14
+        C5TO3   "BHI "          ; $15
+        C5TO3   "BITA"          ; $16
+        C5TO3   "BITB"          ; $17
+        C5TO3   "BLE "          ; $18
+        C5TO3   "BLS "          ; $19
+        C5TO3   "BLT "          ; $1A
+        C5TO3   "BMI "          ; $1B
+        C5TO3   "BNE "          ; $1C
+        C5TO3   "BPL "          ; $1D
+        C5TO3   "BRA "          ; $1E
+        C5TO3   "BRN "          ; $1F
+        C5TO3   "BSR "          ; $20
+        C5TO3   "BVC "          ; $21
+        C5TO3   "BVS "          ; $22
+        C5TO3   "CLR "          ; $23
+        C5TO3   "CLRA"          ; $24
+        C5TO3   "CLRB"          ; $25
+        C5TO3   "CMPA"          ; $26
+        C5TO3   "CMPB"          ; $27
+        C5TO3   "CMPD"          ; $28
+        C5TO3   "CMPS"          ; $29
+        C5TO3   "CMPU"          ; $2A
+        C5TO3   "CMPX"          ; $2B
+        C5TO3   "CMPY"          ; $2C
+        C5TO3   "COMA"          ; $2D
+        C5TO3   "COMB"          ; $2E
+        C5TO3   "COM "          ; $2F
+        C5TO3   "CWAI"          ; $30
+        C5TO3   "DAA "          ; $31
+        C5TO3   "DEC "          ; $32
+        C5TO3   "DECA"          ; $33
+        C5TO3   "DECB"          ; $34
+        C5TO3   "EORA"          ; $35
+        C5TO3   "EORB"          ; $36
+        C5TO3   "EXG "          ; $37
+        C5TO3   "INC "          ; $38
+        C5TO3   "INCA"          ; $39
+        C5TO3   "INCB"          ; $3A
+        C5TO3   "JMP "          ; $3B
+        C5TO3   "JSR "          ; $3C
+        C5TO3   "LBCC"          ; $3D
+        C5TO3   "LBCS"          ; $3E
+        C5TO3   "LBEQ"          ; $3F
+        C5TO3   "LBGE"          ; $40
+        C5TO3   "LBGT"          ; $41
+        C5TO3   "LBHI"          ; $42
+        C5TO3   "LBLE"          ; $43
+        C5TO3   "LBLS"          ; $44
+        C5TO3   "LBLT"          ; $45
+        C5TO3   "LBMI"          ; $46
+        C5TO3   "LBNE"          ; $47
+        C5TO3   "LBPL"          ; $48
+        C5TO3   "LBRA"          ; $49
+        C5TO3   "LBRN"          ; $4A
+        C5TO3   "LBSR"          ; $4B
+        C5TO3   "LBVC"          ; $4C
+        C5TO3   "LBVS"          ; $4D
+        C5TO3   "LDA "          ; $4E
+        C5TO3   "LDB "          ; $4F
+        C5TO3   "LDD "          ; $50
+        C5TO3   "LDS "          ; $51
+        C5TO3   "LDU "          ; $52
+        C5TO3   "LDX "          ; $53
+        C5TO3   "LDY "          ; $54
+        C5TO3   "LEAS"          ; $55
+        C5TO3   "LEAU"          ; $56
+        C5TO3   "LEAX"          ; $57
+        C5TO3   "LEAY"          ; $58
+        C5TO3   "LSR "          ; $59
+        C5TO3   "LSRA"          ; $5A
+        C5TO3   "LSRB"          ; $5B
+        C5TO3   "MUL "          ; $5C
+        C5TO3   "NEG "          ; $5D
+        C5TO3   "NEGA"          ; $5E
+        C5TO3   "NEGB"          ; $5F
+        C5TO3   "NOP "          ; $60
+        C5TO3   "ORA "          ; $61
+        C5TO3   "ORB "          ; $62
+        C5TO3   "ORCC"          ; $63
+        C5TO3   "PSHS"          ; $64
+        C5TO3   "PSHU"          ; $65
+        C5TO3   "PULS"          ; $66
+        C5TO3   "PULU"          ; $67
+        C5TO3   "ROL "          ; $68
+        C5TO3   "ROLA"          ; $69
+        C5TO3   "ROLB"          ; $6A
+        C5TO3   "ROR "          ; $6B
+        C5TO3   "RORA"          ; $6C
+        C5TO3   "RORB"          ; $6D
+        C5TO3   "RTI "          ; $6E
+        C5TO3   "RTS "          ; $6F
+        C5TO3   "SBCA"          ; $70
+        C5TO3   "SBCB"          ; $71
+        C5TO3   "SEX "          ; $72
+        C5TO3   "STA "          ; $73
+        C5TO3   "STB "          ; $74
+        C5TO3   "STD "          ; $75
+        C5TO3   "STS "          ; $76
+        C5TO3   "STU "          ; $77
+        C5TO3   "STX "          ; $78
+        C5TO3   "STY "          ; $79
+        C5TO3   "SUBA"          ; $7A
+        C5TO3   "SUBB"          ; $7B
+        C5TO3   "SUBD"          ; $7C
+        C5TO3   "SWI "          ; $7D
+        C5TO3   "SWI2"          ; $7E
+        C5TO3   "SWI3"          ; $7F
+        C5TO3   "SYNC"          ; $80
+        C5TO3   "TFR "          ; $81
+        C5TO3   "TST "          ; $82
+        C5TO3   "TSTA"          ; $83
+        C5TO3   "TSTB"          ; $84
 
 ; Lengths of instructions given an addressing mode. Matches values of
 ; AM_* Indexed addessing instructions length can increase due to post
