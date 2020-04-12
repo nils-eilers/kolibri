@@ -165,6 +165,21 @@ OP_TFR   EQU    $81
 OP_TST   EQU    $82
 OP_TSTA  EQU    $83
 OP_TSTB  EQU    $84
+OP_LDMD  EQU    $85
+OP_LDE   EQU    $86
+OP_LDF   EQU    $87
+OP_LDW   EQU    $88
+OP_TFM   EQU    $89
+OP_CLRD  EQU    $8A
+OP_CLRW  EQU    $8B
+OP_DECW  EQU    $8C
+OP_STE   EQU    $8D
+OP_STF   EQU    $8E
+OP_DECD  EQU    $8F
+OP_LSRD  EQU    $90
+OP_CMPE  EQU    $91
+OP_CMPF  EQU    $92
+OP_CMPW  EQU    $93
 
 ; Addressing Modes. Mon_OCS table lists these for each instruction.
 ; LENGTHS lists the instruction length for each addressing mode.
@@ -211,16 +226,6 @@ SUBROUTINE Mon_Unassemble
         CMPW    Mon_Adr         ; Compare end condition
         BHI     .loop           ; Go back and repeat until done
         RTS                     ; Return to caller
-ENDSUB
-
-**********************
-SUBROUTINE PrintDollar
-**********************
-
-        PSHS    D
-        LDA     #'$
-        CALL    PUTC
-        PULS    D,PC
 ENDSUB
 
 *********************
@@ -403,12 +408,12 @@ found10                         ; Found entry in table
         STB     Mon_OT          ; Save it
         ADDA    #1              ; Advanced to address mode entry in table
         LDB     A,X             ; Get address mode
-        STB     Mon_AM              ; Save it
+        STB     Mon_AM          ; Save it
         CLRA                    ; Clear MSB of D, addressing mode is now in A:B (D)
         TFR     D,X             ; Put addressing mode in X
         LDB     LENGTHS,X       ; Get instruction length from table
-        STB     Mon_Len             ; Store it
-        INC     Mon_Len             ; Add one because it is a two byte op code
+        STB     Mon_Len         ; Store it
+        INC     Mon_Len         ; Add one because it is a two byte op code
         BRA     dism            ; Continue normal disassembly processing.
 
 handle11                        ; Same logic as above, but use table for page 3 opcodes.
@@ -604,6 +609,8 @@ DO_IMMEDIATE8
         BEQ     XFREXG          ; Handle special case of TFR
         CMPA    #OP_EXG         ; Is is EXG?
         BEQ     XFREXG          ; Handle special case of EXG
+        CMPA    #OP_TFM         ; Is is TFM?
+        BEQ     TFMREG          ; Handle special case of TFM
 
         CMPA    #OP_PULS        ; Is is PULS?
         LBEQ    PULPSH
@@ -617,8 +624,7 @@ DO_IMMEDIATE8
         LBSR    Print2Spaces    ; Two spaces
         LDA     #'#             ; Number sign
         CALL    PUTC
-        LBSR    PrintDollar     ; Dollar sign
-        LDX     Mon_Adr        ; Get address of op code
+        LDX     Mon_Adr         ; Get address of op code
         LDA     1,X             ; Get next byte (immediate data)
         LBSR    PrintByte       ; Print as hex value
         LBRA    done
@@ -639,6 +645,33 @@ XFREXG                          ; Handle special case of TFR and EXG
         LDA     1,X             ; Get postbyte again
         ANDA    #%00001111      ; Mask out destination register bits
         BSR     TFREXGRegister  ; Print destination register name
+        LBRA    done
+
+TFMREG                          ; Handle special case of TFM
+        LBSR    Print2Spaces    ; Two spaces
+        LDX     Mon_Adr         ; Get address of op code
+        CLRE                    ; clear upper byte of W
+        LDF     ,X              ; Get op code
+        SUBF    #$38            ; start of TFM opcodes
+        LDA     1,X             ; Get next byte (postbyte)
+        ANDA    #%11110000      ; Mask out source register bits
+        LSRA                    ; Shift into low order bits
+        LSRA
+        LSRA
+        LSRA
+        BSR     TFREXGRegister  ; Print source register name
+        LDA     TFMS1,W
+        BEQ     TFMREG10
+        CALL    PUTC
+TFMREG10
+        LDA     #',             ; Print comma
+        CALL    PUTC
+        LDA     1,X             ; Get postbyte again
+        ANDA    #%00001111      ; Mask out destination register bits
+        BSR     TFREXGRegister  ; Print destination register name
+        LDA     TFMS2,W
+        LBEQ    done
+        CALL    PUTC
         LBRA    done
 
 ; Look up register name (in A) from Transfer/Exchange postbyte. 4 LSB
@@ -812,7 +845,6 @@ DO_IMMEDIATE16                  ; Display "  #$nnnn"
         LBSR    Print2Spaces    ; Two spaces
         LDA     #'#             ; Number sign
         CALL    PUTC
-        LBSR    PrintDollar     ; Dollar sign
         LDX     Mon_Adr        ; Get address of op code
         LDA     1,X             ; Get first byte (immediate data MSB)
         LDB     2,X             ; Get second byte (immediate data LSB)
@@ -822,7 +854,6 @@ DO_IMMEDIATE16                  ; Display "  #$nnnn"
 
 DO_DIRECT                       ; Display "  $nn"
         LBSR    Print2Spaces    ; Two spaces
-        LBSR    PrintDollar     ; Dollar sign
         LDX     Mon_Adr        ; Get address of op code
         LDA     1,X             ; Get next byte (byte data)
         LBSR    PrintByte       ; Print as hex value
@@ -830,7 +861,6 @@ DO_DIRECT                       ; Display "  $nn"
 
 DO_EXTENDED                     ; Display "  $nnnn"
         LBSR    Print2Spaces    ; Two spaces
-        LBSR    PrintDollar     ; Dollar sign
         LDX     Mon_Adr        ; Get address of op code
         LDA     1,X             ; Get first byte (address MSB)
         LDB     2,X             ; Get second byte (address LSB)
@@ -840,7 +870,6 @@ DO_EXTENDED                     ; Display "  $nnnn"
 
 DO_RELATIVE8                    ; Display "  $nnnn"
         LBSR    Print2Spaces    ; Two spaces
-        LBSR    PrintDollar     ; Dollar sign
 
 ; Destination address for relative branch is address of opcode + (sign
 ; extended)offset + 2, e.g.
@@ -858,7 +887,6 @@ DO_RELATIVE8                    ; Display "  $nnnn"
 
 DO_RELATIVE16                   ; Display "  $nnnn"
         LBSR    Print2Spaces    ; Two spaces
-        LBSR    PrintDollar     ; Dollar sign
 
 ; Destination address calculation is similar to above, except offset
 ; is 16 bits and need to add 3.
@@ -910,7 +938,6 @@ DO_INDEXED
 
                                 ; Format is 0RRnnnnn  n,R
         ANDA    #%00011111      ; Get 5-bit offset
-        LBSR    PrintDollar     ; Dollar sign
         LBSR    PrintByte       ; Print offset
         LBSR    PrintComma      ; Print comma
         LDA     Mon_PB         ; Get postbyte again
@@ -931,7 +958,6 @@ ind3
                                 ; Format is 1RR01000  n,R
         LDX     Mon_Adr
         LDA     2,X             ; Get 8-bit offset
-        LBSR    PrintDollar     ; Dollar sign
         LBSR    PrintByte       ; Display it
         LBSR    PrintComma      ; Print comma
         LDA     Mon_PB         ; Get postbyte again
@@ -944,7 +970,6 @@ ind4
         LDX     Mon_Adr
         LDD     2,X             ; Get 16-bit offset
         TFR     D,X
-        LBSR    PrintDollar     ; Dollar sign
         LBSR    PrintAddress    ; Display it
         LBSR    PrintComma      ; Print comma
         LDA     Mon_PB         ; Get postbyte again
@@ -1022,7 +1047,6 @@ ind12
                                 ; Format is 1xx01100  n,PCR
         LDX     Mon_Adr
         LDA     2,X             ; Get 8-bit offset
-        LBSR    PrintDollar     ; Dollar sign
         LBSR    PrintByte       ; Display it
         LBSR    PrintComma      ; Print comma
         LBSR    PrintPCR        ; Print PCR
@@ -1034,7 +1058,6 @@ ind13
         LDX     Mon_Adr
         LDD     2,X             ; Get 16-bit offset
         TFR     D,X
-        LBSR    PrintDollar     ; Dollar sign
         LBSR    PrintAddress    ; Display it
         LBSR    PrintComma      ; Print comma
         LBSR    PrintPCR        ; Print PCR
@@ -1056,7 +1079,6 @@ ind15
         LBSR    PrintLBracket   ; Print left bracket
         LDX     Mon_Adr
         LDA     2,X             ; Get 8-bit offset
-        LBSR    PrintDollar     ; Dollar sign
         LBSR    PrintByte       ; Display it
         LBSR    PrintComma      ; Print comma
         LDA     Mon_PB         ; Get postbyte again
@@ -1071,7 +1093,6 @@ ind16
         LDX     Mon_Adr
         LDD     2,X             ; Get 16-bit offset
         TFR     D,X
-        LBSR    PrintDollar     ; Dollar sign
         LBSR    PrintAddress    ; Display it
         LBSR    PrintComma      ; Print comma
         LDA     Mon_PB         ; Get postbyte again
@@ -1139,7 +1160,6 @@ ind22
         LBSR    PrintLBracket   ; Print left bracket
         LDX     Mon_Adr
         LDA     2,X             ; Get 8-bit offset
-        JSR     PrintDollar     ; Dollar sign
         JSR     PrintByte       ; Display it
         JSR     PrintComma      ; Print comma
         JSR     PrintPCR        ; Print PCR
@@ -1153,7 +1173,6 @@ ind23
         LDX     Mon_Adr
         LDD     2,X             ; Get 16-bit offset
         TFR     D,X
-        JSR     PrintDollar     ; Dollar sign
         JSR     PrintAddress    ; Display it
         JSR     PrintComma      ; Print comma
         JSR     PrintPCR        ; Print PCR
@@ -1167,7 +1186,6 @@ ind24
         LDX     Mon_Adr
         LDD     2,X             ; Get 16-bit offset
         TFR     D,X
-        LBSR    PrintDollar     ; Dollar sign
         LBSR    PrintAddress    ; Display it
         LBSR    PrintRBracket   ; Print right bracket
 
@@ -1328,6 +1346,21 @@ MNEMONICS
         C5TO3   "TST  "         ; $82
         C5TO3   "TSTA "         ; $83
         C5TO3   "TSTB "         ; $84
+        C5TO3   "LDMD "         ; $85
+        C5TO3   "LDE  "         ; $86
+        C5TO3   "LDF  "         ; $87
+        C5TO3   "LDW  "         ; $88
+        C5TO3   "TFM  "         ; $89
+        C5TO3   "CLRD "         ; $8A
+        C5TO3   "CLRW "         ; $8B
+        C5TO3   "DECW "         ; $8C
+        C5TO3   "STE  "         ; $8D
+        C5TO3   "STF  "         ; $8E
+        C5TO3   "DECD "         ; $8F
+        C5TO3   "LSRD "         ; $90
+        C5TO3   "CMPE "         ; $91
+        C5TO3   "CMPF "         ; $92
+        C5TO3   "CMPW "         ; $93
 
 ; Lengths of instructions given an addressing mode. Matches values of
 ; AM_* Indexed addessing instructions length can increase due to post
@@ -1964,46 +1997,70 @@ PAGE2
         FCB     $2E,OP_LBGT,AM_RELATIVE16
         FCB     $2F,OP_LBLE,AM_RELATIVE16
         FCB     $3F,OP_SWI2,AM_INHERENT
+        FCB     $44,OP_LSRD,AM_INHERENT
+        FCB     $4A,OP_DECD,AM_INHERENT
+        FCB     $4F,OP_CLRD,AM_INHERENT
+        FCB     $5A,OP_DECW,AM_INHERENT
+        FCB     $5F,OP_CLRW,AM_INHERENT
         FCB     $83,OP_CMPD,AM_IMMEDIATE16
+        FCB     $86,OP_LDW ,AM_IMMEDIATE16
         FCB     $8C,OP_CMPY,AM_IMMEDIATE16
-        FCB     $8E,OP_LDY,AM_IMMEDIATE16
+        FCB     $8E,OP_LDY ,AM_IMMEDIATE16
+        FCB     $91,OP_CMPW,AM_DIRECT
         FCB     $93,OP_CMPD,AM_DIRECT
         FCB     $9C,OP_CMPY,AM_DIRECT
-        FCB     $9E,OP_LDY,AM_DIRECT
-        FCB     $9D,OP_STY,AM_DIRECT
+        FCB     $9E,OP_LDY ,AM_DIRECT
+        FCB     $9D,OP_STY ,AM_DIRECT
         FCB     $A3,OP_CMPD,AM_INDEXED
         FCB     $AC,OP_CMPY,AM_INDEXED
-        FCB     $AE,OP_LDY,AM_INDEXED
-        FCB     $AF,OP_STY,AM_INDEXED
+        FCB     $AE,OP_LDY ,AM_INDEXED
+        FCB     $AF,OP_STY ,AM_INDEXED
         FCB     $B3,OP_CMPD,AM_EXTENDED
         FCB     $BC,OP_CMPY,AM_EXTENDED
-        FCB     $BE,OP_LDY,AM_EXTENDED
-        FCB     $BF,OP_STY,AM_EXTENDED
-        FCB     $CE,OP_LDS,AM_IMMEDIATE16
-        FCB     $DE,OP_LDS,AM_DIRECT
-        FCB     $DD,OP_STS,AM_DIRECT
-        FCB     $EE,OP_LDS,AM_INDEXED
-        FCB     $EF,OP_STS,AM_INDEXED
-        FCB     $FE,OP_LDS,AM_EXTENDED
-        FCB     $FF,OP_STS,AM_EXTENDED
+        FCB     $BE,OP_LDY ,AM_EXTENDED
+        FCB     $BF,OP_STY ,AM_EXTENDED
+        FCB     $CE,OP_LDS ,AM_IMMEDIATE16
+        FCB     $DE,OP_LDS ,AM_DIRECT
+        FCB     $DD,OP_STS ,AM_DIRECT
+        FCB     $EE,OP_LDS ,AM_INDEXED
+        FCB     $EF,OP_STS ,AM_INDEXED
+        FCB     $FE,OP_LDS ,AM_EXTENDED
+        FCB     $FF,OP_STS ,AM_EXTENDED
         FCB     0                             ; indicates end of table
 
 ; Special table for page 3 instructions prefixed by $11.
 ; Same format as table above.
 
 PAGE3
+        FCB     $38,OP_TFM ,AM_IMMEDIATE8
+        FCB     $39,OP_TFM ,AM_IMMEDIATE8
+        FCB     $3A,OP_TFM ,AM_IMMEDIATE8
+        FCB     $3B,OP_TFM ,AM_IMMEDIATE8
+        FCB     $3D,OP_LDMD,AM_IMMEDIATE8
         FCB     $3F,OP_SWI3,AM_INHERENT
         FCB     $83,OP_CMPU,AM_IMMEDIATE16
+        FCB     $86,OP_LDE ,AM_IMMEDIATE8
         FCB     $8C,OP_CMPS,AM_IMMEDIATE16
+        FCB     $91,OP_CMPE,AM_DIRECT
         FCB     $93,OP_CMPU,AM_DIRECT
+        FCB     $96,OP_LDE ,AM_DIRECT
+        FCB     $97,OP_STE ,AM_DIRECT
         FCB     $9C,OP_CMPS,AM_DIRECT
         FCB     $A3,OP_CMPU,AM_INDEXED
         FCB     $AC,OP_CMPS,AM_INDEXED
         FCB     $B3,OP_CMPU,AM_EXTENDED
+        FCB     $B7,OP_STE ,AM_EXTENDED
         FCB     $BC,OP_CMPS,AM_EXTENDED
+        FCB     $C6,OP_LDF ,AM_IMMEDIATE8
+        FCB     $D1,OP_CMPF,AM_DIRECT
+        FCB     $D6,OP_LDF ,AM_DIRECT
+        FCB     $D7,OP_STF ,AM_DIRECT
+        FCB     $F7,OP_STF ,AM_EXTENDED
         FCB     0                             ; indicates end of table
 
 ; Display strings. Should be terminated in EOT character.
 
 MSG1    BYTE    "; INVALID",0
+TFMS1   BYTE    "+-+",0
+TFMS2   BYTE    "+-",0,"+"
 
