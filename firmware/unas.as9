@@ -180,6 +180,11 @@ OP_LSRD  EQU    $90
 OP_CMPE  EQU    $91
 OP_CMPF  EQU    $92
 OP_CMPW  EQU    $93
+OP_SEXW  EQU    $94
+OP_LDQ   EQU    $95
+OP_CMPR  EQU    $96
+OP_DECE  EQU    $97
+OP_DECF  EQU    $98
 
 ; Addressing Modes. Mon_OCS table lists these for each instruction.
 ; LENGTHS lists the instruction length for each addressing mode.
@@ -197,6 +202,7 @@ AM_EXTENDED     EQU     5       ; LDA $1234 (3)
 AM_RELATIVE8    EQU     6       ; BSR $1234 (2)
 AM_RELATIVE16   EQU     7       ; LBSR $1234 (3)
 AM_INDEXED      EQU     8       ; LDA 0,X (2+)
+AM_IMMEDIATE32  EQU     9       ; LDQ #$12345678 (5)
 
 *************************
 SUBROUTINE Mon_Unassemble
@@ -581,6 +587,8 @@ noinc20 CALL    PUTC
         BEQ     DO_IMMEDIATE8
         CMPA    #AM_IMMEDIATE16
         LBEQ    DO_IMMEDIATE16
+        CMPA    #AM_IMMEDIATE32
+        LBEQ    DO_IMMEDIATE32
         CMPA    #AM_DIRECT
         LBEQ    DO_DIRECT
         CMPA    #AM_EXTENDED
@@ -609,6 +617,8 @@ DO_IMMEDIATE8
         BEQ     XFREXG          ; Handle special case of TFR
         CMPA    #OP_EXG         ; Is is EXG?
         BEQ     XFREXG          ; Handle special case of EXG
+        CMPA    #OP_CMPR        ; Is is CMPR?
+        BEQ     XFREXG          ; Handle special case of CMPR
         CMPA    #OP_TFM         ; Is is TFM?
         BEQ     TFMREG          ; Handle special case of TFM
 
@@ -643,7 +653,6 @@ XFREXG                          ; Handle special case of TFR and EXG
         LDA     #',             ; Print comma
         CALL    PUTC
         LDA     1,X             ; Get postbyte again
-        ANDA    #%00001111      ; Mask out destination register bits
         BSR     TFREXGRegister  ; Print destination register name
         LBRA    done
 
@@ -667,65 +676,45 @@ TFMREG10
         LDA     #',             ; Print comma
         CALL    PUTC
         LDA     1,X             ; Get postbyte again
-        ANDA    #%00001111      ; Mask out destination register bits
         BSR     TFREXGRegister  ; Print destination register name
         LDA     TFMS2,W
         LBEQ    done
         CALL    PUTC
         LBRA    done
 
-; Look up register name (in A) from Transfer/Exchange postbyte. 4 LSB
-; bits determine the register name. Value is printed. Invalid value
-; is shown as '?'.
-; Value:    0 1 2 3 4 5  8 9 10 11
-; Register: D X Y U S PC A B CC DP
+RegisterName
+        BYTE    'D',0  ; 0
+        BYTE    'X',0  ; 1
+        BYTE    'Y',0  ; 2
+        BYTE    'U',0  ; 3
+        BYTE    'S',0  ; 4
+        BYTE    "PC"   ; 5
+        BYTE    'W',0  ; 6
+        BYTE    'V',0  ; 7
+        BYTE    'A',0  ; 8
+        BYTE    'B',0  ; 9
+        BYTE    "CC"   ; A
+        BYTE    "DP"   ; B
+        BYTE    '0',0  ; C
+        BYTE    '0',0  ; D
+        BYTE    'E',0  ; E
+        BYTE    'F',0  ; F
 
 TFREXGRegister
-        CMPA    #0
-        BNE     Try1
-        LDA     #'D
-        BRA     Print1Reg
-Try1    CMPA    #1
-        BNE     Try2
-        LDA     #'X
-        BRA     Print1Reg
-Try2    CMPA    #2
-        BNE     Try3
-        LDA     #'Y
-        BRA     Print1Reg
-Try3    CMPA    #3
-        BNE     Try4
-        LDA     #'U
-        BRA     Print1Reg
-Try4    CMPA    #4
-        BNE     Try5
-        LDA     #'S
-        BRA     Print1Reg
-Try5    CMPA    #5
-        BNE     Try8
-        LDA     #'P
-        LDB     #'C
-        BRA     Print2Reg
-Try8    CMPA    #8
-        BNE     Try9
-        LDA     #'A
-        BRA     Print1Reg
-Try9    CMPA    #9
-        BNE     Try10
-        LDA     #'B
-        BRA     Print1Reg
-Try10   CMPA    #10
-        BNE     Try11
-        LDA     #'C
-        LDB     #'C
-        BRA     Print2Reg
-Try11   CMPA    #11
-        BNE     Inv
-        LDA     #'D
-        LDB     #'P
-        BRA     Print2Reg
-Inv     LDA     #'?             ; Invalid
-                                ; Fall through
+        PSHS    X
+        LDX     #RegisterName
+        ANDA    #15
+        LSLA
+        LDD     A,X
+        PSHS    B
+        CALL    PUTC
+        PULS    A
+        TSTA
+        BEQ     TryRet
+        CALL    PUTC
+TryRet  PULS    X,PC
+ENDSUB
+
 Print1Reg
         CALL    PUTC        ; Print character
         RTS
@@ -735,7 +724,6 @@ Print2Reg
         PULS    A
         CALL    PUTC        ; Print second character
         RTS
-ENDSUB
 
 ; Handle PSHS/PSHU/PULS/PULU instruction operands
 ; Format is a register list, eg; "  A,B,X"
@@ -755,12 +743,11 @@ PULPSH
 
         BITA    #%10000000      ; Bit 7 set?
         BEQ     bit6
-        PSHS    A,B
-        LDA     #'P
-        LDB     #'C
+        PSHS    D
+        LDD     #"PC"
         BSR     Print2Reg       ; Print PC
         CLR     Mon_First
-        PULS    A,B
+        PULS    D
 bit6    BITA    #%01000000      ; Bit 6 set?
         BEQ     bit5
 
@@ -841,16 +828,25 @@ PrintCommaIfNotFirst
         CALL    PUTC
 ret1    RTS
 
-DO_IMMEDIATE16                  ; Display "  #$nnnn"
+DO_IMMEDIATE16                  ; Display "  #nnnn"
         LBSR    Print2Spaces    ; Two spaces
         LDA     #'#             ; Number sign
         CALL    PUTC
-        LDX     Mon_Adr        ; Get address of op code
-        LDA     1,X             ; Get first byte (immediate data MSB)
-        LDB     2,X             ; Get second byte (immediate data LSB)
-        TFR     D,X             ; Put in X to print
-        LBSR    PrintAddress    ; Print as hex value
-        LBRA    done
+        LDX     Mon_Adr         ; Get address of op code
+        LDD     1,X             ; Get immediate data
+        JSR     Mon_Show_Word   ; Print as hex value
+        JMP     done
+
+DO_IMMEDIATE32                  ; Display "  #nnnnnnnn"
+        LBSR    Print2Spaces    ; Two spaces
+        LDA     #'#             ; Number sign
+        CALL    PUTC
+        LDX     Mon_Adr         ; Get address of op code
+        LDD     1,X             ; Get MSB word
+        JSR     Mon_Show_Word   ; print it
+        LDD     3,X             ; Get LSB word
+        JSR     Mon_Show_Word   ; print it
+        JMP     done
 
 DO_DIRECT                       ; Display "  $nn"
         LBSR    Print2Spaces    ; Two spaces
@@ -1361,6 +1357,11 @@ MNEMONICS
         C5TO3   "CMPE "         ; $91
         C5TO3   "CMPF "         ; $92
         C5TO3   "CMPW "         ; $93
+        C5TO3   "SEXW "         ; $94
+        C5TO3   "LDQ  "         ; $95
+        C5TO3   "CMPR "         ; $96
+        C5TO3   "DECE "         ; $97
+        C5TO3   "DECF "         ; $98
 
 ; Lengths of instructions given an addressing mode. Matches values of
 ; AM_* Indexed addessing instructions length can increase due to post
@@ -1375,6 +1376,7 @@ LENGTHS
         FCB     2               ; 6 AM_RELATIVE8
         FCB     3               ; 7 AM_RELATIVE16
         FCB     2               ; 8 AM_INDEXED
+        FCB     5               ; 9 AM_IMMEDIATE32
 
 ; Lookup table to return needed remaining spaces to print to pad out
 ; instruction to correct column in disassembly.
@@ -1452,7 +1454,7 @@ Mon_OCS
         FCB     OP_INV          ; 11 Page 3 extended opcodes (see other table)
         FCB     OP_NOP          ; 12
         FCB     OP_SYNC         ; 13
-        FCB     OP_INV          ; 14
+        FCB     OP_SEXW         ; 14
         FCB     OP_INV          ; 15
         FCB     OP_LBRA         ; 16
         FCB     OP_LBSR         ; 17
@@ -1648,7 +1650,7 @@ Mon_OCS
         FCB     OP_ORB          ; CA
         FCB     OP_ADDB         ; CB
         FCB     OP_LDD          ; CC
-        FCB     OP_INV          ; CD
+        FCB     OP_LDQ          ; CD
         FCB     OP_LDU          ; CE
         FCB     OP_INV          ; CF
 
@@ -1922,7 +1924,7 @@ MODES
         FCB     AM_IMMEDIATE8   ; CA
         FCB     AM_IMMEDIATE8   ; CB
         FCB     AM_IMMEDIATE16  ; CC
-        FCB     AM_INHERENT     ; CD
+        FCB     AM_IMMEDIATE32  ; CD
         FCB     AM_IMMEDIATE16  ; CE
         FCB     AM_INVALID      ; CF
 
@@ -1996,6 +1998,7 @@ PAGE2
         FCB     $2D,OP_LBLT,AM_RELATIVE16
         FCB     $2E,OP_LBGT,AM_RELATIVE16
         FCB     $2F,OP_LBLE,AM_RELATIVE16
+        FCB     $37,OP_CMPR,AM_IMMEDIATE8
         FCB     $3F,OP_SWI2,AM_INHERENT
         FCB     $44,OP_LSRD,AM_INHERENT
         FCB     $4A,OP_DECD,AM_INHERENT
@@ -2038,6 +2041,8 @@ PAGE3
         FCB     $3B,OP_TFM ,AM_IMMEDIATE8
         FCB     $3D,OP_LDMD,AM_IMMEDIATE8
         FCB     $3F,OP_SWI3,AM_INHERENT
+        FCB     $4A,OP_DECE,AM_INHERENT
+        FCB     $5A,OP_DECF,AM_INHERENT
         FCB     $83,OP_CMPU,AM_IMMEDIATE16
         FCB     $86,OP_LDE ,AM_IMMEDIATE8
         FCB     $8C,OP_CMPS,AM_IMMEDIATE16
