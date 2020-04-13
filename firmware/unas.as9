@@ -221,13 +221,14 @@ AM_INVALID      EQU     0       ; $15            (1)
 AM_INHERENT     EQU     1       ; RTS            (1)
 AM_IMMEDIATE8   EQU     2       ; LDA #$12       (2)
 AM_IMMEDIATE16  EQU     3       ; LDD #$1234     (3)
-AM_DIRECT       EQU     4       ; LDA $12        (2)
-AM_EXTENDED     EQU     5       ; LDA $1234      (3)
-AM_RELATIVE8    EQU     6       ; BSR $1234      (2)
-AM_RELATIVE16   EQU     7       ; LBSR $1234     (3)
-AM_INDEXED      EQU     8       ; LDA 0,X        (2+)
-AM_IMMEDIATE32  EQU     9       ; LDQ #$12345678 (5)
+AM_IMMEDIATE32  EQU     4       ; LDQ #$12345678 (5)
+AM_DIRECT       EQU     5       ; LDA $12        (2)
+AM_EXTENDED     EQU     6       ; LDA $1234      (3)
+AM_RELATIVE8    EQU     7       ; BSR $1234      (2)
+AM_RELATIVE16   EQU     8       ; LBSR $1234     (3)
+AM_INDEXED      EQU     9       ; LDA 0,X        (2+)
 AM_REGREG       EQU    10       ; TFR D,X        (2)
+AM_PUSHPULL     EQU    11       ; PSHS X,Y       (2)
 
 *************************
 SUBROUTINE Mon_Unassemble
@@ -288,15 +289,6 @@ SUBROUTINE PrintRBracket
         CALL    PUTC
         PULS    D,PC
 ENDSUB
-
-***********************
-SUBROUTINE Print2Spaces
-***********************
-
-        PSHS    D
-        JSR     Mon_Blank
-        JSR     Mon_Blank
-        PULS    D,PC
 
 **********************
 SUBROUTINE PrintSpaces
@@ -367,9 +359,9 @@ SUBROUTINE PrintCommaReg
         JSR     PrintComma      ; fall through
 ENDSUB
 
-************************
-SUBROUTINE PrintRegister
-************************
+*********************
+SUBROUTINE PrintIndex
+*********************
 
 ***************************************
 * Print register name encoded in bits *
@@ -391,6 +383,41 @@ SUBROUTINE PrintRegister
 .LAB    ADDA    #'X'
         CALL    PUTC            ; Print it
         RTS
+ENDSUB
+
+**********************
+SUBROUTINE PrintRegReg
+**********************
+        PSHS    D
+        ANDA    #15
+        LSLA
+        LDD     A,Y
+        PSHS    B
+        CALL    PUTC
+        PULS    A
+        TSTA
+        BEQ     .Return
+        CALL    PUTC
+.Return PULS    D,PC
+ENDSUB
+
+*******************
+SUBROUTINE PrintTFM
+*******************
+        TSTW                    ; Initial call ?
+        BMI     .Return         ; Not in TFM instruction
+        BNE     .Sign           ; Print sign
+        LDF     ,X              ; Get op code
+        SUBW    #$38            ; Start of TFM codes
+        CMPW    #4              ; Code range $38,$39,$3A,$3B
+        BLO     .Sign           ; Is TFM code
+        LDW     #-1             ; Disable
+        RTS                     ; Return
+.Sign   LDA     TFMS,W          ; Load sign character
+        BEQ     .Skip           ; Not present
+        CALL    PUTC            ; Print it
+.Skip   ADDW    #4              ; Position to target table
+.Return RTS
 ENDSUB
 
 *****************
@@ -546,320 +573,153 @@ noinc20 CALL    PUTC
         TFR     D,W
         LDA     MNE5,W
         CALL    PUTC
+        JSR     Mon_Blank
 
-; Display any operands based on addressing mode and call appropriate
-; routine. TODO: Could use a lookup table for this.
-
-        LDA     Mon_AM              ; Get addressing mode
-        CMPA    #AM_INVALID
-        BEQ     DO_INVALID
-        CMPA    #AM_INHERENT
-        BEQ     DO_INHERENT
-        CMPA    #AM_IMMEDIATE8
-        BEQ     DO_IMMEDIATE8
-        CMPA    #AM_IMMEDIATE16
-        LBEQ    DO_IMMEDIATE16
-        CMPA    #AM_IMMEDIATE32
-        LBEQ    DO_IMMEDIATE32
-        CMPA    #AM_DIRECT
-        LBEQ    DO_DIRECT
-        CMPA    #AM_EXTENDED
-        LBEQ    DO_EXTENDED
-        CMPA    #AM_RELATIVE8
-        LBEQ    DO_RELATIVE8
-        CMPA    #AM_RELATIVE16
-        LBEQ    DO_RELATIVE16
-        CMPA    #AM_INDEXED
-        LBEQ    DO_INDEXED
-        CMPA    #AM_REGREG
-        LBEQ    DO_REGREG
-        BRA     DO_INVALID      ; Should never be reached
-
-DO_INVALID                      ; Display "   ; INVALID"
-        LDE     #15             ; Want 15 spaces
-        LBSR    PrintSpaces
-        LDX     #MSG1
-        LBSR    PrintString
-        LBRA    done
-
-DO_INHERENT                    ; Nothing else to do
-        LBRA    done
-
-DO_IMMEDIATE8
-        LDA     Mon_OT          ; Get opcode type
-        CMPA    #OP_PULS        ; Is is PULS?
-        LBEQ    PULPSH
-        CMPA    #OP_PULU        ; Is is PULU?
-        LBEQ    PULPSH
-        CMPA    #OP_PSHS        ; Is is PSHS?
-        LBEQ    PULPSH
-        CMPA    #OP_PSHU        ; Is is PSHU?
-        LBEQ    PULPSH
-                                ; Display "  #$nn"
-        LBSR    Print2Spaces    ; Two spaces
-        LDA     #'#             ; Number sign
-        CALL    PUTC
-        LDX     Mon_Adr         ; Get address of op code
-        LDA     1,X             ; Get next byte (immediate data)
-        LBSR    PrintByte       ; Print as hex value
-        LBRA    done
-
-DO_REGREG                       ; Handle register,register
-        CMPA    #OP_TFM         ; Is is TFM?
-        BEQ     TFMREG          ; Handle special case of TFM
-        LBSR    Print2Spaces    ; Two spaces
-        LDX     Mon_Adr         ; Get address of op code
-        LDA     1,X             ; Get next byte (postbyte)
-        ANDA    #%11110000      ; Mask out source register bits
-        LSRA                    ; Shift into low order bits
-        LSRA
-        LSRA
-        LSRA
-        BSR     TFREXGRegister  ; Print source register name
-        LDA     #',             ; Print comma
-        CALL    PUTC
-        LDA     1,X             ; Get postbyte again
-        BSR     TFREXGRegister  ; Print destination register name
-        LBRA    done
-
-TFMREG                          ; Handle special case of TFM
-        LBSR    Print2Spaces    ; Two spaces
-        LDX     Mon_Adr         ; Get address of op code
-        CLRE                    ; clear upper byte of W
-        LDF     ,X              ; Get op code
-        SUBF    #$38            ; start of TFM opcodes
-        LDA     1,X             ; Get next byte (postbyte)
-        ANDA    #%11110000      ; Mask out source register bits
-        LSRA                    ; Shift into low order bits
-        LSRA
-        LSRA
-        LSRA
-        BSR     TFREXGRegister  ; Print source register name
-        LDA     TFMS1,W
-        BEQ     TFMREG10
-        CALL    PUTC
-TFMREG10
-        LDA     #',             ; Print comma
-        CALL    PUTC
-        LDA     1,X             ; Get postbyte again
-        BSR     TFREXGRegister  ; Print destination register name
-        LDA     TFMS2,W
-        LBEQ    done
-        CALL    PUTC
-        LBRA    done
-
-RegisterName
-        BYTE    'D',0  ; 0
-        BYTE    'X',0  ; 1
-        BYTE    'Y',0  ; 2
-        BYTE    'U',0  ; 3
-        BYTE    'S',0  ; 4
-        BYTE    "PC"   ; 5
-        BYTE    'W',0  ; 6
-        BYTE    'V',0  ; 7
-        BYTE    'A',0  ; 8
-        BYTE    'B',0  ; 9
-        BYTE    "CC"   ; A
-        BYTE    "DP"   ; B
-        BYTE    '0',0  ; C
-        BYTE    '0',0  ; D
-        BYTE    'E',0  ; E
-        BYTE    'F',0  ; F
-
-TFREXGRegister
-        PSHS    X
-        LDX     #RegisterName
-        ANDA    #15
-        LSLA
-        LDD     A,X
-        PSHS    B
-        CALL    PUTC
-        PULS    A
-        TSTA
-        BEQ     TryRet
-        CALL    PUTC
-TryRet  PULS    X,PC
+        LDX     Mon_Adr         ; Load op code address
+        LDD     1,X             ; Load operand
+        LDY     #AM_Table
+        LDE     Mon_AM
+        ADDR    E,E
+        JSR     [E,Y]
+        JMP     done
 ENDSUB
 
-Print2Reg
-        PSHS    B
-        CALL    PUTC        ; Print first character
-        PULS    A
-        CALL    PUTC        ; Print second character
+********
+AM_Table
+********
+        WORD    SUB_INVALID      ;  0
+        WORD    SUB_INHERENT     ;  1
+        WORD    SUB_IMMEDIATE8   ;  2
+        WORD    SUB_IMMEDIATE16  ;  3
+        WORD    SUB_IMMEDIATE32  ;  4
+        WORD    Mon_Show_Byte    ;  5
+        WORD    Mon_Show_Word    ;  6
+        WORD    SUB_RELATIVE8    ;  7
+        WORD    SUB_RELATIVE16   ;  8
+        WORD    SUB_INDEXED      ;  9
+        WORD    SUB_REGREG       ; 10
+        WORD    SUB_PUSHPULL     ; 11
+
+
+**********************
+SUBROUTINE SUB_INVALID
+**********************
+        LDE     #15             ; Want 15 spaces
+        JSR     PrintSpaces
+        LDX     #MSG1
+        JMP     PrintString
+ENDSUB
+
+***********************
+SUBROUTINE SUB_INHERENT
+***********************
+        RTS
+ENDSUB
+
+*************************
+SUBROUTINE SUB_IMMEDIATE8
+*************************
+        LDA     #'#'            ; Number sign
+        CALL    PUTC
+        LDA     1,X
+        JMP     Mon_Show_Byte   ; Print as hex value
+ENDSUB
+
+**************************
+SUBROUTINE SUB_IMMEDIATE16
+**************************
+        LDA     #'#'            ; Number sign
+        CALL    PUTC
+        LDD     1,X
+        JMP     Mon_Show_Word   ; Print as hex value
+ENDSUB
+
+**************************
+SUBROUTINE SUB_IMMEDIATE32
+**************************
+        JSR     SUB_IMMEDIATE16 ; Print MSB word
+        LDD     3,X             ; Get LSB word
+        JMP     Mon_Show_Word   ; Print it
+ENDSUB
+
+*********************
+SUBROUTINE SUB_REGREG
+*********************
+        CLRW                    ; Initialize TFM check
+        LDY     #RegisterName   ; Setup table
+        LSRA                    ; Shift into low order bits
+        LSRA
+        LSRA
+        LSRA
+        JSR     PrintRegReg     ; Print source register name
+        JSR     PrintTFM        ; Print TFM direction
+        JSR     PrintComma
+        LDA     1,X             ; Get postbyte again
+        JSR     PrintRegReg     ; Print destination register name
+        JMP     PrintTFM        ; Print TFM direction
+ENDSUB
+
+***********************
+SUBROUTINE SUB_PUSHPULL
+***********************
+        CLR     Mon_First       ; Comma flag
+        LDY     #PushPullName   ; Register names
+        LDA     #0              ; Bit count
+        LDB     1,X             ; Get postbyte
+PULP10  LSRB                    ; Check next register
+        BCC     PULP30          ; Not used
+        TST     Mon_First       ; 1st. register name ?
+        BEQ     PULP20          ; yes: no comma
+        JSR     PrintComma
+PULP20  INC     Mon_First
+        CMPA    #6              ; U/S register
+        BNE     PULP25
+        LDE     ,X              ; op code
+        CMPE    #OP_PSHU        ; For PSHU
+        BEQ     PULP22          ; And PULU
+        CMPE    #OP_PULU        ; Bit 6 marks
+        BNE     PULP25          ; Register S
+PULP22  LDA     #'S'
+        CALL    PUTC
+        LDA     #7
+        BRA     PULP10
+PULP25  JSR     PrintRegReg     ; Print register
+PULP30  INCA
+        CMPA    #8
+        BLO     PULP10
         RTS
 
-; Handle PSHS/PSHU/PULS/PULU instruction operands
-; Format is a register list, eg; "  A,B,X"
+************************
+SUBROUTINE SUB_RELATIVE8
+************************
 
-PULPSH
-        LBSR    Print2Spaces    ; Two spaces
-        LDA     #1
-        STA     Mon_First       ; Flag set before any items printed
-        LDX     Mon_Adr         ; Get address of op code
-        LDA     1,X             ; Get next byte (postbyte)
-
-; Postbyte bits indicate registers to push/pull when 1.
-; 7  6   5 4 3  2 1 0
-; PC S/U Y X DP B A CC
-
-; TODO: Could simplify this with shifting and lookup table.
-
-        BITA    #%10000000      ; Bit 7 set?
-        BEQ     bit6
-        PSHS    D
-        LDD     #"PC"
-        BSR     Print2Reg       ; Print PC
-        CLR     Mon_First
-        PULS    D
-bit6    BITA    #%01000000      ; Bit 6 set?
-        BEQ     bit5
-
-; Need to show S or U depending on instruction
-
-        PSHS    A               ; Save postbyte
-        LDA     Mon_OT          ; Get opcode type
-        CMPA    #OP_PULS
-        BEQ     printu
-        CMPA    #OP_PSHS
-        BEQ     printu
-        LBSR    PrintCommaIfNotFirst
-        LDA     #'S             ; Print S
-pr1     CALL    PUTC
-        CLR     Mon_First
-        PULS    A
-        bra     bit5
-printu  BSR     PrintCommaIfNotFirst
-        LDA     #'U             ; Print U
-        bra     pr1
-bit5    BITA    #%00100000      ; Bit 5 set?
-        BEQ     bit4
-        PSHS    A
-        BSR     PrintCommaIfNotFirst
-        LDA     #'Y
-        CALL    PUTC
-        CLR     Mon_First
-        PULS    A
-bit4    BITA    #%00010000      ; Bit 4 set?
-        BEQ     bit3
-        PSHS    A
-        BSR     PrintCommaIfNotFirst
-        LDA     #'X
-        CALL    PUTC
-        CLR     Mon_First
-        PULS    A
-bit3    BITA    #%00001000      ; Bit 3 set?
-        BEQ     bit2
-        PSHS    A,B
-        BSR     PrintCommaIfNotFirst
-        LDA     #'D
-        LDB     #'P
-        BSR     Print2Reg       ; Print DP
-        CLR     Mon_First
-        PULS    A,B
-bit2    BITA    #%00000100      ; Bit 2 set?
-        BEQ     bit1
-        PSHS    A
-        BSR     PrintCommaIfNotFirst
-        LDA     #'B
-        CALL    PUTC
-        CLR     Mon_First
-        PULS    A
-bit1    BITA    #%00000010      ; Bit 1 set?
-        BEQ     bit0
-        PSHS    A
-        BSR     PrintCommaIfNotFirst
-        LDA     #'A
-        CALL    PUTC
-        CLR     Mon_First
-        PULS    A
-bit0    BITA    #%00000001      ; Bit 0 set?
-        BEQ     done1
-        PSHS    A,B
-        BSR     PrintCommaIfNotFirst
-        LDA     #'C
-        LDB     #'C
-        LBSR    Print2Reg       ; Print CC
-        CLR     Mon_First
-        PULS    A,B
-done1   LBRA    done
-
-; Print comma if Mon_First flag is not set.
-PrintCommaIfNotFirst
-        TST     Mon_First
-        BNE     ret1
-        LDA     #',
-        CALL    PUTC
-ret1    RTS
-
-DO_IMMEDIATE16                  ; Display "  #nnnn"
-        LBSR    Print2Spaces    ; Two spaces
-        LDA     #'#             ; Number sign
-        CALL    PUTC
-        LDX     Mon_Adr         ; Get address of op code
-        LDD     1,X             ; Get immediate data
-        JSR     Mon_Show_Word   ; Print as hex value
-        JMP     done
-
-DO_IMMEDIATE32                  ; Display "  #nnnnnnnn"
-        LBSR    Print2Spaces    ; Two spaces
-        LDA     #'#             ; Number sign
-        CALL    PUTC
-        LDX     Mon_Adr         ; Get address of op code
-        LDD     1,X             ; Get MSB word
-        JSR     Mon_Show_Word   ; print it
-        LDD     3,X             ; Get LSB word
-        JSR     Mon_Show_Word   ; print it
-        JMP     done
-
-DO_DIRECT                       ; Display "  $nn"
-        LBSR    Print2Spaces    ; Two spaces
-        LDX     Mon_Adr        ; Get address of op code
-        LDA     1,X             ; Get next byte (byte data)
-        LBSR    PrintByte       ; Print as hex value
-        LBRA    done
-
-DO_EXTENDED                     ; Display "  $nnnn"
-        LBSR    Print2Spaces    ; Two spaces
-        LDX     Mon_Adr        ; Get address of op code
-        LDA     1,X             ; Get first byte (address MSB)
-        LDB     2,X             ; Get second byte (address LSB)
-        TFR     D,X             ; Put in X to print
-        LBSR    PrintAddress    ; Print as hex value
-        LBRA    done
-
-DO_RELATIVE8                    ; Display "  $nnnn"
-        LBSR    Print2Spaces    ; Two spaces
-
-; Destination address for relative branch is address of opcode + (sign
-; extended)offset + 2, e.g.
+; Destination address for relative branch is
+; address of opcode + (sign ; extended) offset
 ;   $1015 + $(FF)FC + 2 = $1013
 ;   $101B + $(00)27 + 2 = $1044
 
-        LDX     Mon_Adr        ; Get address of op code
         LDB     1,X             ; Get first byte (8-bit branch offset)
         SEX                     ; Sign extend to 16 bits
-        ADDD    Mon_Adr           ; Add address of op code
         ADDD    #2              ; Add 2
-        TFR     D,X             ; Put in X to print
-        LBSR    PrintAddress    ; Print as hex value
-        LBRA    done
+        ADDR    X,D             ; Add address of op code
+        JMP     Mon_Show_Word   ; Print as hex value
+ENDSUB
 
-DO_RELATIVE16                   ; Display "  $nnnn"
-        LBSR    Print2Spaces    ; Two spaces
+*************************
+SUBROUTINE SUB_RELATIVE16
+*************************
 
 ; Destination address calculation is similar to above, except offset
 ; is 16 bits and need to add 3.
 
-        LDX     Mon_Adr        ; Get address of op code
-        LDD     1,X             ; Get next 2 bytes (16-bit branch offset)
-        ADDD    Mon_Adr           ; Add address of op code
         ADDD    #3              ; Add 3
-        TFR     D,X             ; Put in X to print
-        LBSR    PrintAddress    ; Print as hex value
-        LBRA    done
+        ADDR    X,D             ; Add address of op code
+        JMP     Mon_Show_Word   ; Print as hex value
+ENDSUB
 
-DO_INDEXED
-        LBSR    Print2Spaces    ; Two spaces
+**********************
+SUBROUTINE SUB_INDEXED
+**********************
 
 ; Addressing modes are determined by the postbyte:
 ;
@@ -898,22 +758,20 @@ DO_INDEXED
                                 ; Format is 0RRnnnnn  n,R
         ANDA    #%00011111      ; Get 5-bit offset
         JSR     Mon_Show_Byte   ; Print offset
-        JSR     PrintCommaReg   ; Print ,R
-        JMP     done
+        JMP     PrintCommaReg   ; Print ,R
 
 ind2    CMPA    #%10001111      ; Check against pattern
         BNE     ind2a
         JSR     PrintComma
         LDA     #'W'
         CALL    PUTC
-        JMP     done
+        RTS
 
 ind2a   ANDA    #%10011111      ; Mask out register bits
         CMPA    #%10000100      ; Check against pattern
         BNE     ind3
                                 ; Format is 1RR00100  ,R
-        JSR     PrintCommaReg   ; Print ,R
-        JMP     done
+        JMP     PrintCommaReg   ; Print ,R
 ind3
         CMPA    #%10001000      ; Check against pattern
         BNE     ind4
@@ -921,8 +779,7 @@ ind3
         LDX     Mon_Adr
         LDA     2,X             ; Get 8-bit offset
         JSR     Mon_Show_Byte   ; Print offset
-        JSR     PrintCommaReg   ; Print ,R
-        JMP     done
+        JMP     PrintCommaReg   ; Print ,R
 ind4
         CMPA    #%10001001      ; Check against pattern
         BNE     ind5
@@ -930,8 +787,7 @@ ind4
         LDX     Mon_Adr
         LDD     2,X             ; Get 16-bit offset
         JSR     Mon_Show_Word
-        JSR     PrintCommaReg   ; Print ,R
-        JMP     done
+        JMP     PrintCommaReg   ; Print ,R
 ind5
         CMPA    #%10000110      ; Check against pattern
         BNE     ind6
@@ -939,8 +795,7 @@ ind5
         LDA     #'A'
         CALL    PUTC            ; Print A
 commar
-        JSR     PrintCommaReg   ; Print ,R
-        JMP     done
+        JMP     PrintCommaReg   ; Print ,R
 ind6
         CMPA    #%10000101      ; Check against pattern
         BNE     ind7
@@ -962,7 +817,7 @@ ind8
         JSR     PrintCommaReg   ; Print ,R
         LDA     #'+'            ; Print plus
         CALL    PUTC
-        JMP     done
+        RTS
 ind9
         CMPA    #%10000001      ; Check against pattern
         BNE     ind10
@@ -971,7 +826,7 @@ ind9
         LDA     #'+'            ; Print plus twice
         CALL    PUTC
         CALL    PUTC
-        JMP     done
+        RTS
 ind10
         CMPA    #%10000010      ; Check against pattern
         BNE     ind11
@@ -979,8 +834,7 @@ ind10
         LBSR    PrintComma      ; Print comma
         LDA     #'-             ; Print minus
         CALL    PUTC
-        LBSR    PrintRegister   ; Print register name
-        LBRA    done
+        JMP     PrintIndex   ; Print register name
 ind11
         CMPA    #%10000011      ; Check against pattern
         BNE     ind12
@@ -989,18 +843,16 @@ ind11
         LDA     #'-             ; Print minus twice
         CALL    PUTC
         CALL    PUTC
-        LBSR    PrintRegister   ; Print register name
-        LBRA    done
+        JMP     PrintIndex   ; Print register name
 ind12
         CMPA    #%10001100      ; Check against pattern
         BNE     ind13
                                 ; Format is 1xx01100  n,PCR
         LDX     Mon_Adr
         LDA     2,X             ; Get 8-bit offset
-        LBSR    PrintByte       ; Display it
-        LBSR    PrintComma      ; Print comma
-        LBSR    PrintPCR        ; Print PCR
-        LBRA    done
+        JSR     PrintByte       ; Display it
+        JSR     PrintComma      ; Print comma
+        JMP     PrintPCR        ; Print PCR
 ind13
         CMPA    #%10001101      ; Check against pattern
         BNE     ind14
@@ -1008,18 +860,16 @@ ind13
         LDX     Mon_Adr
         LDD     2,X             ; Get 16-bit offset
         TFR     D,X
-        LBSR    PrintAddress    ; Display it
-        LBSR    PrintComma      ; Print comma
-        LBSR    PrintPCR        ; Print PCR
-        LBRA    done
+        JSR     PrintAddress    ; Display it
+        JSR     PrintComma      ; Print comma
+        JMP     PrintPCR        ; Print PCR
 ind14
         CMPA    #%10010100      ; Check against pattern
         BNE     ind15
                                 ; Format is 1RR10100  [,R]
-        LBSR    PrintLBracket   ; Print left bracket
+        JSR     PrintLBracket   ; Print left bracket
         JSR     PrintCommaReg   ; Print ,R
-        LBSR    PrintRBracket   ; Print right bracket
-        LBRA    done
+        JMP     PrintRBracket   ; Print right bracket
 ind15
         CMPA    #%10011000      ; Check against pattern
         BNE     ind16
@@ -1027,10 +877,9 @@ ind15
         LBSR    PrintLBracket   ; Print left bracket
         LDX     Mon_Adr
         LDA     2,X             ; Get 8-bit offset
-        LBSR    PrintByte       ; Display it
+        JSR     PrintByte       ; Display it
         JSR     PrintCommaReg   ; Print ,R
-        LBSR    PrintRBracket   ; Print right bracket
-        LBRA    done
+        JMP     PrintRBracket   ; Print right bracket
 ind16
         CMPA    #%10011001      ; Check against pattern
         BNE     ind17
@@ -1039,10 +888,9 @@ ind16
         LDX     Mon_Adr
         LDD     2,X             ; Get 16-bit offset
         TFR     D,X
-        LBSR    PrintAddress    ; Display it
+        JSR     PrintAddress    ; Display it
         JSR     PrintCommaReg   ; Print ,R
-        LBSR    PrintRBracket   ; Print right bracket
-        LBRA    done
+        JMP     PrintRBracket   ; Print right bracket
 ind17
         CMPA    #%10010110      ; Check against pattern
         BNE     ind18
@@ -1052,8 +900,7 @@ ind17
         CALL    PUTC            ; Print A
 comrb
         JSR     PrintCommaReg   ; Print ,R
-        LBSR    PrintRBracket   ; Print right bracket
-        LBRA    done
+        JMP     PrintRBracket   ; Print right bracket
 ind18
         CMPA    #%10010101      ; Check against pattern
         BNE     ind19
@@ -1079,8 +926,7 @@ ind20
         LDA     #'+             ; Print plus twice
         CALL    PUTC
         CALL    PUTC
-        LBSR    PrintRBracket   ; Print right bracket
-        LBRA    done
+        JMP     PrintRBracket   ; Print right bracket
 ind21
         CMPA    #%10010011      ; Check against pattern
         BNE     ind22
@@ -1090,9 +936,8 @@ ind21
         LDA     #'-             ; Print minus twice
         CALL    PUTC
         CALL    PUTC
-        JSR     PrintRegister   ; Print register name
-        LBSR    PrintRBracket   ; Print right bracket
-        BRA     done
+        JSR     PrintIndex   ; Print register name
+        JMP     PrintRBracket   ; Print right bracket
 ind22
         CMPA    #%10011100      ; Check against pattern
         BNE     ind23
@@ -1103,8 +948,7 @@ ind22
         JSR     PrintByte       ; Display it
         JSR     PrintComma      ; Print comma
         JSR     PrintPCR        ; Print PCR
-        JSR     PrintRBracket   ; Print right bracket
-        BRA     done
+        JMP     PrintRBracket   ; Print right bracket
 ind23
         CMPA    #%10011101      ; Check against pattern
         BNE     ind24
@@ -1116,17 +960,18 @@ ind23
         JSR     PrintAddress    ; Display it
         JSR     PrintComma      ; Print comma
         JSR     PrintPCR        ; Print PCR
-        JSR     PrintRBracket   ; Print right bracket
-        BRA     done
+        JMP     PrintRBracket   ; Print right bracket
 ind24
         CMPA    #%10011111      ; Check against pattern
-        BNE     done
+        BNE     ind25
                                 ; Format is 1xx11111  [n]
-        LBSR    PrintLBracket   ; Print left bracket
+        JSR     PrintLBracket   ; Print left bracket
         LDX     Mon_Adr
         LDD     2,X             ; Get 16-bit offset
         JSR     Mon_Show_Word   ; Display it
-        JSR     PrintRBracket   ; Print right bracket
+        JMP     PrintRBracket   ; Print right bracket
+ind25
+        RTS
 
 done    JSR     Mon_CRLF        ; Print final CR
         CLRA                    ; Clear MSB of D
@@ -1330,20 +1175,21 @@ LENGTHS
         FCB     1               ; 1 AM_INHERENT
         FCB     2               ; 2 AM_IMMEDIATE8
         FCB     3               ; 3 AM_IMMEDIATE16
-        FCB     2               ; 4 AM_DIRECT
-        FCB     3               ; 5 AM_EXTENDED
-        FCB     2               ; 6 AM_RELATIVE8
-        FCB     3               ; 7 AM_RELATIVE16
-        FCB     2               ; 8 AM_INDEXED
-        FCB     5               ; 9 AM_IMMEDIATE32
-        FCB     2               ; 9 AM_REGREG
+        FCB     5               ; 4 AM_IMMEDIATE32
+        FCB     2               ; 5 AM_DIRECT
+        FCB     3               ; 6 AM_EXTENDED
+        FCB     2               ; 7 AM_RELATIVE8
+        FCB     3               ; 8 AM_RELATIVE16
+        FCB     2               ; 9 AM_INDEXED
+        FCB     2               ; A AM_REGREG
+        FCB     2               ; B AM_PUSHPULL
 
 ; Lookup table to return needed remaining spaces to print to pad out
 ; instruction to correct column in disassembly.
 ; # bytes: 1 2 3 4
 ; Padding: 9 6 3 0
 PADDING
-        FCB     10,7,4,1
+        FCB     13,10,7,4,1
 
 ; Lookup table to return number of additional bytes for indexed
 ; addressing based on low order 5 bits of postbyte. Based on
@@ -1722,10 +1568,10 @@ MODES
         FCB     AM_INDEXED      ; 31
         FCB     AM_INDEXED      ; 32
         FCB     AM_INDEXED      ; 33
-        FCB     AM_IMMEDIATE8   ; 34
-        FCB     AM_IMMEDIATE8   ; 35
-        FCB     AM_IMMEDIATE8   ; 36
-        FCB     AM_IMMEDIATE8   ; 37
+        FCB     AM_PUSHPULL     ; 34
+        FCB     AM_PUSHPULL     ; 35
+        FCB     AM_PUSHPULL     ; 36
+        FCB     AM_PUSHPULL     ; 37
         FCB     AM_INVALID      ; 38
         FCB     AM_INHERENT     ; 39
         FCB     AM_INHERENT     ; 3A
@@ -2057,9 +1903,46 @@ PAGE3
         FCB     $F7,OP_STF ,AM_EXTENDED
         FCB     0                             ; indicates end of table
 
+************
+RegisterName
+************
+
+        BYTE    'D',0  ; 0
+        BYTE    'X',0  ; 1
+        BYTE    'Y',0  ; 2
+        BYTE    'U',0  ; 3
+        BYTE    'S',0  ; 4
+        BYTE    "PC"   ; 5
+        BYTE    'W',0  ; 6
+        BYTE    'V',0  ; 7
+        BYTE    'A',0  ; 8
+        BYTE    'B',0  ; 9
+        BYTE    "CC"   ; A
+        BYTE    "DP"   ; B
+        BYTE    '0',0  ; C
+        BYTE    '0',0  ; D
+        BYTE    'E',0  ; E
+        BYTE    'F',0  ; F
+
+************
+PushPullName
+************
+
+        BYTE    "CC"   ; 0
+        BYTE    'A',0  ; 1
+        BYTE    'B',0  ; 2
+        BYTE    "DP"   ; 3
+        BYTE    'X',0  ; 4
+        BYTE    'Y',0  ; 5
+        BYTE    'U',0  ; 6
+        BYTE    "PC"   ; 7
+
 ; Display strings. Should be terminated in EOT character.
 
 MSG1    BYTE    "; INVALID",0
-TFMS1   BYTE    "+-+",0
-TFMS2   BYTE    "+-",0,"+"
+
+; Table of TFM direction signs
+
+TFMS    BYTE    "+-+",0
+        BYTE    "+-",0,"+"
 
