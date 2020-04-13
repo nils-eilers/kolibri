@@ -200,6 +200,15 @@ OP_INCD  EQU    $A4
 OP_STW   EQU    $A5
 OP_STQ   EQU    $A6
 OP_PSHSW EQU    $A7
+OP_ADDW  EQU    $A8
+OP_CLRE  EQU    $A9
+OP_ASRD  EQU    $AA
+OP_PULSW EQU    $AB
+OP_TSTE  EQU    $AC
+OP_DIVQ  EQU    $AD
+OP_SUBF  EQU    $AE
+OP_PSHUW EQU    $AF
+OP_PULUW EQU    $B0
 
 ; Addressing Modes. Mon_OCS table lists these for each instruction.
 ; LENGTHS lists the instruction length for each addressing mode.
@@ -1302,7 +1311,16 @@ MNEMONICS
         C5TO3   "INCD "         ; $A4
         C5TO3   "STW  "         ; $A5
         C5TO3   "STQ  "         ; $A6
-        C5TO3   "PSHSW"         ; $A6
+        C5TO3   "PSHSW"         ; $A7
+        C5TO3   "ADDW "         ; $A8
+        C5TO3   "CLRE "         ; $A9
+        C5TO3   "ASRD "         ; $AA
+        C5TO3   "PULSW"         ; $AB
+        C5TO3   "TSTE "         ; $AC
+        C5TO3   "DIVQ "         ; $AD
+        C5TO3   "SUBF "         ; $AE
+        C5TO3   "PSHUW"         ; $AF
+        C5TO3   "PULUW"         ; $B0
 
 ; Lengths of instructions given an addressing mode. Matches values of
 ; AM_* Indexed addessing instructions length can increase due to post
@@ -1949,8 +1967,12 @@ PAGE2
         FCB     $36,OP_EORR ,AM_REGREG
         FCB     $37,OP_CMPR ,AM_REGREG
         FCB     $38,OP_PSHSW,AM_INHERENT
+        FCB     $39,OP_PULSW,AM_INHERENT
+        FCB     $38,OP_PSHUW,AM_INHERENT
+        FCB     $39,OP_PULUW,AM_INHERENT
         FCB     $3F,OP_SWI2 ,AM_INHERENT
         FCB     $44,OP_LSRD ,AM_INHERENT
+        FCB     $47,OP_ASRD ,AM_INHERENT
         FCB     $48,OP_LSLD ,AM_INHERENT
         FCB     $4A,OP_DECD ,AM_INHERENT
         FCB     $4C,OP_INCD ,AM_INHERENT
@@ -1959,6 +1981,7 @@ PAGE2
         FCB     $5F,OP_CLRW ,AM_INHERENT
         FCB     $83,OP_CMPD ,AM_IMMEDIATE16
         FCB     $86,OP_LDW  ,AM_IMMEDIATE16
+        FCB     $8B,OP_ADDW ,AM_IMMEDIATE16
         FCB     $8C,OP_CMPY ,AM_IMMEDIATE16
         FCB     $8E,OP_LDY  ,AM_IMMEDIATE16
         FCB     $91,OP_CMPW ,AM_DIRECT
@@ -1971,8 +1994,10 @@ PAGE2
         FCB     $AC,OP_CMPY ,AM_INDEXED
         FCB     $AE,OP_LDY  ,AM_INDEXED
         FCB     $AF,OP_STY  ,AM_INDEXED
+        FCB     $B1,OP_CMPW ,AM_EXTENDED
         FCB     $B3,OP_CMPD ,AM_EXTENDED
         FCB     $B6,OP_LDW  ,AM_EXTENDED
+        FCB     $B7,OP_STW  ,AM_EXTENDED
         FCB     $BC,OP_CMPY ,AM_EXTENDED
         FCB     $BE,OP_LDY  ,AM_EXTENDED
         FCB     $BF,OP_STY  ,AM_EXTENDED
@@ -2002,26 +2027,33 @@ PAGE3
         FCB     $43,OP_COME,AM_INHERENT
         FCB     $4A,OP_DECE,AM_INHERENT
         FCB     $4C,OP_INCE,AM_INHERENT
+        FCB     $4D,OP_TSTE,AM_INHERENT
+        FCB     $4F,OP_CLRE,AM_INHERENT
         FCB     $5A,OP_DECF,AM_INHERENT
         FCB     $5C,OP_INCF,AM_INHERENT
         FCB     $81,OP_CMPE,AM_IMMEDIATE8
         FCB     $83,OP_CMPU,AM_IMMEDIATE16
         FCB     $86,OP_LDE ,AM_IMMEDIATE8
         FCB     $8C,OP_CMPS,AM_IMMEDIATE16
+        FCB     $8E,OP_DIVQ,AM_IMMEDIATE16
         FCB     $91,OP_CMPE,AM_DIRECT
         FCB     $93,OP_CMPU,AM_DIRECT
         FCB     $96,OP_LDE ,AM_DIRECT
         FCB     $97,OP_STE ,AM_DIRECT
         FCB     $9C,OP_CMPS,AM_DIRECT
         FCB     $A3,OP_CMPU,AM_INDEXED
+        FCB     $A6,OP_LDE ,AM_INDEXED
         FCB     $AC,OP_CMPS,AM_INDEXED
         FCB     $B3,OP_CMPU,AM_EXTENDED
+        FCB     $B6,OP_LDE ,AM_EXTENDED
         FCB     $B7,OP_STE ,AM_EXTENDED
         FCB     $BC,OP_CMPS,AM_EXTENDED
+        FCB     $C0,OP_SUBF,AM_IMMEDIATE8
         FCB     $C6,OP_LDF ,AM_IMMEDIATE8
         FCB     $D1,OP_CMPF,AM_DIRECT
         FCB     $D6,OP_LDF ,AM_DIRECT
         FCB     $D7,OP_STF ,AM_DIRECT
+        FCB     $E6,OP_LDF ,AM_INDEXED
         FCB     $F7,OP_STF ,AM_EXTENDED
         FCB     0                             ; indicates end of table
 
