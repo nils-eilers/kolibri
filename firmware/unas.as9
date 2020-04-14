@@ -20,15 +20,6 @@
 ; 0.0     29-Jan-2019  First version started, based on 6502 code.
 ; 0.1     03-Feb-2019  All instructions now supported.
 ; 0.2     10-Apr-2020  Implemented in Kolibri monitor program (BS)
-;
-; To Do:  process Hitachi 6309 instructions
-
-; Character defines
-
-EOT     EQU     $00             ; String terminator
-LF      EQU     $0A             ; Line feed
-CR      EQU     $0D             ; Carriage return
-SP      EQU     $20             ; Space
 
 ; Instructions. Matches indexes into entries in table MNEMONICS.
 
@@ -209,6 +200,18 @@ OP_DIVQ  EQU    $AD
 OP_SUBF  EQU    $AE
 OP_PSHUW EQU    $AF
 OP_PULUW EQU    $B0
+OP_TIM   EQU    $B1
+OP_AIM   EQU    $B2
+OP_EIM   EQU    $B3
+OP_OIM   EQU    $B4
+OP_BAND  EQU    $B5
+OP_BIAND EQU    $B6
+OP_BOR   EQU    $B7
+OP_BIOR  EQU    $B8
+OP_BEOR  EQU    $B9
+OP_BIEOR EQU    $BA
+OP_LDBT  EQU    $BB
+OP_STBT  EQU    $BC
 
 ; Addressing Modes. Mon_OCS table lists these for each instruction.
 ; LENGTHS lists the instruction length for each addressing mode.
@@ -217,18 +220,22 @@ OP_PULUW EQU    $B0
 ; Indexed modes can be longer depending on postbyte.
 ; Page 2 and 3 opcodes are one byte longer (prefixed by 10 or 11)
 
-AM_INVALID      EQU     0       ; $15            (1)
-AM_INHERENT     EQU     1       ; RTS            (1)
-AM_IMMEDIATE8   EQU     2       ; LDA #$12       (2)
-AM_IMMEDIATE16  EQU     3       ; LDD #$1234     (3)
-AM_IMMEDIATE32  EQU     4       ; LDQ #$12345678 (5)
-AM_DIRECT       EQU     5       ; LDA $12        (2)
-AM_EXTENDED     EQU     6       ; LDA $1234      (3)
-AM_RELATIVE8    EQU     7       ; BSR $1234      (2)
-AM_RELATIVE16   EQU     8       ; LBSR $1234     (3)
-AM_INDEXED      EQU     9       ; LDA 0,X        (2+)
-AM_REGREG       EQU    10       ; TFR D,X        (2)
-AM_PUSHPULL     EQU    11       ; PSHS X,Y       (2)
+AM_INVALID   EQU     0       ; $15             (1)
+AM_INHERENT  EQU     1       ; RTS             (1)
+AM_IMM_BYTE  EQU     2       ; LDA  #$12       (2)
+AM_IMM_WORD  EQU     3       ; LDD  #$1234     (3)
+AM_IMM_LONG  EQU     4       ; LDQ  #$12345678 (5)
+AM_DIRECT    EQU     5       ; LDA  $12        (2)
+AM_EXTENDED  EQU     6       ; LDA  $1234      (3)
+AM_REL_BYTE  EQU     7       ; BSR  $1234      (2)
+AM_REL_WORD  EQU     8       ; LBSR $1234      (3)
+AM_INDEXED   EQU     9       ; LDA  0,X        (2+)
+AM_REGREG    EQU    10       ; TFR  D,X        (2)
+AM_PUSHPULL  EQU    11       ; PSHS X,Y        (2)
+AM_IMM_DIR   EQU    12       ; AIM  #8,$12     (3)
+AM_IMM_EXT   EQU    13       ; TIM  #8,$1234   (4)
+AM_IMM_IND   EQU    14       ; OIM  #8,X       (3+)
+AM_BIT_BIT   EQU    15       ; OIM  #8,X       (3+)
 
 *************************
 SUBROUTINE Mon_Unassemble
@@ -256,7 +263,7 @@ SUBROUTINE Mon_Unassemble
         JSR     DISASM          ; Do disassembly of one instruction
         PULSW                   ; Restore end address
         CMPW    Mon_Adr         ; Compare end condition
-        BHI     .loop           ; Go back and repeat until done
+        BHI     .loop           ; Loop until done
         RTS                     ; Return to caller
 ENDSUB
 
@@ -265,7 +272,17 @@ SUBROUTINE PrintComma
 *********************
 
         PSHS    D
-        LDA     #',
+        LDA     #','
+        CALL    PUTC
+        PULS    D,PC
+ENDSUB
+
+*******************
+SUBROUTINE PrintDot
+*******************
+
+        PSHS    D
+        LDA     #'.'
         CALL    PUTC
         PULS    D,PC
 ENDSUB
@@ -439,7 +456,7 @@ SUBROUTINE DISASM
         BEQ     handle23        ; If so, do special handling
         LDY     #PAGE2          ; Pointer to PAGE2
         CMPB    #$10            ; Is it a page 2 16-bit opcode prefix with 10?
-        BNE     not23         ; If not, handle as normal case
+        BNE     not23           ; If not, handle as normal case
 handle23
         INC     Mon_Pg23        ; Set page2/3 flag
         LDB     1,X             ; Get real opcode
@@ -458,7 +475,6 @@ search23
         LDA     #1              ; Set length to one
         STA     Mon_Len
         BRA     dism            ; Disassemble as normal
-
 found23                         ; Found entry in table
         LDD     1,Y             ; Get instruction type & address mode
         STA     Mon_OT          ; Save type
@@ -520,24 +536,21 @@ opby    LDA     ,X+             ; Get instruction byte and increment pointer
 
 ; Print needed remaining spaces to pad out to correct column
 
-        LDX     #PADDING        ; Pointer to start of lookup table
+        LDX     #PADDING-1      ; Pointer to start of lookup table
         LDA     Mon_Len         ; Number of bytes in instruction
-        DECA                    ; Subtract 1 since table starts at 1, not 0
         LDE     A,X             ; Get number of spaces to print
         JSR     PrintSpaces
 
-; If a page2/3 instruction, advance Mon_Adrto the next byte which points
-; to the real op code.
+; If a page2/3 instruction, advance Mon_Adr to the next byte
 
-        TST     Mon_Pg23        ; Flag set
-        BEQ     noinc           ; Branch if not
-        LDD     Mon_Adr         ; Increment 16-bit address
-        ADDD    #1
+        CLRA
+        LDB     Mon_Pg23        ; 1 for page 2/3
+        ADDD    Mon_Adr         ; Increment 16-bit address
         STD     Mon_Adr
 
-; Get and print mnemonic (4 chars) (3 bytes packed)
+; Get and print mnemonic (5 chars) (3 bytes packed)
 
-noinc   LDB     Mon_OT          ; Get instruction type to index into table
+        LDB     Mon_OT          ; Get instruction type to index into table
         LDX     #MNEMONICS-1    ; Pointer to start of table
         ABX
         ABX
@@ -577,28 +590,39 @@ noinc20 CALL    PUTC
 
         LDX     Mon_Adr         ; Load op code address
         LDD     1,X             ; Load operand
-        LDY     #AM_Table
-        LDE     Mon_AM
-        ADDR    E,E
-        JSR     [E,Y]
-        JMP     done
+        LDY     #AM_Table       ; Table of AM subroutines
+        LDE     Mon_AM          ; Index for table
+        ADDR    E,E             ; Shift for word address
+        JSR     [E,Y]           ; Call subroutine
+
+        JSR     Mon_CRLF        ; Print final CR
+        CLRA                    ; Clear MSB of D
+        LDB     Mon_Len         ; Get length byte in LSB of D
+        SUBB    Mon_Pg23        ; Page 2/3 prefix byte
+        ADDD    Mon_Adr         ; Add to address
+        STD     Mon_Adr         ; Write new address
+        RTS
 ENDSUB
 
 ********
 AM_Table
 ********
-        WORD    SUB_INVALID      ;  0
-        WORD    SUB_INHERENT     ;  1
-        WORD    SUB_IMMEDIATE8   ;  2
-        WORD    SUB_IMMEDIATE16  ;  3
-        WORD    SUB_IMMEDIATE32  ;  4
-        WORD    Mon_Show_Byte    ;  5
-        WORD    Mon_Show_Word    ;  6
-        WORD    SUB_RELATIVE8    ;  7
-        WORD    SUB_RELATIVE16   ;  8
-        WORD    SUB_INDEXED      ;  9
-        WORD    SUB_REGREG       ; 10
-        WORD    SUB_PUSHPULL     ; 11
+        WORD    SUB_INVALID   ;  0
+        WORD    SUB_INHERENT  ;  1
+        WORD    SUB_IMM_BYTE  ;  2
+        WORD    SUB_IMM_WORD  ;  3
+        WORD    SUB_IMM_LONG  ;  4
+        WORD    Mon_Show_Byte ;  5
+        WORD    Mon_Show_Word ;  6
+        WORD    SUB_REL_BYTE  ;  7
+        WORD    SUB_REL_WORD  ;  8
+        WORD    SUB_INDEXED   ;  9
+        WORD    SUB_REGREG    ; 10
+        WORD    SUB_PUSHPULL  ; 11
+        WORD    SUB_IMM_DIR   ; 12
+        WORD    SUB_IMM_EXT   ; 13
+        WORD    SUB_IMM_IND   ; 14
+        WORD    SUB_BIT_BIT   ; 15
 
 
 **********************
@@ -616,31 +640,94 @@ SUBROUTINE SUB_INHERENT
         RTS
 ENDSUB
 
-*************************
-SUBROUTINE SUB_IMMEDIATE8
-*************************
+***********************
+SUBROUTINE SUB_IMM_BYTE
+***********************
         LDA     #'#'            ; Number sign
         CALL    PUTC
         LDA     1,X
         JMP     Mon_Show_Byte   ; Print as hex value
 ENDSUB
 
-**************************
-SUBROUTINE SUB_IMMEDIATE16
-**************************
+***********************
+SUBROUTINE SUB_IMM_WORD
+***********************
         LDA     #'#'            ; Number sign
         CALL    PUTC
         LDD     1,X
         JMP     Mon_Show_Word   ; Print as hex value
 ENDSUB
 
-**************************
-SUBROUTINE SUB_IMMEDIATE32
-**************************
-        JSR     SUB_IMMEDIATE16 ; Print MSB word
+***********************
+SUBROUTINE SUB_IMM_LONG
+***********************
+        JSR     SUB_IMM_WORD    ; Print MSB word
         LDD     3,X             ; Get LSB word
         JMP     Mon_Show_Word   ; Print it
 ENDSUB
+
+**********************
+SUBROUTINE SUB_IMM_DIR
+**********************
+        JSR     SUB_IMM_BYTE    ; Immediate byte
+        JSR     PrintComma
+        LDA     2,X             ; Memory byte
+        JMP     Mon_Show_Byte
+ENDSUB
+
+**********************
+SUBROUTINE SUB_IMM_EXT
+**********************
+        JSR     SUB_IMM_DIR
+        LDA     3,X             ; LSB memory word
+        JMP     Mon_Show_Byte
+ENDSUB
+
+**********************
+SUBROUTINE SUB_IMM_IND
+**********************
+        JSR     SUB_IMM_BYTE    ; Print immediate byte
+        JSR     PrintComma      ; And comma
+        LDD     #1
+        STB     Mon_Pg23        ; Mark as 2 byte opcode
+        ADDD    Mon_Adr         ; Adjust memory pointer
+        STD     Mon_Adr
+        TFR     D,X             ; Point at one before PB
+        LDA     1,X             ; Load post byte
+        STA     Mon_PB          ; store it
+        JMP     SUB_INDEXED
+ENDSUB
+
+**********************
+SUBROUTINE SUB_BIT_BIT
+**********************
+        LDA     1,X             ; Bit 7/6 = register
+        ROLA                    ; 00 = CC
+        ROLA                    ; 01 = A
+        ROLA                    ; 10 = B
+        ANDA    #3              ; 11 = invalid
+        LDY     #PushPullName
+        JSR     PrintRegReg     ; Target register
+        JSR     PrintDot
+        LDA     1,X             ; Bit 2,1,0 = target bit
+        ANDA    #7
+        ORA     #'0'            ; To ASCII
+        CALL    PUTC
+        JSR     PrintComma
+        LDA     2,X             ; Direct page address
+        JSR     Mon_Show_Byte
+        JSR     PrintDot
+        LDA     1,X             ; Bit 5,4,3 = source bit
+        LSRA
+        LSRA
+        LSRA
+        ANDA    #7
+        ORA     #'0'            ; To ASCII
+        CALL    PUTC
+        RTS
+ENDSUB
+
+        LDBT    A.6,$77.4
 
 *********************
 SUBROUTINE SUB_REGREG
@@ -690,7 +777,7 @@ PULP30  INCA
         RTS
 
 ************************
-SUBROUTINE SUB_RELATIVE8
+SUBROUTINE SUB_REL_BYTE
 ************************
 
 ; Destination address for relative branch is
@@ -706,7 +793,7 @@ SUBROUTINE SUB_RELATIVE8
 ENDSUB
 
 *************************
-SUBROUTINE SUB_RELATIVE16
+SUBROUTINE SUB_REL_WORD
 *************************
 
 ; Destination address calculation is similar to above, except offset
@@ -973,13 +1060,6 @@ ind24
 ind25
         RTS
 
-done    JSR     Mon_CRLF        ; Print final CR
-        CLRA                    ; Clear MSB of D
-        LDB     Mon_Len         ; Get length byte in LSB of D
-        SUBB    Mon_Pg23        ; Mon_Adr was moved
-        ADDD    Mon_Adr         ; Add to address
-        STD     Mon_Adr         ; Write new address
-        RTS
 ENDSUB
 
 ; *** DATA
@@ -1166,6 +1246,18 @@ MNEMONICS
         C5TO3   "SUBF "         ; $AE
         C5TO3   "PSHUW"         ; $AF
         C5TO3   "PULUW"         ; $B0
+        C5TO3   "TIM  "         ; $B1
+        C5TO3   "AIM  "         ; $B2
+        C5TO3   "EIM  "         ; $B3
+        C5TO3   "OIM  "         ; $B4
+        C5TO3   "BAND "         ; $B5
+        C5TO3   "BIAND"         ; $B6
+        C5TO3   "BOR  "         ; $B7
+        C5TO3   "BIOR "         ; $B8
+        C5TO3   "BEOR "         ; $B9
+        C5TO3   "BIEOR"         ; $BA
+        C5TO3   "LDBT "         ; $BB
+        C5TO3   "STBT "         ; $BC
 
 ; Lengths of instructions given an addressing mode. Matches values of
 ; AM_* Indexed addessing instructions length can increase due to post
@@ -1173,21 +1265,26 @@ MNEMONICS
 LENGTHS
         FCB     1               ; 0 AM_INVALID
         FCB     1               ; 1 AM_INHERENT
-        FCB     2               ; 2 AM_IMMEDIATE8
-        FCB     3               ; 3 AM_IMMEDIATE16
-        FCB     5               ; 4 AM_IMMEDIATE32
+        FCB     2               ; 2 AM_IMM_BYTE
+        FCB     3               ; 3 AM_IMM_WORD
+        FCB     5               ; 4 AM_IMM_LONG
         FCB     2               ; 5 AM_DIRECT
         FCB     3               ; 6 AM_EXTENDED
-        FCB     2               ; 7 AM_RELATIVE8
-        FCB     3               ; 8 AM_RELATIVE16
+        FCB     2               ; 7 AM_REL_BYTE
+        FCB     3               ; 8 AM_REL_WORD
         FCB     2               ; 9 AM_INDEXED
         FCB     2               ; A AM_REGREG
         FCB     2               ; B AM_PUSHPULL
+        FCB     3               ; C AM_IMM_DIR
+        FCB     4               ; D AM_IMM_EXT
+        FCB     3               ; E AM_IMM_IND
+        FCB     3               ; E AM_BIT_BIT
 
 ; Lookup table to return needed remaining spaces to print to pad out
 ; instruction to correct column in disassembly.
-; # bytes: 1 2 3 4
-; Padding: 9 6 3 0
+; # bytes:  1  2  3  4  5
+; Padding: 13,10, 7, 4, 1
+
 PADDING
         FCB     13,10,7,4,1
 
@@ -1240,17 +1337,17 @@ Mon_PBES
 ; Opcodes. Listed in order indexed by op code. Defines the mnemonic.
 Mon_OCS
         FCB     OP_NEG          ; 00
-        FCB     OP_INV          ; 01
-        FCB     OP_INV          ; 02
+        FCB     OP_OIM          ; 01
+        FCB     OP_AIM          ; 02
         FCB     OP_COMB         ; 03
         FCB     OP_LSR          ; 04
-        FCB     OP_INV          ; 05
+        FCB     OP_EIM          ; 05
         FCB     OP_ROR          ; 06
         FCB     OP_ASR          ; 07
         FCB     OP_ASL          ; 08
         FCB     OP_ROL          ; 09
         FCB     OP_DEC          ; 0A
-        FCB     OP_INV          ; 0B
+        FCB     OP_TIM          ; 0B
         FCB     OP_INC          ; 0C
         FCB     OP_TST          ; 0D
         FCB     OP_JMP          ; 0E
@@ -1342,34 +1439,34 @@ Mon_OCS
         FCB     OP_CLRB         ; 5F
 
         FCB     OP_NEG          ; 60
-        FCB     OP_INV          ; 61
-        FCB     OP_INV          ; 62
+        FCB     OP_OIM          ; 61
+        FCB     OP_AIM          ; 62
         FCB     OP_COM          ; 63
         FCB     OP_LSR          ; 64
-        FCB     OP_INV          ; 65
+        FCB     OP_EIM          ; 65
         FCB     OP_ROR          ; 66
         FCB     OP_ASR          ; 67
         FCB     OP_ASL          ; 68
         FCB     OP_ROL          ; 69
         FCB     OP_DEC          ; 6A
-        FCB     OP_INV          ; 6B
+        FCB     OP_TIM          ; 6B
         FCB     OP_INC          ; 6C
         FCB     OP_TST          ; 6D
         FCB     OP_JMP          ; 6E
         FCB     OP_CLR          ; 6F
 
         FCB     OP_NEG          ; 70
-        FCB     OP_INV          ; 71
-        FCB     OP_INV          ; 72
+        FCB     OP_OIM          ; 71
+        FCB     OP_AIM          ; 72
         FCB     OP_COM          ; 73
         FCB     OP_LSR          ; 74
-        FCB     OP_INV          ; 75
+        FCB     OP_EIM          ; 75
         FCB     OP_ROR          ; 76
         FCB     OP_ASR          ; 77
         FCB     OP_ASL          ; 78
         FCB     OP_ROL          ; 79
         FCB     OP_DEC          ; 7A
-        FCB     OP_INV          ; 7B
+        FCB     OP_TIM          ; 7B
         FCB     OP_INC          ; 7C
         FCB     OP_TST          ; 7D
         FCB     OP_JMP          ; 7E
@@ -1514,55 +1611,55 @@ Mon_OCS
 ; Table of addressing modes. Listed in order,indexed by op code.
 MODES
         FCB     AM_DIRECT       ; 00
-        FCB     AM_INVALID      ; 01
-        FCB     AM_INVALID      ; 02
+        FCB     AM_IMM_DIR      ; 01  OIM
+        FCB     AM_IMM_DIR      ; 02  AIM
         FCB     AM_DIRECT       ; 03
         FCB     AM_DIRECT       ; 04
-        FCB     AM_INVALID      ; 05
+        FCB     AM_IMM_DIR      ; 05  EIM
         FCB     AM_DIRECT       ; 06
         FCB     AM_DIRECT       ; 07
         FCB     AM_DIRECT       ; 08
         FCB     AM_DIRECT       ; 09
         FCB     AM_DIRECT       ; 0A
-        FCB     AM_INVALID      ; 0B
+        FCB     AM_IMM_DIR      ; 0B  TIM
         FCB     AM_DIRECT       ; 0C
         FCB     AM_DIRECT       ; 0D
         FCB     AM_DIRECT       ; 0E
         FCB     AM_DIRECT       ; 0F
 
-        FCB     AM_INVALID      ; 10 Page 2 extended opcodes (see other table)
-        FCB     AM_INVALID      ; 11 Page 3 extended opcodes (see other table)
+        FCB     AM_INVALID      ; 10 Page 2 extended opcodes
+        FCB     AM_INVALID      ; 11 Page 3 extended opcodes
         FCB     AM_INHERENT     ; 12
         FCB     AM_INHERENT     ; 13
         FCB     AM_INVALID      ; 14
         FCB     AM_INVALID      ; 15
-        FCB     AM_RELATIVE16   ; 16
-        FCB     AM_RELATIVE16   ; 17
+        FCB     AM_REL_WORD     ; 16
+        FCB     AM_REL_WORD     ; 17
         FCB     AM_INVALID      ; 18
         FCB     AM_INHERENT     ; 19
-        FCB     AM_IMMEDIATE8   ; 1A
+        FCB     AM_IMM_BYTE     ; 1A
         FCB     AM_INVALID      ; 1B
-        FCB     AM_IMMEDIATE8   ; 1C
+        FCB     AM_IMM_BYTE     ; 1C
         FCB     AM_INHERENT     ; 1D
         FCB     AM_REGREG       ; 1E  EXG
         FCB     AM_REGREG       ; 1F  TFR
 
-        FCB     AM_RELATIVE8    ; 20
-        FCB     AM_RELATIVE8    ; 21
-        FCB     AM_RELATIVE8    ; 22
-        FCB     AM_RELATIVE8    ; 23
-        FCB     AM_RELATIVE8    ; 24
-        FCB     AM_RELATIVE8    ; 25
-        FCB     AM_RELATIVE8    ; 26
-        FCB     AM_RELATIVE8    ; 27
-        FCB     AM_RELATIVE8    ; 28
-        FCB     AM_RELATIVE8    ; 29
-        FCB     AM_RELATIVE8    ; 2A
-        FCB     AM_RELATIVE8    ; 2B
-        FCB     AM_RELATIVE8    ; 2C
-        FCB     AM_RELATIVE8    ; 2D
-        FCB     AM_RELATIVE8    ; 2E
-        FCB     AM_RELATIVE8    ; 2F
+        FCB     AM_REL_BYTE    ; 20
+        FCB     AM_REL_BYTE    ; 21
+        FCB     AM_REL_BYTE    ; 22
+        FCB     AM_REL_BYTE    ; 23
+        FCB     AM_REL_BYTE    ; 24
+        FCB     AM_REL_BYTE    ; 25
+        FCB     AM_REL_BYTE    ; 26
+        FCB     AM_REL_BYTE    ; 27
+        FCB     AM_REL_BYTE    ; 28
+        FCB     AM_REL_BYTE    ; 29
+        FCB     AM_REL_BYTE    ; 2A
+        FCB     AM_REL_BYTE    ; 2B
+        FCB     AM_REL_BYTE    ; 2C
+        FCB     AM_REL_BYTE    ; 2D
+        FCB     AM_REL_BYTE    ; 2E
+        FCB     AM_REL_BYTE    ; 2F
 
         FCB     AM_INDEXED      ; 30
         FCB     AM_INDEXED      ; 31
@@ -1576,7 +1673,7 @@ MODES
         FCB     AM_INHERENT     ; 39
         FCB     AM_INHERENT     ; 3A
         FCB     AM_INHERENT     ; 3B
-        FCB     AM_IMMEDIATE8   ; 3C
+        FCB     AM_IMM_BYTE     ; 3C
         FCB     AM_INHERENT     ; 3D
         FCB     AM_INVALID      ; 3E
         FCB     AM_INHERENT     ; 3F
@@ -1616,54 +1713,54 @@ MODES
         FCB     AM_INHERENT     ; 5F
 
         FCB     AM_INDEXED      ; 60
-        FCB     AM_INVALID      ; 61
-        FCB     AM_INVALID      ; 62
+        FCB     AM_IMM_IND      ; 61  OIM
+        FCB     AM_IMM_IND      ; 62  AIM
         FCB     AM_INDEXED      ; 63
         FCB     AM_INDEXED      ; 64
-        FCB     AM_INVALID      ; 65
+        FCB     AM_IMM_IND      ; 65  EIM
         FCB     AM_INDEXED      ; 66
         FCB     AM_INDEXED      ; 67
         FCB     AM_INDEXED      ; 68
         FCB     AM_INDEXED      ; 69
         FCB     AM_INDEXED      ; 6A
-        FCB     AM_INVALID      ; 6B
+        FCB     AM_IMM_IND      ; 6B  TIM
         FCB     AM_INDEXED      ; 6C
         FCB     AM_INDEXED      ; 6D
         FCB     AM_INDEXED      ; 6E
         FCB     AM_INDEXED      ; 6F
 
         FCB     AM_EXTENDED     ; 70
-        FCB     AM_INVALID      ; 71
-        FCB     AM_INVALID      ; 72
+        FCB     AM_IMM_EXT      ; 71  OIM
+        FCB     AM_IMM_EXT      ; 72  AIM
         FCB     AM_EXTENDED     ; 73
         FCB     AM_EXTENDED     ; 74
-        FCB     AM_INVALID      ; 75
+        FCB     AM_IMM_EXT      ; 75  EIM
         FCB     AM_EXTENDED     ; 76
         FCB     AM_EXTENDED     ; 77
         FCB     AM_EXTENDED     ; 78
         FCB     AM_EXTENDED     ; 79
         FCB     AM_EXTENDED     ; 7A
-        FCB     AM_INVALID      ; 7B
+        FCB     AM_IMM_EXT      ; 7B  TIM
         FCB     AM_EXTENDED     ; 7C
         FCB     AM_EXTENDED     ; 7D
         FCB     AM_EXTENDED     ; 7E
         FCB     AM_EXTENDED     ; 7F
 
-        FCB     AM_IMMEDIATE8   ; 80
-        FCB     AM_IMMEDIATE8   ; 81
-        FCB     AM_IMMEDIATE8   ; 82
-        FCB     AM_IMMEDIATE16  ; 83
-        FCB     AM_IMMEDIATE8   ; 84
-        FCB     AM_IMMEDIATE8   ; 85
-        FCB     AM_IMMEDIATE8   ; 86
+        FCB     AM_IMM_BYTE   ; 80
+        FCB     AM_IMM_BYTE   ; 81
+        FCB     AM_IMM_BYTE   ; 82
+        FCB     AM_IMM_WORD  ; 83
+        FCB     AM_IMM_BYTE   ; 84
+        FCB     AM_IMM_BYTE   ; 85
+        FCB     AM_IMM_BYTE   ; 86
         FCB     AM_INVALID      ; 87
-        FCB     AM_IMMEDIATE8   ; 88
-        FCB     AM_IMMEDIATE8   ; 89
-        FCB     AM_IMMEDIATE8   ; 8A
-        FCB     AM_IMMEDIATE8   ; 8B
-        FCB     AM_IMMEDIATE16  ; 8C
-        FCB     AM_RELATIVE8    ; 8D
-        FCB     AM_IMMEDIATE16  ; 8E
+        FCB     AM_IMM_BYTE   ; 88
+        FCB     AM_IMM_BYTE   ; 89
+        FCB     AM_IMM_BYTE   ; 8A
+        FCB     AM_IMM_BYTE   ; 8B
+        FCB     AM_IMM_WORD  ; 8C
+        FCB     AM_REL_BYTE    ; 8D
+        FCB     AM_IMM_WORD  ; 8E
         FCB     AM_INVALID      ; 8F
 
         FCB     AM_DIRECT       ; 90
@@ -1717,21 +1814,21 @@ MODES
         FCB     AM_EXTENDED     ; BE
         FCB     AM_EXTENDED     ; BF
 
-        FCB     AM_IMMEDIATE8   ; C0
-        FCB     AM_IMMEDIATE8   ; C1
-        FCB     AM_IMMEDIATE8   ; C2
-        FCB     AM_IMMEDIATE16  ; C3
-        FCB     AM_IMMEDIATE8   ; C4
-        FCB     AM_IMMEDIATE8   ; C5
-        FCB     AM_IMMEDIATE8   ; C6
+        FCB     AM_IMM_BYTE     ; C0
+        FCB     AM_IMM_BYTE     ; C1
+        FCB     AM_IMM_BYTE     ; C2
+        FCB     AM_IMM_WORD     ; C3
+        FCB     AM_IMM_BYTE     ; C4
+        FCB     AM_IMM_BYTE     ; C5
+        FCB     AM_IMM_BYTE     ; C6
         FCB     AM_INVALID      ; C7
-        FCB     AM_IMMEDIATE8   ; C8
-        FCB     AM_IMMEDIATE8   ; C9
-        FCB     AM_IMMEDIATE8   ; CA
-        FCB     AM_IMMEDIATE8   ; CB
-        FCB     AM_IMMEDIATE16  ; CC
-        FCB     AM_IMMEDIATE32  ; CD
-        FCB     AM_IMMEDIATE16  ; CE
+        FCB     AM_IMM_BYTE     ; C8
+        FCB     AM_IMM_BYTE     ; C9
+        FCB     AM_IMM_BYTE     ; CA
+        FCB     AM_IMM_BYTE     ; CB
+        FCB     AM_IMM_WORD     ; CC
+        FCB     AM_IMM_LONG     ; CD
+        FCB     AM_IMM_WORD     ; CE
         FCB     AM_INVALID      ; CF
 
         FCB     AM_DIRECT       ; D0
@@ -1789,21 +1886,21 @@ MODES
 ; Format: opcode (less 10), instruction, addressing mode
 
 PAGE2
-        FCB     $21,OP_LBRN ,AM_RELATIVE16
-        FCB     $22,OP_LBHI ,AM_RELATIVE16
-        FCB     $23,OP_LBLS ,AM_RELATIVE16
-        FCB     $24,OP_LBCC ,AM_RELATIVE16
-        FCB     $25,OP_LBCS ,AM_RELATIVE16
-        FCB     $26,OP_LBNE ,AM_RELATIVE16
-        FCB     $27,OP_LBEQ ,AM_RELATIVE16
-        FCB     $28,OP_LBVC ,AM_RELATIVE16
-        FCB     $29,OP_LBVS ,AM_RELATIVE16
-        FCB     $2A,OP_LBPL ,AM_RELATIVE16
-        FCB     $2B,OP_LBMI ,AM_RELATIVE16
-        FCB     $2C,OP_LBGE ,AM_RELATIVE16
-        FCB     $2D,OP_LBLT ,AM_RELATIVE16
-        FCB     $2E,OP_LBGT ,AM_RELATIVE16
-        FCB     $2F,OP_LBLE ,AM_RELATIVE16
+        FCB     $21,OP_LBRN ,AM_REL_WORD
+        FCB     $22,OP_LBHI ,AM_REL_WORD
+        FCB     $23,OP_LBLS ,AM_REL_WORD
+        FCB     $24,OP_LBCC ,AM_REL_WORD
+        FCB     $25,OP_LBCS ,AM_REL_WORD
+        FCB     $26,OP_LBNE ,AM_REL_WORD
+        FCB     $27,OP_LBEQ ,AM_REL_WORD
+        FCB     $28,OP_LBVC ,AM_REL_WORD
+        FCB     $29,OP_LBVS ,AM_REL_WORD
+        FCB     $2A,OP_LBPL ,AM_REL_WORD
+        FCB     $2B,OP_LBMI ,AM_REL_WORD
+        FCB     $2C,OP_LBGE ,AM_REL_WORD
+        FCB     $2D,OP_LBLT ,AM_REL_WORD
+        FCB     $2E,OP_LBGT ,AM_REL_WORD
+        FCB     $2F,OP_LBLE ,AM_REL_WORD
         FCB     $30,OP_ADDR ,AM_REGREG
         FCB     $31,OP_ADCR ,AM_REGREG
         FCB     $32,OP_SUBR ,AM_REGREG
@@ -1825,11 +1922,11 @@ PAGE2
         FCB     $4F,OP_CLRD ,AM_INHERENT
         FCB     $5A,OP_DECW ,AM_INHERENT
         FCB     $5F,OP_CLRW ,AM_INHERENT
-        FCB     $83,OP_CMPD ,AM_IMMEDIATE16
-        FCB     $86,OP_LDW  ,AM_IMMEDIATE16
-        FCB     $8B,OP_ADDW ,AM_IMMEDIATE16
-        FCB     $8C,OP_CMPY ,AM_IMMEDIATE16
-        FCB     $8E,OP_LDY  ,AM_IMMEDIATE16
+        FCB     $83,OP_CMPD ,AM_IMM_WORD
+        FCB     $86,OP_LDW  ,AM_IMM_WORD
+        FCB     $8B,OP_ADDW ,AM_IMM_WORD
+        FCB     $8C,OP_CMPY ,AM_IMM_WORD
+        FCB     $8E,OP_LDY  ,AM_IMM_WORD
         FCB     $91,OP_CMPW ,AM_DIRECT
         FCB     $93,OP_CMPD ,AM_DIRECT
         FCB     $9C,OP_CMPY ,AM_DIRECT
@@ -1847,7 +1944,7 @@ PAGE2
         FCB     $BC,OP_CMPY ,AM_EXTENDED
         FCB     $BE,OP_LDY  ,AM_EXTENDED
         FCB     $BF,OP_STY  ,AM_EXTENDED
-        FCB     $CE,OP_LDS  ,AM_IMMEDIATE16
+        FCB     $CE,OP_LDS  ,AM_IMM_WORD
         FCB     $DE,OP_LDS  ,AM_DIRECT
         FCB     $DD,OP_STS  ,AM_DIRECT
         FCB     $EC,OP_LDQ  ,AM_INDEXED
@@ -1864,43 +1961,51 @@ PAGE2
 ; Same format as table above.
 
 PAGE3
-        FCB     $38,OP_TFM ,AM_REGREG
-        FCB     $39,OP_TFM ,AM_REGREG
-        FCB     $3A,OP_TFM ,AM_REGREG
-        FCB     $3B,OP_TFM ,AM_REGREG
-        FCB     $3D,OP_LDMD,AM_IMMEDIATE8
-        FCB     $3F,OP_SWI3,AM_INHERENT
-        FCB     $43,OP_COME,AM_INHERENT
-        FCB     $4A,OP_DECE,AM_INHERENT
-        FCB     $4C,OP_INCE,AM_INHERENT
-        FCB     $4D,OP_TSTE,AM_INHERENT
-        FCB     $4F,OP_CLRE,AM_INHERENT
-        FCB     $5A,OP_DECF,AM_INHERENT
-        FCB     $5C,OP_INCF,AM_INHERENT
-        FCB     $81,OP_CMPE,AM_IMMEDIATE8
-        FCB     $83,OP_CMPU,AM_IMMEDIATE16
-        FCB     $86,OP_LDE ,AM_IMMEDIATE8
-        FCB     $8C,OP_CMPS,AM_IMMEDIATE16
-        FCB     $8E,OP_DIVQ,AM_IMMEDIATE16
-        FCB     $91,OP_CMPE,AM_DIRECT
-        FCB     $93,OP_CMPU,AM_DIRECT
-        FCB     $96,OP_LDE ,AM_DIRECT
-        FCB     $97,OP_STE ,AM_DIRECT
-        FCB     $9C,OP_CMPS,AM_DIRECT
-        FCB     $A3,OP_CMPU,AM_INDEXED
-        FCB     $A6,OP_LDE ,AM_INDEXED
-        FCB     $AC,OP_CMPS,AM_INDEXED
-        FCB     $B3,OP_CMPU,AM_EXTENDED
-        FCB     $B6,OP_LDE ,AM_EXTENDED
-        FCB     $B7,OP_STE ,AM_EXTENDED
-        FCB     $BC,OP_CMPS,AM_EXTENDED
-        FCB     $C0,OP_SUBF,AM_IMMEDIATE8
-        FCB     $C6,OP_LDF ,AM_IMMEDIATE8
-        FCB     $D1,OP_CMPF,AM_DIRECT
-        FCB     $D6,OP_LDF ,AM_DIRECT
-        FCB     $D7,OP_STF ,AM_DIRECT
-        FCB     $E6,OP_LDF ,AM_INDEXED
-        FCB     $F7,OP_STF ,AM_EXTENDED
+        FCB     $30,OP_BAND ,AM_BIT_BIT
+        FCB     $31,OP_BIAND,AM_BIT_BIT
+        FCB     $32,OP_BOR  ,AM_BIT_BIT
+        FCB     $33,OP_BIOR ,AM_BIT_BIT
+        FCB     $34,OP_BEOR ,AM_BIT_BIT
+        FCB     $35,OP_BIEOR,AM_BIT_BIT
+        FCB     $36,OP_LDBT ,AM_BIT_BIT
+        FCB     $37,OP_STBT ,AM_BIT_BIT
+        FCB     $38,OP_TFM  ,AM_REGREG
+        FCB     $39,OP_TFM  ,AM_REGREG
+        FCB     $3A,OP_TFM  ,AM_REGREG
+        FCB     $3B,OP_TFM  ,AM_REGREG
+        FCB     $3D,OP_LDMD ,AM_IMM_BYTE
+        FCB     $3F,OP_SWI3 ,AM_INHERENT
+        FCB     $43,OP_COME ,AM_INHERENT
+        FCB     $4A,OP_DECE ,AM_INHERENT
+        FCB     $4C,OP_INCE ,AM_INHERENT
+        FCB     $4D,OP_TSTE ,AM_INHERENT
+        FCB     $4F,OP_CLRE ,AM_INHERENT
+        FCB     $5A,OP_DECF ,AM_INHERENT
+        FCB     $5C,OP_INCF ,AM_INHERENT
+        FCB     $81,OP_CMPE ,AM_IMM_BYTE
+        FCB     $83,OP_CMPU ,AM_IMM_WORD
+        FCB     $86,OP_LDE  ,AM_IMM_BYTE
+        FCB     $8C,OP_CMPS ,AM_IMM_WORD
+        FCB     $8E,OP_DIVQ ,AM_IMM_WORD
+        FCB     $91,OP_CMPE ,AM_DIRECT
+        FCB     $93,OP_CMPU ,AM_DIRECT
+        FCB     $96,OP_LDE  ,AM_DIRECT
+        FCB     $97,OP_STE  ,AM_DIRECT
+        FCB     $9C,OP_CMPS ,AM_DIRECT
+        FCB     $A3,OP_CMPU ,AM_INDEXED
+        FCB     $A6,OP_LDE  ,AM_INDEXED
+        FCB     $AC,OP_CMPS ,AM_INDEXED
+        FCB     $B3,OP_CMPU ,AM_EXTENDED
+        FCB     $B6,OP_LDE  ,AM_EXTENDED
+        FCB     $B7,OP_STE  ,AM_EXTENDED
+        FCB     $BC,OP_CMPS ,AM_EXTENDED
+        FCB     $C0,OP_SUBF ,AM_IMM_BYTE
+        FCB     $C6,OP_LDF  ,AM_IMM_BYTE
+        FCB     $D1,OP_CMPF ,AM_DIRECT
+        FCB     $D6,OP_LDF  ,AM_DIRECT
+        FCB     $D7,OP_STF  ,AM_DIRECT
+        FCB     $E6,OP_LDF  ,AM_INDEXED
+        FCB     $F7,OP_STF  ,AM_EXTENDED
         FCB     0                             ; indicates end of table
 
 ************
@@ -1936,8 +2041,6 @@ PushPullName
         BYTE    'Y',0  ; 5
         BYTE    'U',0  ; 6
         BYTE    "PC"   ; 7
-
-; Display strings. Should be terminated in EOT character.
 
 MSG1    BYTE    "; INVALID",0
 
