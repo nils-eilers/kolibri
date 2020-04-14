@@ -212,6 +212,33 @@ OP_BEOR  EQU    $B9
 OP_BIEOR EQU    $BA
 OP_LDBT  EQU    $BB
 OP_STBT  EQU    $BC
+OP_NEGD  EQU    $BD
+OP_COMD  EQU    $BE
+OP_RORD  EQU    $BF
+OP_ROLD  EQU    $C0
+OP_TSTD  EQU    $C1
+OP_COMW  EQU    $C2
+OP_LSRW  EQU    $C3
+OP_RORW  EQU    $C4
+OP_ROLW  EQU    $C5
+OP_INCW  EQU    $C6
+OP_TSTW  EQU    $C7
+OP_SUBW  EQU    $C8
+OP_SBCD  EQU    $C9
+OP_ANDD  EQU    $CA
+OP_BITD  EQU    $CB
+OP_EORD  EQU    $CC
+OP_ADCD  EQU    $CD
+OP_ORD   EQU    $CE
+OP_BITMD EQU    $CF
+OP_COMF  EQU    $D0
+OP_TSTF  EQU    $D1
+OP_CLRF  EQU    $D2
+OP_SUBE  EQU    $D3
+OP_ADDE  EQU    $D4
+OP_DIVD  EQU    $D5
+OP_MULD  EQU    $D6
+OP_ADDF  EQU    $D7
 
 ; Addressing Modes. Mon_OCS table lists these for each instruction.
 ; LENGTHS lists the instruction length for each addressing mode.
@@ -1258,6 +1285,33 @@ MNEMONICS
         C5TO3   "BIEOR"         ; $BA
         C5TO3   "LDBT "         ; $BB
         C5TO3   "STBT "         ; $BC
+        C5TO3   "NEGD "         ; $BD
+        C5TO3   "COMD "         ; $BE
+        C5TO3   "RORD "         ; $BF
+        C5TO3   "ROLD "         ; $C0
+        C5TO3   "TSTD "         ; $C1
+        C5TO3   "COMW "         ; $C2
+        C5TO3   "LSRW "         ; $C3
+        C5TO3   "RORW "         ; $C4
+        C5TO3   "ROLW "         ; $C5
+        C5TO3   "INCW "         ; $C6
+        C5TO3   "TSTW "         ; $C7
+        C5TO3   "SUBW "         ; $C8
+        C5TO3   "SBCD "         ; $C9
+        C5TO3   "ANDD "         ; $CA
+        C5TO3   "BITD "         ; $CB
+        C5TO3   "EORD "         ; $CC
+        C5TO3   "ADCD "         ; $CD
+        C5TO3   "ORD  "         ; $CE
+        C5TO3   "BITMD"         ; $CF
+        C5TO3   "COMF "         ; $D0
+        C5TO3   "TSTF "         ; $D1
+        C5TO3   "CLRF "         ; $D2
+        C5TO3   "SUBE "         ; $D3
+        C5TO3   "ADDE "         ; $D4
+        C5TO3   "DIVD "         ; $D5
+        C5TO3   "MULD "         ; $D6
+        C5TO3   "ADDF "         ; $D7
 
 ; Lengths of instructions given an addressing mode. Matches values of
 ; AM_* Indexed addessing instructions length can increase due to post
@@ -1746,21 +1800,21 @@ MODES
         FCB     AM_EXTENDED     ; 7E
         FCB     AM_EXTENDED     ; 7F
 
-        FCB     AM_IMM_BYTE   ; 80
-        FCB     AM_IMM_BYTE   ; 81
-        FCB     AM_IMM_BYTE   ; 82
-        FCB     AM_IMM_WORD  ; 83
-        FCB     AM_IMM_BYTE   ; 84
-        FCB     AM_IMM_BYTE   ; 85
-        FCB     AM_IMM_BYTE   ; 86
+        FCB     AM_IMM_BYTE     ; 80
+        FCB     AM_IMM_BYTE     ; 81
+        FCB     AM_IMM_BYTE     ; 82
+        FCB     AM_IMM_WORD     ; 83
+        FCB     AM_IMM_BYTE     ; 84
+        FCB     AM_IMM_BYTE     ; 85
+        FCB     AM_IMM_BYTE     ; 86
         FCB     AM_INVALID      ; 87
-        FCB     AM_IMM_BYTE   ; 88
-        FCB     AM_IMM_BYTE   ; 89
-        FCB     AM_IMM_BYTE   ; 8A
-        FCB     AM_IMM_BYTE   ; 8B
-        FCB     AM_IMM_WORD  ; 8C
-        FCB     AM_REL_BYTE    ; 8D
-        FCB     AM_IMM_WORD  ; 8E
+        FCB     AM_IMM_BYTE     ; 88
+        FCB     AM_IMM_BYTE     ; 89
+        FCB     AM_IMM_BYTE     ; 8A
+        FCB     AM_IMM_BYTE     ; 8B
+        FCB     AM_IMM_WORD     ; 8C
+        FCB     AM_REL_BYTE     ; 8D
+        FCB     AM_IMM_WORD     ; 8E
         FCB     AM_INVALID      ; 8F
 
         FCB     AM_DIRECT       ; 90
@@ -1901,6 +1955,7 @@ PAGE2
         FCB     $2D,OP_LBLT ,AM_REL_WORD
         FCB     $2E,OP_LBGT ,AM_REL_WORD
         FCB     $2F,OP_LBLE ,AM_REL_WORD
+
         FCB     $30,OP_ADDR ,AM_REGREG
         FCB     $31,OP_ADCR ,AM_REGREG
         FCB     $32,OP_SUBR ,AM_REGREG
@@ -1911,46 +1966,105 @@ PAGE2
         FCB     $37,OP_CMPR ,AM_REGREG
         FCB     $38,OP_PSHSW,AM_INHERENT
         FCB     $39,OP_PULSW,AM_INHERENT
-        FCB     $38,OP_PSHUW,AM_INHERENT
-        FCB     $39,OP_PULUW,AM_INHERENT
+        FCB     $3A,OP_PSHUW,AM_INHERENT
+        FCB     $3B,OP_PULUW,AM_INHERENT
         FCB     $3F,OP_SWI2 ,AM_INHERENT
+
+        FCB     $40,OP_NEGD ,AM_INHERENT
+        FCB     $43,OP_COMD ,AM_INHERENT
         FCB     $44,OP_LSRD ,AM_INHERENT
+        FCB     $46,OP_RORD ,AM_INHERENT
         FCB     $47,OP_ASRD ,AM_INHERENT
         FCB     $48,OP_LSLD ,AM_INHERENT
+        FCB     $49,OP_ROLD ,AM_INHERENT
         FCB     $4A,OP_DECD ,AM_INHERENT
         FCB     $4C,OP_INCD ,AM_INHERENT
+        FCB     $4D,OP_TSTD ,AM_INHERENT
         FCB     $4F,OP_CLRD ,AM_INHERENT
+
+        FCB     $53,OP_COMW ,AM_INHERENT
+        FCB     $54,OP_LSRW ,AM_INHERENT
+        FCB     $56,OP_RORW ,AM_INHERENT
+        FCB     $59,OP_ROLW ,AM_INHERENT
         FCB     $5A,OP_DECW ,AM_INHERENT
+        FCB     $5C,OP_INCW ,AM_INHERENT
+        FCB     $5C,OP_TSTW ,AM_INHERENT
         FCB     $5F,OP_CLRW ,AM_INHERENT
+
+        FCB     $80,OP_SUBW ,AM_IMM_WORD
+        FCB     $81,OP_CMPW ,AM_IMM_WORD
+        FCB     $82,OP_SBCD ,AM_IMM_WORD
         FCB     $83,OP_CMPD ,AM_IMM_WORD
+        FCB     $84,OP_ANDD ,AM_IMM_WORD
+        FCB     $85,OP_BITD ,AM_IMM_WORD
         FCB     $86,OP_LDW  ,AM_IMM_WORD
+        FCB     $88,OP_EORD ,AM_IMM_WORD
+        FCB     $89,OP_ADCD ,AM_IMM_WORD
+        FCB     $8A,OP_ORD  ,AM_IMM_WORD
         FCB     $8B,OP_ADDW ,AM_IMM_WORD
         FCB     $8C,OP_CMPY ,AM_IMM_WORD
         FCB     $8E,OP_LDY  ,AM_IMM_WORD
+
+        FCB     $90,OP_SUBW ,AM_DIRECT
         FCB     $91,OP_CMPW ,AM_DIRECT
+        FCB     $92,OP_SBCD ,AM_DIRECT
         FCB     $93,OP_CMPD ,AM_DIRECT
+        FCB     $94,OP_ANDD ,AM_DIRECT
+        FCB     $95,OP_BITD ,AM_DIRECT
+        FCB     $96,OP_LDW  ,AM_DIRECT
+        FCB     $97,OP_STW  ,AM_DIRECT
+        FCB     $98,OP_EORD ,AM_DIRECT
+        FCB     $99,OP_ADCD ,AM_DIRECT
+        FCB     $9A,OP_ORD  ,AM_DIRECT
+        FCB     $9B,OP_ADDW ,AM_DIRECT
         FCB     $9C,OP_CMPY ,AM_DIRECT
         FCB     $9E,OP_LDY  ,AM_DIRECT
         FCB     $9D,OP_STY  ,AM_DIRECT
+
+        FCB     $A0,OP_SUBW ,AM_INDEXED
+        FCB     $A1,OP_CMPW ,AM_INDEXED
+        FCB     $A2,OP_SBCD ,AM_INDEXED
         FCB     $A3,OP_CMPD ,AM_INDEXED
+        FCB     $A4,OP_ANDD ,AM_INDEXED
+        FCB     $A5,OP_BITD ,AM_INDEXED
+        FCB     $A6,OP_LDW  ,AM_INDEXED
         FCB     $A7,OP_STW  ,AM_INDEXED
+        FCB     $A8,OP_EORD ,AM_INDEXED
+        FCB     $A9,OP_ADCD ,AM_INDEXED
+        FCB     $AA,OP_ORD  ,AM_INDEXED
+        FCB     $AB,OP_ADDW ,AM_INDEXED
         FCB     $AC,OP_CMPY ,AM_INDEXED
         FCB     $AE,OP_LDY  ,AM_INDEXED
-        FCB     $AF,OP_STY  ,AM_INDEXED
+        FCB     $AD,OP_STY  ,AM_INDEXED
+
+        FCB     $B0,OP_SUBW ,AM_EXTENDED
         FCB     $B1,OP_CMPW ,AM_EXTENDED
+        FCB     $B2,OP_SBCD ,AM_EXTENDED
         FCB     $B3,OP_CMPD ,AM_EXTENDED
+        FCB     $B4,OP_ANDD ,AM_EXTENDED
+        FCB     $B5,OP_BITD ,AM_EXTENDED
         FCB     $B6,OP_LDW  ,AM_EXTENDED
         FCB     $B7,OP_STW  ,AM_EXTENDED
+        FCB     $B8,OP_EORD ,AM_EXTENDED
+        FCB     $B9,OP_ADCD ,AM_EXTENDED
+        FCB     $BA,OP_ORD  ,AM_EXTENDED
+        FCB     $BB,OP_ADDW ,AM_EXTENDED
         FCB     $BC,OP_CMPY ,AM_EXTENDED
         FCB     $BE,OP_LDY  ,AM_EXTENDED
-        FCB     $BF,OP_STY  ,AM_EXTENDED
+        FCB     $BD,OP_STY  ,AM_EXTENDED
+
         FCB     $CE,OP_LDS  ,AM_IMM_WORD
+
+        FCB     $DC,OP_LDQ  ,AM_DIRECT
+        FCB     $DD,OP_STQ  ,AM_DIRECT
         FCB     $DE,OP_LDS  ,AM_DIRECT
-        FCB     $DD,OP_STS  ,AM_DIRECT
+        FCB     $DF,OP_STS  ,AM_DIRECT
+
         FCB     $EC,OP_LDQ  ,AM_INDEXED
         FCB     $ED,OP_STQ  ,AM_INDEXED
         FCB     $EE,OP_LDS  ,AM_INDEXED
         FCB     $EF,OP_STS  ,AM_INDEXED
+
         FCB     $FC,OP_LDQ  ,AM_EXTENDED
         FCB     $FD,OP_STQ  ,AM_EXTENDED
         FCB     $FE,OP_LDS  ,AM_EXTENDED
@@ -1973,39 +2087,88 @@ PAGE3
         FCB     $39,OP_TFM  ,AM_REGREG
         FCB     $3A,OP_TFM  ,AM_REGREG
         FCB     $3B,OP_TFM  ,AM_REGREG
+        FCB     $3C,OP_BITMD,AM_IMM_BYTE
         FCB     $3D,OP_LDMD ,AM_IMM_BYTE
         FCB     $3F,OP_SWI3 ,AM_INHERENT
+
         FCB     $43,OP_COME ,AM_INHERENT
         FCB     $4A,OP_DECE ,AM_INHERENT
         FCB     $4C,OP_INCE ,AM_INHERENT
         FCB     $4D,OP_TSTE ,AM_INHERENT
         FCB     $4F,OP_CLRE ,AM_INHERENT
+
+        FCB     $53,OP_COMF ,AM_INHERENT
         FCB     $5A,OP_DECF ,AM_INHERENT
         FCB     $5C,OP_INCF ,AM_INHERENT
+        FCB     $5D,OP_TSTF ,AM_INHERENT
+        FCB     $5F,OP_CLRF ,AM_INHERENT
+
+        FCB     $80,OP_SUBE ,AM_IMM_BYTE
         FCB     $81,OP_CMPE ,AM_IMM_BYTE
         FCB     $83,OP_CMPU ,AM_IMM_WORD
         FCB     $86,OP_LDE  ,AM_IMM_BYTE
+        FCB     $8B,OP_ADDE ,AM_IMM_BYTE
         FCB     $8C,OP_CMPS ,AM_IMM_WORD
+        FCB     $8D,OP_DIVD ,AM_IMM_WORD
         FCB     $8E,OP_DIVQ ,AM_IMM_WORD
+        FCB     $8F,OP_MULD ,AM_IMM_WORD
+
+        FCB     $90,OP_SUBE ,AM_DIRECT
         FCB     $91,OP_CMPE ,AM_DIRECT
         FCB     $93,OP_CMPU ,AM_DIRECT
         FCB     $96,OP_LDE  ,AM_DIRECT
         FCB     $97,OP_STE  ,AM_DIRECT
+        FCB     $9B,OP_ADDE ,AM_DIRECT
         FCB     $9C,OP_CMPS ,AM_DIRECT
+        FCB     $9D,OP_DIVD ,AM_DIRECT
+        FCB     $9E,OP_DIVQ ,AM_DIRECT
+        FCB     $9F,OP_MULD ,AM_DIRECT
+
+        FCB     $A0,OP_SUBE ,AM_INDEXED
+        FCB     $A1,OP_CMPE ,AM_INDEXED
         FCB     $A3,OP_CMPU ,AM_INDEXED
         FCB     $A6,OP_LDE  ,AM_INDEXED
+        FCB     $A7,OP_STE  ,AM_INDEXED
+        FCB     $AB,OP_ADDE ,AM_INDEXED
         FCB     $AC,OP_CMPS ,AM_INDEXED
+        FCB     $AD,OP_DIVD ,AM_INDEXED
+        FCB     $AE,OP_DIVQ ,AM_INDEXED
+        FCB     $AF,OP_MULD ,AM_INDEXED
+
+        FCB     $B0,OP_SUBE ,AM_EXTENDED
+        FCB     $B1,OP_CMPE ,AM_EXTENDED
         FCB     $B3,OP_CMPU ,AM_EXTENDED
         FCB     $B6,OP_LDE  ,AM_EXTENDED
         FCB     $B7,OP_STE  ,AM_EXTENDED
+        FCB     $BB,OP_ADDE ,AM_EXTENDED
         FCB     $BC,OP_CMPS ,AM_EXTENDED
+        FCB     $BD,OP_DIVD ,AM_EXTENDED
+        FCB     $BE,OP_DIVQ ,AM_EXTENDED
+        FCB     $BF,OP_MULD ,AM_EXTENDED
+
         FCB     $C0,OP_SUBF ,AM_IMM_BYTE
+        FCB     $C1,OP_CMPF ,AM_IMM_BYTE
         FCB     $C6,OP_LDF  ,AM_IMM_BYTE
+        FCB     $CB,OP_ADDF ,AM_IMM_BYTE
+
+        FCB     $D0,OP_SUBF ,AM_DIRECT
         FCB     $D1,OP_CMPF ,AM_DIRECT
         FCB     $D6,OP_LDF  ,AM_DIRECT
         FCB     $D7,OP_STF  ,AM_DIRECT
+        FCB     $DB,OP_ADDF ,AM_DIRECT
+
+        FCB     $E0,OP_SUBF ,AM_INDEXED
+        FCB     $E1,OP_CMPF ,AM_INDEXED
         FCB     $E6,OP_LDF  ,AM_INDEXED
+        FCB     $E7,OP_STF  ,AM_INDEXED
+        FCB     $EB,OP_ADDF ,AM_INDEXED
+
+        FCB     $F0,OP_SUBF ,AM_EXTENDED
+        FCB     $F1,OP_CMPF ,AM_EXTENDED
+        FCB     $F6,OP_LDF  ,AM_EXTENDED
         FCB     $F7,OP_STF  ,AM_EXTENDED
+        FCB     $FB,OP_ADDF ,AM_EXTENDED
+
         FCB     0                             ; indicates end of table
 
 ************
