@@ -9,6 +9,7 @@
 #include "kbhit.h"
 
 static bool load_rom_given = false;
+bool boot_switch_pressed = false;
 char *lopt = NULL; // pointer to program name to load
 
 void die(char *errmsg)
@@ -54,6 +55,11 @@ void process_args(int argc, char *argv[])
          }
 
          switch (argv[i][1]) {
+            case 'b':
+               boot_switch_pressed = true;
+               if (argv[i][2] == '-') boot_switch_pressed = false;
+               printf("Boot switch %spressed.\n", boot_switch_pressed ? "" : "not ");
+               break;
             case 'p': lopt = argv[i] + 2;
                       while (*lopt == ' ') ++lopt;
                       break;
@@ -62,6 +68,7 @@ void process_args(int argc, char *argv[])
                printf("   -h\tThis help text\n"
                       "   --load-rom <address> <filename>\tloads a binary ROM image\n");
                printf("   -p <filename>\tloads a program after firmware loading\n");
+               printf("   -b[+|-]\tboot switch pressed (+) or not pressed (-)\n");
                exit(EXIT_SUCCESS);
 
             default:

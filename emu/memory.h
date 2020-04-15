@@ -1,6 +1,7 @@
 #pragma once
 
 #define FT245R          0xFE2C  /* virtual COM port                     */
+#define IO_INPORT       0xFE2D
 
 
 uint8_t read8(uint16_t addr);

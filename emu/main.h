@@ -8,3 +8,4 @@ void Init_SEM();
 void Exit_SEM();
 #endif
 
+extern bool boot_switch_pressed;

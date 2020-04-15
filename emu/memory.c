@@ -64,6 +64,12 @@ uint8_t read8(uint16_t addr)
          return getchar();
 #endif
 
+      case IO_INPORT:
+         if (boot_switch_pressed)
+            return 0xFF - 16;
+         else
+            return 0xFF;
+
       default:
           return mem[addr];
          //fprintf(stderr, "read from undefined I/O address $%04X\n", addr);
