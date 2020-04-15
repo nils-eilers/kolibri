@@ -134,6 +134,8 @@ Monitor
         LDA     3+2,S           ; DP
         LDB     ,S              ; CC
         STD     MON_DP
+        LDA     #1
+        STA     Mon_Dollar
 
 *********
 Mon_Hello

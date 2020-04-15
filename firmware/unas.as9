@@ -304,6 +304,16 @@ SUBROUTINE PrintComma
         PULS    D,PC
 ENDSUB
 
+********************
+SUBROUTINE PrintDash
+********************
+
+        PSHS    D
+        LDA     #'-'
+        CALL    PUTC
+        PULS    D,PC
+ENDSUB
+
 *******************
 SUBROUTINE PrintDot
 *******************
@@ -373,21 +383,6 @@ SUBROUTINE PrintSpaces
         DECE                    ; Decrement count
         BNE     .PS1            ; Check again
 .PS2    PULS    D,PC
-ENDSUB
-
-***********************
-SUBROUTINE PrintAddress
-***********************
-
-********************
-* Input : X = word *
-********************
-
-        PSHS    D,X             ; Save registers used
-        TFR     X,D
-        JSR     Mon_Show_Word
-        JSR     Mon_Blank
-        PULS    D,X,PC
 ENDSUB
 
 *******************
@@ -477,6 +472,25 @@ SUBROUTINE PrintTFM
 .Skip   ADDW    #4              ; Position to target table
 .Return RTS
 ENDSUB
+
+***************************
+SUBROUTINE Print5BitDecimal
+***************************
+        BITA    #%0001 0000     ; Test sign
+        BEQ     .P5B1           ; -> positive
+        JSR     PrintDash       ; Print minus sign
+        ORA     #%1111 0000     ; Extend sign
+        NEGA                    ; Make positive
+.P5B1   CMPA    #10             ; Offset >= 10 ?
+        BLO     .P5B2           ; -> only 1 digit
+        PSHS    A               ; Save A
+        LDA     #'1'            ; Printh 10th.
+        CALL    PUTC
+        PULS    A               ; Restore A
+        SUBA    #10             ; Remove 10th.
+.P5B2   ORA     #'0'            ; To ASCII
+        CALL    PUTC
+        RTS
 
 *****************
 SUBROUTINE DISASM
@@ -892,9 +906,8 @@ SUBROUTINE SUB_INDEXED
 
         LDA     Mon_PB          ; Get postbyte
         BMI     ind2            ; Branch if MSB is 1
-                                ; Format is 0RRnnnnn  n,R
-        ANDA    #%00011111      ; Get 5-bit offset
-        JSR     PrintByte   ; Print offset
+        ANDA    #%00011111      ; Format is 0RRnnnnn  n,R
+        JSR     Print5BitDecimal
         JMP     PrintCommaReg   ; Print ,R
 
 ind2    CMPA    #%10001111      ; Check against pattern
@@ -997,7 +1010,7 @@ ind13
         LDX     Mon_Adr
         LDD     2,X             ; Get 16-bit offset
         TFR     D,X
-        JSR     PrintAddress    ; Display it
+        JSR     PrintWord       ; Display it
         JSR     PrintComma      ; Print comma
         JMP     PrintPCR        ; Print PCR
 ind14
@@ -1025,7 +1038,7 @@ ind16
         LDX     Mon_Adr
         LDD     2,X             ; Get 16-bit offset
         TFR     D,X
-        JSR     PrintAddress    ; Display it
+        JSR     PrintWord       ; Display it
         JSR     PrintCommaReg   ; Print ,R
         JMP     PrintRBracket   ; Print right bracket
 ind17
@@ -1094,7 +1107,7 @@ ind23
         LDX     Mon_Adr
         LDD     2,X             ; Get 16-bit offset
         TFR     D,X
-        JSR     PrintAddress    ; Display it
+        JSR     PrintWord       ; Display it
         JSR     PrintComma      ; Print comma
         JSR     PrintPCR        ; Print PCR
         JMP     PrintRBracket   ; Print right bracket
