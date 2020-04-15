@@ -954,7 +954,6 @@ ENDSUB
 *******
 PB_MASK
 *******
-        BYTE    INX_W        , %10001111 ;      ,W
         BYTE    PrintCommaReg, %10000100 ;      ,R
         BYTE    INX_ByteReg  , %10001000 ;    nn,R
         BYTE    INX_WordReg  , %10001001 ;  nnnn,R
@@ -1064,14 +1063,6 @@ SUBROUTINE SUB_INDEXED
         JSR     ,W              ; print operand
         JSR     PrintRBracket   ; if indirect
 .InxR   RTS
-ENDSUB
-
-****************
-SUBROUTINE INX_W
-****************
-
-        JSR     PrintComma
-        JMP     PrintW
 ENDSUB
 
 ***********************
