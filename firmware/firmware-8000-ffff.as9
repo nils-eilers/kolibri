@@ -80,7 +80,7 @@ Greet_80
 
 ; Call S-record loader if BOOT switch is pressed
         TIM     #IO_INBOOT,IO_INPORT
-        BEQ     +               ; branch if switch is not pressed
+        BNE     +               ; branch if switch is not pressed
         JSR     Mon_Load
 +
 
