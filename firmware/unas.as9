@@ -305,7 +305,17 @@ SUBROUTINE PrintComma
 ENDSUB
 
 ********************
-SUBROUTINE PrintDash
+SUBROUTINE PrintPlus
+********************
+
+        PSHS    D
+        LDA     #'+'
+        CALL    PUTC
+        PULS    D,PC
+ENDSUB
+
+********************
+SUBROUTINE PrintMinus
 ********************
 
         PSHS    D
@@ -324,24 +334,41 @@ SUBROUTINE PrintDot
         PULS    D,PC
 ENDSUB
 
+*****************
+SUBROUTINE PrintW
+*****************
+
+        PSHS    D
+        LDA     #'W'
+        CALL    PUTC
+        PULS    D,PC
+ENDSUB
+
 ************************
 SUBROUTINE PrintLBracket
 ************************
 
-        PSHS    D
         LDA     #'['
-        CALL    PUTC
-        PULS    D,PC
+        BRA     PrintDelimiter
 ENDSUB
 
 ************************
 SUBROUTINE PrintRBracket
 ************************
 
+        LDA     #']'          ; fall through
+ENDSUB
+
+*************************
+SUBROUTINE PrintDelimiter
+*************************
+
+        TIM     #$10,Mon_PB   ; indirect bit
+        BEQ     .Return
         PSHS    D
-        LDA     #']'
         CALL    PUTC
-        PULS    D,PC
+        PULS    D
+.Return RTS
 ENDSUB
 
 **********************
@@ -476,9 +503,10 @@ ENDSUB
 ***************************
 SUBROUTINE Print5BitDecimal
 ***************************
+        ANDA    #%0001 1111     ; mask 5 bits
         BITA    #%0001 0000     ; Test sign
         BEQ     .P5B1           ; -> positive
-        JSR     PrintDash       ; Print minus sign
+        JSR     PrintMinus      ; Print minus sign
         ORA     #%1111 0000     ; Extend sign
         NEGA                    ; Make positive
 .P5B1   CMPA    #10             ; Offset >= 10 ?
@@ -566,14 +594,21 @@ dism    LDA     Mon_AM          ; Get addressing mode
 ; bytes and we can skip the rest of the check.
 
         BPL     NotIndexed      ; Branch of MSB is zero
+        CMPA    #$AF            ; nnnn,W
+        BEQ     dismW
+        CMPA    #$B0            ; [nnnn,W]
+        BNE     dism10
 
-; Else if most significant bit is 1, mask off all but low order 5 bits
+dismW   LDA     #2
+        BRA     dism20
+
+; Else if most significant bit is 1, mask off all but low order 4 bits
 ; and look up length in table.
 
-        ANDA    #%00011111      ; Mask off bits
+dism10  ANDA    #%00001111      ; Mask off bits
         LDX     #Mon_PBES       ; Lookup table of lengths
         LDA     A,X             ; Get table entry
-        ADDA    Mon_Len         ; Add to instruction length
+dism20  ADDA    Mon_Len         ; Add to instruction length
         STA     Mon_Len         ; Save new length
 
 NotIndexed
@@ -868,10 +903,6 @@ SUBROUTINE SUB_REL_WORD
         BRA     Mon_Rel
 ENDSUB
 
-**********************
-SUBROUTINE SUB_INDEXED
-**********************
-
 ; Addressing modes are determined by the postbyte:
 ;
 ; Postbyte  Format  Additional Bytes
@@ -904,225 +935,266 @@ SUBROUTINE SUB_INDEXED
 ;
 ; Where RR: 00=X 01=Y 10=U 11=S
 
-        LDA     Mon_PB          ; Get postbyte
-        BMI     ind2            ; Branch if MSB is 1
-        ANDA    #%00011111      ; Format is 0RRnnnnn  n,R
-        JSR     Print5BitDecimal
-        JMP     PrintCommaReg   ; Print ,R
+        LDX     Mon_Adr         ; Load op code address
+        LDD     1,X             ; Load operand
+        LDY     #AM_Table       ; Table of AM subroutines
+        LDE     Mon_AM          ; Index for table
+        ADDR    E,E             ; Shift for word address
+        JSR     [E,Y]           ; Call subroutine
 
-ind2    CMPA    #%10001111      ; Check against pattern
-        BNE     ind2a
-        JSR     PrintComma
-        LDA     #'W'
-        CALL    PUTC
+        JSR     Mon_CRLF        ; Print final CR
+        CLRA                    ; Clear MSB of D
+        LDB     Mon_Len         ; Get length byte in LSB of D
+        SUBB    Mon_Pg23        ; Page 2/3 prefix byte
+        ADDD    Mon_Adr         ; Add to address
+        STD     Mon_Adr         ; Write new address
         RTS
+ENDSUB
 
-ind2a   ANDA    #%10011111      ; Mask out register bits
-        CMPA    #%10000100      ; Check against pattern
-        BNE     ind3
-                                ; Format is 1RR00100  ,R
-        JMP     PrintCommaReg   ; Print ,R
-ind3
-        CMPA    #%10001000      ; Check against pattern
-        BNE     ind4
-                                ; Format is 1RR01000  n,R
-        LDX     Mon_Adr
-        LDA     2,X             ; Get 8-bit offset
-        JSR     PrintByte   ; Print offset
-        JMP     PrintCommaReg   ; Print ,R
-ind4
-        CMPA    #%10001001      ; Check against pattern
-        BNE     ind5
-                                ; Format is 1RR01001  n,R
-        LDX     Mon_Adr
-        LDD     2,X             ; Get 16-bit offset
+*******
+PB_MASK
+*******
+        BYTE    INX_W        , %10001111 ;      ,W
+        BYTE    PrintCommaReg, %10000100 ;      ,R
+        BYTE    INX_ByteReg  , %10001000 ;    nn,R
+        BYTE    INX_WordReg  , %10001001 ;  nnnn,R
+        BYTE    INX_AReg     , %10000110 ;     A,R
+        BYTE    INX_BReg     , %10000101 ;     B,R
+        BYTE    INX_DReg     , %10001011 ;     D,R
+        BYTE    INX_EReg     , %10000111 ;     E,R
+        BYTE    INX_FReg     , %10001010 ;     F,R
+        BYTE    INX_WReg     , %10001110 ;     W,R
+        BYTE    INX_Rp       , %10000000 ;      ,R+
+        BYTE    INX_Rpp      , %10000001 ;      ,R++
+        BYTE    INX_mR       , %10000010 ;      ,-R
+        BYTE    INX_mmR      , %10000011 ;      ,--R
+        BYTE    INX_BytePC   , %10001100 ;    nn,PC
+        BYTE    INX_WordPC   , %10001101 ;  nnnn,PC
+        BYTE    0,0
+
+* Test
+
+*       LDE     ,W
+*       LDF     [,W]
+*       LDB     $5678,X
+*       LDA     $1234,W
+*       LDB     [$5678,X]
+*       LDA     [$1234,W]
+*       LDX     ,W++
+*       LDX     [,W++]
+*       LDY     [,--W]
+
+**********************
+SUBROUTINE SUB_INDEXED
+**********************
+
+******* 5 bit offset , register X,Y,U,S *******
+
+        LDA     Mon_PB          ; Get postbyte
+        BMI     .InxA           ; Branch if MSB is 1
+        JSR     Print5BitDecimal; Offset
+        JMP     PrintCommaReg   ; ,R
+
+******* [nnnn] *******
+
+.InxA   CMPA    #%1001 1111
+        BNE     .InxB
+        JSR     PrintLBracket
+        LDD     2,X
         JSR     PrintWord
+        JMP     PrintRBracket
+
+******* ,W   [,W] *******
+
+.InxB   CMPA    #%1000 1111     ;  ,W
+        BEQ     .InxC
+        CMPA    #%1001 0000     ; [,W]
+        BNE     .InxD
+        JSR     PrintLBracket
+.InxC   JSR     PrintComma
+        JSR     PrintW
+        JMP     PrintRBracket
+
+******* nnnn,W   [nnnn,W] ******
+
+.InxD   CMPA    #%1010 1111     ;  nnnn,W
+        BEQ     .InxE
+        CMPA    #%1011 0000     ; [nnnn,W]
+        BNE     .InxF
+        JSR     PrintLBracket
+.InxE   LDD     2,X
+        JSR     PrintWord
+        JSR     PrintComma
+        JSR     PrintW
+        JMP     PrintRBracket
+
+******* ,W++   [,W++] **********
+
+.InxF   CMPA    #%1100 1111     ; ,W++
+        BEQ     .InxG
+        CMPA    #%1101 0000     ; [,W++]
+        BNE     .InxH
+        JSR     PrintLBracket
+.InxG   LDX     #MSGWPP
+        JSR     PrintString
+        JMP     PrintRBracket
+
+******* ,--W   [,--W] *******
+
+.InxH   CMPA    #%1110 1111
+        BEQ     .InxI
+        CMPA    #%1111 0000
+        BNE     .InxY
+        JSR     PrintLBracket
+.InxI   LDX     #MSGMMW
+        JSR     PrintString
+        JMP     PrintRBracket
+
+******* register operands with X,Y,U,S,W ******
+
+.InxY   ANDA    #%1000 1111     ; Mask out register and indirect bit
+        LDY     #PB_MASK        ; Table of masks
+.InxZ   LDW     ,Y++            ; Subroutine
+        BEQ     .InxR
+        CMPA    ,Y+             ; Mask
+        BNE     .InxZ           ; Loop
+        JSR     PrintLBracket   ; if indirect
+        LDX     Mon_Adr         ; op code
+        LDD     2,X             ; address
+        JSR     ,W              ; print operand
+        JSR     PrintRBracket   ; if indirect
+.InxR   RTS
+ENDSUB
+
+****************
+SUBROUTINE INX_W
+****************
+
+        JSR     PrintComma
+        JMP     PrintW
+ENDSUB
+
+***********************
+SUBROUTINE INX_ByteReg
+***********************
+
+        JSR     PrintByte       ; Print offset
         JMP     PrintCommaReg   ; Print ,R
-ind5
-        CMPA    #%10000110      ; Check against pattern
-        BNE     ind6
-                                ; Format is 1RR00110  A,R
+ENDSUB
+
+**********************
+SUBROUTINE INX_WordReg
+**********************
+
+        JSR     PrintWord
+        JMP     PrintCommaReg
+ENDSUB
+
+*******************
+SUBROUTINE INX_AReg
+*******************
+
         LDA     #'A'
-        CALL    PUTC            ; Print A
-commar
-        JMP     PrintCommaReg   ; Print ,R
-ind6
-        CMPA    #%10000101      ; Check against pattern
-        BNE     ind7
-                                ; Format is 1RR00101  B,R
+        CALL    PUTC
+        JMP     PrintCommaReg
+ENDSUB
+
+*******************
+SUBROUTINE INX_BReg
+*******************
+
         LDA     #'B'
         CALL    PUTC
-        BRA     commar
-ind7
-        CMPA    #%10001011      ; Check against pattern
-        BNE     ind8
-                                ; Format is 1RR01011  D,R
+        JMP     PrintCommaReg
+ENDSUB
+
+*******************
+SUBROUTINE INX_DReg
+*******************
+
         LDA     #'D'
         CALL    PUTC
-        BRA     commar
-ind8
-        CMPA    #%10000000      ; Check against pattern
-        BNE     ind9
-                                ; Format is 1RR00000  ,R+
-        JSR     PrintCommaReg   ; Print ,R
-        LDA     #'+'            ; Print plus
-        CALL    PUTC
-        RTS
-ind9
-        CMPA    #%10000001      ; Check against pattern
-        BNE     ind10
-                                ; Format is 1RR00001  ,R++
-        JSR     PrintCommaReg   ; Print ,R
-        LDA     #'+'            ; Print plus twice
-        CALL    PUTC
-        CALL    PUTC
-        RTS
-ind10
-        CMPA    #%10000010      ; Check against pattern
-        BNE     ind11
-                                ; Format is 1RR00010  ,-R
-        LBSR    PrintComma      ; Print comma
-        LDA     #'-             ; Print minus
-        CALL    PUTC
-        JMP     PrintIndex   ; Print register name
-ind11
-        CMPA    #%10000011      ; Check against pattern
-        BNE     ind12
-                                ; Format is 1RR00011  ,--R
-        LBSR    PrintComma      ; Print comma
-        LDA     #'-             ; Print minus twice
-        CALL    PUTC
-        CALL    PUTC
-        JMP     PrintIndex   ; Print register name
-ind12
-        CMPA    #%10001100      ; Check against pattern
-        BNE     ind13
-                                ; Format is 1xx01100  n,PCR
-        LDX     Mon_Adr
-        LDA     2,X             ; Get 8-bit offset
-        JSR     PrintByte       ; Display it
-        JSR     PrintComma      ; Print comma
-        JMP     PrintPCR        ; Print PCR
-ind13
-        CMPA    #%10001101      ; Check against pattern
-        BNE     ind14
-                                ; Format is 1xx01101  n,PCR
-        LDX     Mon_Adr
-        LDD     2,X             ; Get 16-bit offset
-        TFR     D,X
-        JSR     PrintWord       ; Display it
-        JSR     PrintComma      ; Print comma
-        JMP     PrintPCR        ; Print PCR
-ind14
-        CMPA    #%10010100      ; Check against pattern
-        BNE     ind15
-                                ; Format is 1RR10100  [,R]
-        JSR     PrintLBracket   ; Print left bracket
-        JSR     PrintCommaReg   ; Print ,R
-        JMP     PrintRBracket   ; Print right bracket
-ind15
-        CMPA    #%10011000      ; Check against pattern
-        BNE     ind16
-                                ; Format is 1RR11000  [n,R]
-        LBSR    PrintLBracket   ; Print left bracket
-        LDX     Mon_Adr
-        LDA     2,X             ; Get 8-bit offset
-        JSR     PrintByte       ; Display it
-        JSR     PrintCommaReg   ; Print ,R
-        JMP     PrintRBracket   ; Print right bracket
-ind16
-        CMPA    #%10011001      ; Check against pattern
-        BNE     ind17
-                                ; Format is 1RR11001  [n,R]
-        LBSR    PrintLBracket   ; Print left bracket
-        LDX     Mon_Adr
-        LDD     2,X             ; Get 16-bit offset
-        TFR     D,X
-        JSR     PrintWord       ; Display it
-        JSR     PrintCommaReg   ; Print ,R
-        JMP     PrintRBracket   ; Print right bracket
-ind17
-        CMPA    #%10010110      ; Check against pattern
-        BNE     ind18
-                                ; Format is 1RR10110  [A,R]
-        LBSR    PrintLBracket   ; Print left bracket
-        LDA     #'A
-        CALL    PUTC            ; Print A
-comrb
-        JSR     PrintCommaReg   ; Print ,R
-        JMP     PrintRBracket   ; Print right bracket
-ind18
-        CMPA    #%10010101      ; Check against pattern
-        BNE     ind19
-                                ; Format is 1RR10101  [B,R]
-        LBSR    PrintLBracket   ; Print left bracket
-        LDA     #'B
-        CALL    PUTC
-        BRA     comrb
-ind19
-        CMPA    #%10011011      ; Check against pattern
-        BNE     ind20
-                                ; Format is 1RR11011  [D,R]
-        LBSR    PrintLBracket   ; Print left bracket
-        LDA     #'D
-        CALL    PUTC
-        BRA     comrb
-ind20
-        CMPA    #%10010001      ; Check against pattern
-        BNE     ind21
-                                ; Format is 1RR10001  [,R++]
-        LBSR    PrintLBracket   ; Print left bracket
-        JSR     PrintCommaReg   ; Print ,R
-        LDA     #'+             ; Print plus twice
-        CALL    PUTC
-        CALL    PUTC
-        JMP     PrintRBracket   ; Print right bracket
-ind21
-        CMPA    #%10010011      ; Check against pattern
-        BNE     ind22
-                                ; Format is 1RR10011  [,--R]
-        LBSR    PrintLBracket   ; Print left bracket
-        LBSR    PrintComma      ; Print comma
-        LDA     #'-             ; Print minus twice
-        CALL    PUTC
-        CALL    PUTC
-        JSR     PrintIndex   ; Print register name
-        JMP     PrintRBracket   ; Print right bracket
-ind22
-        CMPA    #%10011100      ; Check against pattern
-        BNE     ind23
-                                ; Format is 1xx11100  [n,PCR]
-        LBSR    PrintLBracket   ; Print left bracket
-        LDX     Mon_Adr
-        LDA     2,X             ; Get 8-bit offset
-        JSR     PrintByte   ; Display it
-        JSR     PrintComma      ; Print comma
-        JSR     PrintPCR        ; Print PCR
-        JMP     PrintRBracket   ; Print right bracket
-ind23
-        CMPA    #%10011101      ; Check against pattern
-        BNE     ind24
-                                ; Format is 1xx11101  [n,PCR]
-        LBSR    PrintLBracket   ; Print left bracket
-        LDX     Mon_Adr
-        LDD     2,X             ; Get 16-bit offset
-        TFR     D,X
-        JSR     PrintWord       ; Display it
-        JSR     PrintComma      ; Print comma
-        JSR     PrintPCR        ; Print PCR
-        JMP     PrintRBracket   ; Print right bracket
-ind24
-        CMPA    #%10011111      ; Check against pattern
-        BNE     ind25
-                                ; Format is 1xx11111  [n]
-        JSR     PrintLBracket   ; Print left bracket
-        LDX     Mon_Adr
-        LDD     2,X             ; Get 16-bit offset
-        JSR     PrintWord   ; Display it
-        JMP     PrintRBracket   ; Print right bracket
-ind25
-        RTS
+        JMP     PrintCommaReg
+ENDSUB
 
+*******************
+SUBROUTINE INX_EReg
+*******************
+
+        LDA     #'E'
+        CALL    PUTC
+        JMP     PrintCommaReg
+ENDSUB
+
+*******************
+SUBROUTINE INX_FReg
+*******************
+
+        LDA     #'F'
+        CALL    PUTC
+        JMP     PrintCommaReg
+ENDSUB
+
+*******************
+SUBROUTINE INX_WReg
+*******************
+
+        JSR     PrintW
+        JMP     PrintCommaReg
+ENDSUB
+
+*****************
+SUBROUTINE INX_Rp
+*****************
+
+        JSR     PrintCommaReg
+        JMP     PrintPlus
+ENDSUB
+
+******************
+SUBROUTINE INX_Rpp
+******************
+
+        JSR     PrintCommaReg
+        JSR     PrintPlus
+        JMP     PrintPlus
+ENDSUB
+
+*****************
+SUBROUTINE INX_mR
+*****************
+
+        JSR     PrintComma
+        JSR     PrintMinus
+        JMP     PrintIndex
+ENDSUB
+
+******************
+SUBROUTINE INX_mmR
+******************
+
+        JSR     PrintComma
+        JSR     PrintMinus
+        JSR     PrintMinus
+        JMP     PrintIndex
+ENDSUB
+
+*********************
+SUBROUTINE INX_BytePC
+*********************
+
+        JSR     PrintByte       ; Display it
+        JSR     PrintComma      ; Print comma
+        JMP     PrintPCR        ; Print PCR
+ENDSUB
+
+*********************
+SUBROUTINE INX_WordPC
+*********************
+
+        JSR     PrintWord       ; Display it
+        JSR     PrintComma      ; Print comma
+        JMP     PrintPCR        ; Print PCR
 ENDSUB
 
 ; *** DATA
@@ -1379,18 +1451,16 @@ PADDING
         FCB     13,10,7,4,1
 
 ; Lookup table to return number of additional bytes for indexed
-; addressing based on low order 5 bits of postbyte. Based on
-; detailed list of values below.
+; addressing based on low order 4 bits of postbyte.
 
 Mon_PBES
         FCB     0,0,0,0,0,0,0,0
         FCB     1,2,0,0,1,2,0,0
-        FCB     0,0,0,0,0,0,0,0
-        FCB     1,2,0,0,1,2,0,2
 
 ; Pattern:  # Extra bytes:
 ; --------  --------------
 ; 0XXXXXXX   0
+
 ; 1XX00000   0
 ; 1XX00001   0
 ; 1XX00010   0
@@ -1399,30 +1469,15 @@ Mon_PBES
 ; 1X000101   0
 ; 1XX00110   0
 ; 1XX00111   0 (INVALID)
-; 1XX01000   1
-; 1XX01001   2
+
+; 1XX01000   1   nn,R
+; 1XX01001   2 nnnn,R
 ; 1XX01010   0 (INVALID)
 ; 1XX01011   0
-; 1XX01100   1
-; 1XX01101   2
+; 1XX01100   1   nn,PC
+; 1XX01101   2 nnnn,PC
 ; 1XX01110   0 (INVALID)
-; 1XX01111   0 (INVALID)
-; 1XX10000   0 (INVALID)
-; 1XX10001   0
-; 1XX10010   0 (INVALID)
-; 1XX10011   0
-; 1XX10100   0
-; 1XX10101   0
-; 1XX10110   0
-; 1XX10111   0 (INVALID)
-; 1XX11000   1
-; 1XX11001   2
-; 1XX11010   0 (INVALID)
-; 1XX11011   0
-; 1XX11100   1
-; 1XX11101   2
-; 1XX11110   0 (INVALID)
-; 1XX11111   2
+; 1XX01111   0
 
 ; Opcodes. Listed in order indexed by op code. Defines the mnemonic.
 Mon_OCS
@@ -1443,8 +1498,8 @@ Mon_OCS
         FCB     OP_JMP          ; 0E
         FCB     OP_CLR          ; 0F
 
-        FCB     OP_INV          ; 10 Page 2 extended opcodes (see other table)
-        FCB     OP_INV          ; 11 Page 3 extended opcodes (see other table)
+        FCB     OP_INV          ; 10 Page 2 extended opcodes
+        FCB     OP_INV          ; 11 Page 3 extended opcodes
         FCB     OP_NOP          ; 12
         FCB     OP_SYNC         ; 13
         FCB     OP_SEXW         ; 14
@@ -2278,6 +2333,8 @@ PushPullName
         BYTE    "PC"   ; 7
 
 MSG1    BYTE    "; INVALID",0
+MSGWPP  BYTE    ",W++",0
+MSGMMW  BYTE    ",--W",0
 
 ; Table of TFM direction signs
 
