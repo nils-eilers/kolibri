@@ -5480,19 +5480,19 @@ void h6809_mainloop (void)
             case 0x000b:        /* TIM post, direct */
                 post_byte = imm_byte();
                 direct();
-                WRMEM(ea, tim(post_byte, 2));
+                and(RDMEM(ea), post_byte, 1, 1);
                 break;
 
             case 0x007b:        /* TIM extended */
                 post_byte = imm_byte();
                 extended();
-                WRMEM(ea, tim(post_byte, 1));
+                and(RDMEM(ea), post_byte, 1, 1);
                 break;
 
             case 0x006b:        /* TIM indexed */
                 post_byte = imm_byte();
                 indexed();
-                WRMEM(ea, tim(post_byte, 3));
+                and(RDMEM(ea), post_byte, 2, 2);
                 break;
 #endif
 
