@@ -55,6 +55,7 @@ Msg_Mon FCB     "  PC  DP CC  A B  E F    X    Y    U    S    V"
 Mon_Commands
 ************
 
+        FCB     '$',Mon_Toggle_Dollar
         FCB     ':',Mon_Modify_Memory
         FCB     ';',Mon_Modify_Register
         FCB     'E',Mon_Execute
@@ -67,6 +68,13 @@ Mon_Commands
         FCB     'X',Mon_Exit
         FCB     0
 
+
+*****************
+Mon_Toggle_Dollar
+*****************
+
+        EIM     #1,Mon_Dollar
+        RTS
 
 ******************************
 * Execute a subroutine       *

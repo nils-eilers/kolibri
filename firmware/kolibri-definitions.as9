@@ -75,10 +75,9 @@ Mon_AM          RMB 1         ; Addressing mode of instruction
 Mon_OT          RMB 1         ; Instruction type
 Mon_PB          RMB 1         ; Post byte (for indexed addressing)
 Mon_Len         RMB 1         ; Length of instruction
-Mon_TPA         RMB 2         ; Temp variable (used by print routines)
-Mon_TPB         RMB 2         ; Temp variable
 Mon_First       RMB 1         ; Flag used to indicate first time an item printed
 Mon_Pg23        RMB 1         ; Flag indicating page2/3 instruction when non-zero
+Mon_Dollar      RMB 1         ; Flag for using $ in hex operand
 
 *********
 * Video *

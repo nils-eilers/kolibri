@@ -319,7 +319,7 @@ SUBROUTINE PrintLBracket
 ************************
 
         PSHS    D
-        LDA     #'[
+        LDA     #'['
         CALL    PUTC
         PULS    D,PC
 ENDSUB
@@ -329,9 +329,33 @@ SUBROUTINE PrintRBracket
 ************************
 
         PSHS    D
-        LDA     #']
+        LDA     #']'
         CALL    PUTC
         PULS    D,PC
+ENDSUB
+
+**********************
+SUBROUTINE PrintDollar
+**********************
+
+        PSHS    D
+        TST     Mon_Dollar
+        BEQ     .No
+        LDA     #'$'
+        CALL    PUTC
+.No     PULS    D,PC
+ENDSUB
+
+********************
+SUBROUTINE PrintHash
+********************
+
+        PSHS    D
+        LDA     #'#'
+        CALL    PUTC
+        BSR     PrintDollar
+        PULS    D
+.No     RTS
 ENDSUB
 
 **********************
@@ -349,16 +373,6 @@ SUBROUTINE PrintSpaces
         DECE                    ; Decrement count
         BNE     .PS1            ; Check again
 .PS2    PULS    D,PC
-ENDSUB
-
-********************
-SUBROUTINE PrintByte
-********************
-
-        PSHS    D               ; Save registers used
-        JSR     Mon_Show_Byte
-        JSR     Mon_Blank
-        PULS    D,PC
 ENDSUB
 
 ***********************
@@ -639,8 +653,8 @@ AM_Table
         WORD    SUB_IMM_BYTE  ;  2
         WORD    SUB_IMM_WORD  ;  3
         WORD    SUB_IMM_LONG  ;  4
-        WORD    Mon_Show_Byte ;  5
-        WORD    Mon_Show_Word ;  6
+        WORD    PrintByte     ;  5
+        WORD    PrintWord     ;  6
         WORD    SUB_REL_BYTE  ;  7
         WORD    SUB_REL_WORD  ;  8
         WORD    SUB_INDEXED   ;  9
@@ -667,21 +681,31 @@ SUBROUTINE SUB_INHERENT
         RTS
 ENDSUB
 
+********************
+SUBROUTINE PrintByte
+********************
+        JSR     PrintDollar
+        JMP     Mon_Show_Byte
+ENDSUB
+
+********************
+SUBROUTINE PrintWord
+********************
+        JSR     PrintDollar
+        JMP     Mon_Show_Word
+ENDSUB
+
 ***********************
 SUBROUTINE SUB_IMM_BYTE
 ***********************
-        LDA     #'#'            ; Number sign
-        CALL    PUTC
-        LDA     1,X
+        JSR     PrintHash
         JMP     Mon_Show_Byte   ; Print as hex value
 ENDSUB
 
 ***********************
 SUBROUTINE SUB_IMM_WORD
 ***********************
-        LDA     #'#'            ; Number sign
-        CALL    PUTC
-        LDD     1,X
+        JSR     PrintHash
         JMP     Mon_Show_Word   ; Print as hex value
 ENDSUB
 
@@ -742,7 +766,7 @@ SUBROUTINE SUB_BIT_BIT
         CALL    PUTC
         JSR     PrintComma
         LDA     2,X             ; Direct page address
-        JSR     Mon_Show_Byte
+        JSR     PrintByte
         JSR     PrintDot
         LDA     1,X             ; Bit 5,4,3 = source bit
         LSRA
@@ -815,8 +839,8 @@ SUBROUTINE SUB_REL_BYTE
         LDB     1,X             ; Get first byte (8-bit branch offset)
         SEX                     ; Sign extend to 16 bits
         ADDD    #2              ; Add 2
-        ADDR    X,D             ; Add address of op code
-        JMP     Mon_Show_Word   ; Print as hex value
+Mon_Rel ADDR    X,D             ; Add address of op code
+        JMP     PrintWord       ; Print as hex value
 ENDSUB
 
 *************************
@@ -827,8 +851,7 @@ SUBROUTINE SUB_REL_WORD
 ; is 16 bits and need to add 3.
 
         ADDD    #3              ; Add 3
-        ADDR    X,D             ; Add address of op code
-        JMP     Mon_Show_Word   ; Print as hex value
+        BRA     Mon_Rel
 ENDSUB
 
 **********************
@@ -871,7 +894,7 @@ SUBROUTINE SUB_INDEXED
         BMI     ind2            ; Branch if MSB is 1
                                 ; Format is 0RRnnnnn  n,R
         ANDA    #%00011111      ; Get 5-bit offset
-        JSR     Mon_Show_Byte   ; Print offset
+        JSR     PrintByte   ; Print offset
         JMP     PrintCommaReg   ; Print ,R
 
 ind2    CMPA    #%10001111      ; Check against pattern
@@ -892,7 +915,7 @@ ind3
                                 ; Format is 1RR01000  n,R
         LDX     Mon_Adr
         LDA     2,X             ; Get 8-bit offset
-        JSR     Mon_Show_Byte   ; Print offset
+        JSR     PrintByte   ; Print offset
         JMP     PrintCommaReg   ; Print ,R
 ind4
         CMPA    #%10001001      ; Check against pattern
@@ -900,7 +923,7 @@ ind4
                                 ; Format is 1RR01001  n,R
         LDX     Mon_Adr
         LDD     2,X             ; Get 16-bit offset
-        JSR     Mon_Show_Word
+        JSR     PrintWord
         JMP     PrintCommaReg   ; Print ,R
 ind5
         CMPA    #%10000110      ; Check against pattern
@@ -1059,7 +1082,7 @@ ind22
         LBSR    PrintLBracket   ; Print left bracket
         LDX     Mon_Adr
         LDA     2,X             ; Get 8-bit offset
-        JSR     PrintByte       ; Display it
+        JSR     PrintByte   ; Display it
         JSR     PrintComma      ; Print comma
         JSR     PrintPCR        ; Print PCR
         JMP     PrintRBracket   ; Print right bracket
@@ -1082,7 +1105,7 @@ ind24
         JSR     PrintLBracket   ; Print left bracket
         LDX     Mon_Adr
         LDD     2,X             ; Get 16-bit offset
-        JSR     Mon_Show_Word   ; Display it
+        JSR     PrintWord   ; Display it
         JMP     PrintRBracket   ; Print right bracket
 ind25
         RTS
@@ -2069,10 +2092,46 @@ PAGE2
         FCB     $FD,OP_STQ  ,AM_EXTENDED
         FCB     $FE,OP_LDS  ,AM_EXTENDED
         FCB     $FF,OP_STS  ,AM_EXTENDED
-        FCB     0                             ; indicates end of table
+        FCB     0         ; end of table
 
-; Special table for page 3 instructions prefixed by $11.
-; Same format as table above.
+* Special table for page 3 instructions prefixed by $11.
+
+* ------------------------------ *
+* opcode = 0001 0001 : 7654 3210 *
+*                             AA *
+* ------------------------------ *
+
+* address mode
+* ---------------------------
+* 0.....11 = Diverse    3x
+* 0....10. = Inherent   4x,5x
+* 1.....00 = Immediate  8x,Cx
+* 1.....01 = Direct     9x,Dx
+* 1.....10 = Indexed    Ax,Ex
+* 1.....11 = Extended   Bx,Fx
+
+* register
+* ---------------------------
+* ........ = Inherent  E   4x
+* ........ = Inherent  F   5x
+* 1100.... = Immediate F   Cx
+* 1101.... = Direct    F   Dx
+* 1110.... = Indexed   F   Ex
+* 1111.... = Extended  F   Fx
+
+* operation
+* ---------------------------
+* ....0000 = 0 = SUB
+* ....0001 = 1 = CMP
+* ....0011 = 3 = COM
+* ....0110 = 6 = LD
+* ....0111 = 7 = ST
+* ....1010 = A = DEC
+* ....1011 = B = ADD
+* ....1100 = C = INC
+* ....1101 = D = TST
+* ....1110 = E = DIVQ
+* ....1111 = F = MULD
 
 PAGE3
         FCB     $30,OP_BAND ,AM_BIT_BIT
