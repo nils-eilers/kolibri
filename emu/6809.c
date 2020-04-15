@@ -1660,16 +1660,6 @@ static void swires(void)
 
 /* 6309 specific code */
 #ifdef H6309
-static uint8_t tim(uint8_t val, int CLK6309)
-{
-    OV = 0;
-    N = Z = val;
-
-    CLK += CLK6309;
-
-    return val;
-}
-
 static void pshsw(void)
 {
     CLK += 2;
