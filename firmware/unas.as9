@@ -304,26 +304,6 @@ SUBROUTINE PrintComma
         PULS    D,PC
 ENDSUB
 
-********************
-SUBROUTINE PrintPlus
-********************
-
-        PSHS    D
-        LDA     #'+'
-        CALL    PUTC
-        PULS    D,PC
-ENDSUB
-
-********************
-SUBROUTINE PrintMinus
-********************
-
-        PSHS    D
-        LDA     #'-'
-        CALL    PUTC
-        PULS    D,PC
-ENDSUB
-
 *******************
 SUBROUTINE PrintDot
 *******************
@@ -342,33 +322,6 @@ SUBROUTINE PrintW
         LDA     #'W'
         CALL    PUTC
         PULS    D,PC
-ENDSUB
-
-************************
-SUBROUTINE PrintLBracket
-************************
-
-        LDA     #'['
-        BRA     PrintDelimiter
-ENDSUB
-
-************************
-SUBROUTINE PrintRBracket
-************************
-
-        LDA     #']'          ; fall through
-ENDSUB
-
-*************************
-SUBROUTINE PrintDelimiter
-*************************
-
-        TIM     #$10,Mon_PB   ; indirect bit
-        BEQ     .Return
-        PSHS    D
-        CALL    PUTC
-        PULS    D
-.Return RTS
 ENDSUB
 
 **********************
@@ -430,39 +383,6 @@ SUBROUTINE PrintString
         PSHS    D,X             ; Save registers used
         JSR     [VECTBL+PUTS*2] ; Call monitor function
         PULS    D,X,PC
-ENDSUB
-
-************************
-SUBROUTINE PrintCommaReg
-************************
-
-        JSR     PrintComma      ; fall through
-ENDSUB
-
-*********************
-SUBROUTINE PrintIndex
-*********************
-
-***************************************
-* Print register name encoded in bits *
-* 6 and 5 of A for indexed addressing *
-* A=.RR.....  RR: 00=X 01=Y 10=U 11=S *
-***************************************
-
-        LDA     Mon_PB          ; load post byte
-        ROLA                    ; rotate register bits
-        ROLA                    ; through carry
-        ROLA                    ; to bit 1 and bit 0
-        ROLA
-        ANDA    #%00000011      ; Mask out other bits
-        CMPA    #%00000010      ; X or Y
-        BLO     .LAB
-        INCA
-        ANDA    #%00000110
-        COMA                    ; U or S
-.LAB    ADDA    #'X'
-        CALL    PUTC            ; Print it
-        RTS
 ENDSUB
 
 **********************
@@ -903,58 +823,50 @@ SUBROUTINE SUB_REL_WORD
         BRA     Mon_Rel
 ENDSUB
 
-; Addressing modes are determined by the postbyte:
-;
 ; Postbyte  Format  Additional Bytes
 ; --------  ------  ----------------
-; 0RRnnnnn  n,R     0
-; 1RR00100  ,R      0
-; 10001111  ,W      0
-; 1RR01000  n,R     1
-; 1RR01001  n,R     2
-; 1RR00110  A,R     0
-; 1RR00101  B,R     0
-; 1RR01011  D,R     0
-; 1RR00000  ,R+     0
-; 1RR00001  ,R++    0
-; 1RR00010  ,-R     0
-; 1RR00011  ,--R    0
-; 1xx01100  n,PCR   1
-; 1xx01101  n,PCR   2
-; 1RR10100  [,R]    0
-; 1RR11000  [n,R]   1
-; 1RR11001  [n,R]   2
-; 1RR10110  [A,R]   0
-; 1RR10101  [B,R]   0
-; 1RR11011  [D,R]   0
-; 1RR10001  [,R++]  0
-; 1RR10011  [,--R]  0
-; 1xx11100  [n,PCR] 1
-; 1xx11101  [n,PCR] 2
-; 10011111  [n]     2
-;
-; Where RR: 00=X 01=Y 10=U 11=S
+; 1RRI0100      ,R
+; 1RRI1000    nn,R    1
+; 1RRI1001  nnnn,R    2
+; 1RRI0110     A,R
+; 1RRI0101     B,R
+; 1RRI1011     D,R
+; 1RRI0000      ,R+
+; 1RRI0001      ,R++
+; 1RRI0010      ,-R
+; 1RRI0011      ,--R
+; 1xxI1100    nn,PCR  1
+; 1xxI1101  nnnn,PCR  2
+; 10011111   [n]      2
 
-        LDX     Mon_Adr         ; Load op code address
-        LDD     1,X             ; Load operand
-        LDY     #AM_Table       ; Table of AM subroutines
-        LDE     Mon_AM          ; Index for table
-        ADDR    E,E             ; Shift for word address
-        JSR     [E,Y]           ; Call subroutine
+; RR: 00=X 01=Y 10=U 11=S
+;  I: 1=Indirect []
 
-        JSR     Mon_CRLF        ; Print final CR
-        CLRA                    ; Clear MSB of D
-        LDB     Mon_Len         ; Get length byte in LSB of D
-        SUBB    Mon_Pg23        ; Page 2/3 prefix byte
-        ADDD    Mon_Adr         ; Add to address
-        STD     Mon_Adr         ; Write new address
-        RTS
-ENDSUB
+*       LDE     ,W
+*       LDF     [,W]
+*       LDB     $5678,X
+*       LDA     $1234,W
+*       LDB     [$5678,X]
+*       LDA     [$1234,W]
+*       LDX     ,W++
+*       LDX     [,W++]
+*       LDY     [,--W]
+*       STF     [$1234]
 
 *******
 PB_MASK
 *******
-        BYTE    PrintCommaReg, %10000100 ;      ,R
+        BYTE    INX_W        , %10001111 ;      ,W
+        BYTE    INX_W        , %10010000 ;     [,W]
+        BYTE    INX_WordW    , %10101111 ;  nnnn,W
+        BYTE    INX_WordW    , %10110000 ; [nnnn,W]
+        BYTE    INX_WPP      , %11001111 ;      ,W++
+        BYTE    INX_WPP      , %11010000 ;     [,W++]
+        BYTE    INX_MMW      , %11101111 ;    --,W
+        BYTE    INX_MMW      , %11110000 ;   [--,W]
+        BYTE    PrintWord    , %10011111 ; [nnnn]
+
+        BYTE    INX_Reg      , %10000100 ;      ,R
         BYTE    INX_ByteReg  , %10001000 ;    nn,R
         BYTE    INX_WordReg  , %10001001 ;  nnnn,R
         BYTE    INX_AReg     , %10000110 ;     A,R
@@ -971,18 +883,6 @@ PB_MASK
         BYTE    INX_WordPC   , %10001101 ;  nnnn,PC
         BYTE    0,0
 
-* Test
-
-*       LDE     ,W
-*       LDF     [,W]
-*       LDB     $5678,X
-*       LDA     $1234,W
-*       LDB     [$5678,X]
-*       LDA     [$1234,W]
-*       LDX     ,W++
-*       LDX     [,W++]
-*       LDY     [,--W]
-
 **********************
 SUBROUTINE SUB_INDEXED
 **********************
@@ -992,188 +892,218 @@ SUBROUTINE SUB_INDEXED
         LDA     Mon_PB          ; Get postbyte
         BMI     .InxA           ; Branch if MSB is 1
         JSR     Print5BitDecimal; Offset
-        JMP     PrintCommaReg   ; ,R
-
-******* [nnnn] *******
-
-.InxA   CMPA    #%1001 1111
-        BNE     .InxB
-        JSR     PrintLBracket
-        LDD     2,X
-        JSR     PrintWord
-        JMP     PrintRBracket
-
-******* ,W   [,W] *******
-
-.InxB   CMPA    #%1000 1111     ;  ,W
-        BEQ     .InxC
-        CMPA    #%1001 0000     ; [,W]
-        BNE     .InxD
-        JSR     PrintLBracket
-.InxC   JSR     PrintComma
-        JSR     PrintW
-        JMP     PrintRBracket
-
-******* nnnn,W   [nnnn,W] ******
-
-.InxD   CMPA    #%1010 1111     ;  nnnn,W
-        BEQ     .InxE
-        CMPA    #%1011 0000     ; [nnnn,W]
-        BNE     .InxF
-        JSR     PrintLBracket
-.InxE   LDD     2,X
-        JSR     PrintWord
-        JSR     PrintComma
-        JSR     PrintW
-        JMP     PrintRBracket
-
-******* ,W++   [,W++] **********
-
-.InxF   CMPA    #%1100 1111     ; ,W++
-        BEQ     .InxG
-        CMPA    #%1101 0000     ; [,W++]
-        BNE     .InxH
-        JSR     PrintLBracket
-.InxG   LDX     #MSGWPP
-        JSR     PrintString
-        JMP     PrintRBracket
-
-******* ,--W   [,--W] *******
-
-.InxH   CMPA    #%1110 1111
-        BEQ     .InxI
-        CMPA    #%1111 0000
-        BNE     .InxY
-        JSR     PrintLBracket
-.InxI   LDX     #MSGMMW
-        JSR     PrintString
-        JMP     PrintRBracket
+        BRA     PrintCommaReg   ; ,R
 
 ******* register operands with X,Y,U,S,W ******
 
-.InxY   ANDA    #%1000 1111     ; Mask out register and indirect bit
-        LDY     #PB_MASK        ; Table of masks
-.InxZ   LDW     ,Y++            ; Subroutine
-        BEQ     .InxR
-        CMPA    ,Y+             ; Mask
-        BNE     .InxZ           ; Loop
-        JSR     PrintLBracket   ; if indirect
+.InxA   LDY     #PB_MASK        ; Table of masks
+.InxB   LDW     ,Y++            ; Subroutine
+        BEQ     .InxR           ; -> end of table
+        CMPW    #INX_Reg        ; begin of X,Y,U,S instructions
+        BNE     .InxC
+        ANDA    #%1000 1111     ; Clear register and indirect bit
+.InxC   CMPA    ,Y+             ; Mask
+        BNE     .InxB           ; Loop
+        BSR     PrintLBracket   ; if indirect
         LDX     Mon_Adr         ; op code
         LDD     2,X             ; address
         JSR     ,W              ; print operand
-        JSR     PrintRBracket   ; if indirect
+        BRA     PrintRBracket   ; if indirect
 .InxR   RTS
+ENDSUB
+
+************************
+SUBROUTINE PrintCommaReg
+************************
+
+        JSR     PrintComma      ; fall through
+ENDSUB
+
+*********************
+SUBROUTINE PrintIndex
+*********************
+
+***************************************
+* Print register name encoded in bits *
+* 6 and 5 of A for indexed addressing *
+* A=.RR.....  RR: 00=X 01=Y 10=U 11=S *
+***************************************
+
+        LDA     Mon_PB          ; load post byte
+        ROLA                    ; rotate register bits
+        ROLA                    ; through carry
+        ROLA                    ; to bit 1 and bit 0
+        ROLA
+        ANDA    #%00000011      ; Mask out other bits
+        CMPA    #%00000010      ; X or Y
+        BLO     .LAB
+        INCA
+        ANDA    #%00000110
+        COMA                    ; U or S
+.LAB    ADDA    #'X'
+        CALL    PUTC            ; Print it
+        RTS
+ENDSUB
+
+************************
+SUBROUTINE PrintLBracket
+************************
+
+        LDA     #'['
+        BRA     PrintDelimiter
+ENDSUB
+
+************************
+SUBROUTINE PrintRBracket
+************************
+
+        LDA     #']'          ; fall through
+ENDSUB
+
+*************************
+SUBROUTINE PrintDelimiter
+*************************
+
+        TIM     #$10,Mon_PB   ; indirect bit
+        BEQ     .Return
+        PSHS    D
+        CALL    PUTC
+        PULS    D
+.Return RTS
+ENDSUB
+
+****************
+SUBROUTINE INX_W
+****************
+        JSR     PrintComma
+        JMP     PrintW
+ENDSUB
+
+********************
+SUBROUTINE INX_WordW
+********************
+        JSR     PrintWord
+        JSR     PrintComma
+        JMP     PrintW
+ENDSUB
+
+******************
+SUBROUTINE INX_WPP
+******************
+        LDX     #MSGWPP
+        JMP     PrintString
+ENDSUB
+
+******************
+SUBROUTINE INX_MMW
+******************
+        LDX     #MSGMMW
+        JMP     PrintString
+ENDSUB
+
+******************
+SUBROUTINE INX_Reg
+******************
+        BRA     PrintCommaReg   ; ,R
 ENDSUB
 
 ***********************
 SUBROUTINE INX_ByteReg
 ***********************
-
         JSR     PrintByte       ; Print offset
-        JMP     PrintCommaReg   ; Print ,R
+        BRA     PrintCommaReg   ; Print ,R
 ENDSUB
 
 **********************
 SUBROUTINE INX_WordReg
 **********************
-
         JSR     PrintWord
-        JMP     PrintCommaReg
+        BRA     PrintCommaReg
 ENDSUB
 
 *******************
 SUBROUTINE INX_AReg
 *******************
+        LDA     #'A'          ; fall through
+ENDSUB
 
-        LDA     #'A'
+*****************
+SUBROUTINE INX_RR
+*****************
         CALL    PUTC
-        JMP     PrintCommaReg
+        BRA     PrintCommaReg
 ENDSUB
 
 *******************
 SUBROUTINE INX_BReg
 *******************
-
         LDA     #'B'
-        CALL    PUTC
-        JMP     PrintCommaReg
+        BRA     INX_RR
 ENDSUB
 
 *******************
 SUBROUTINE INX_DReg
 *******************
-
         LDA     #'D'
-        CALL    PUTC
-        JMP     PrintCommaReg
+        BRA     INX_RR
 ENDSUB
 
 *******************
 SUBROUTINE INX_EReg
 *******************
-
         LDA     #'E'
-        CALL    PUTC
-        JMP     PrintCommaReg
+        BRA     INX_RR
 ENDSUB
 
 *******************
 SUBROUTINE INX_FReg
 *******************
-
         LDA     #'F'
-        CALL    PUTC
-        JMP     PrintCommaReg
+        BRA     INX_RR
 ENDSUB
 
 *******************
 SUBROUTINE INX_WReg
 *******************
-
-        JSR     PrintW
-        JMP     PrintCommaReg
+        LDA     #'W'
+        BRA     INX_RR
 ENDSUB
 
 *****************
 SUBROUTINE INX_Rp
 *****************
-
-        JSR     PrintCommaReg
-        JMP     PrintPlus
+        BSR     PrintCommaReg
+        BRA     PrintPlus
 ENDSUB
 
 ******************
 SUBROUTINE INX_Rpp
 ******************
-
-        JSR     PrintCommaReg
-        JSR     PrintPlus
-        JMP     PrintPlus
+        BSR     PrintCommaReg
+        BSR     PrintPlus
+        BRA     PrintPlus
 ENDSUB
 
 *****************
 SUBROUTINE INX_mR
 *****************
-
         JSR     PrintComma
-        JSR     PrintMinus
+        BSR     PrintMinus
         JMP     PrintIndex
 ENDSUB
 
 ******************
 SUBROUTINE INX_mmR
 ******************
-
         JSR     PrintComma
-        JSR     PrintMinus
-        JSR     PrintMinus
+        BSR     PrintMinus
+        BSR     PrintMinus
         JMP     PrintIndex
 ENDSUB
 
 *********************
 SUBROUTINE INX_BytePC
 *********************
-
         JSR     PrintByte       ; Display it
         JSR     PrintComma      ; Print comma
         JMP     PrintPCR        ; Print PCR
@@ -1182,10 +1112,29 @@ ENDSUB
 *********************
 SUBROUTINE INX_WordPC
 *********************
-
         JSR     PrintWord       ; Display it
         JSR     PrintComma      ; Print comma
         JMP     PrintPCR        ; Print PCR
+ENDSUB
+
+********************
+SUBROUTINE PrintPlus
+********************
+
+        PSHS    D
+        LDA     #'+'
+        CALL    PUTC
+        PULS    D,PC
+ENDSUB
+
+********************
+SUBROUTINE PrintMinus
+********************
+
+        PSHS    D
+        LDA     #'-'
+        CALL    PUTC
+        PULS    D,PC
 ENDSUB
 
 ; *** DATA
