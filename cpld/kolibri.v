@@ -69,6 +69,7 @@ module kolibri (
     assign nRTC    = nIOEN |       !(A[7:4] == 4'h0001);    // $FE10-$FE1F
     assign nCS8742 = nIOEN |       !(A[7:1] == 7'b0010010); // $FE24-$FE25
     assign nOPL2   = nIOEN |       !(A[7:1] == 7'b0010011); // $FE26-$FE27
+    assign nFPU    = nIOEN |       !(A[7:5] == 3'b010);     // $FE40-$FE5F
 
 
     // ===== Static assignments ========================================

@@ -121,6 +121,7 @@ IO_INBOOT       = 16            ; low if boot switch pressed
 IO_INIBF        = 32
 IO_INTXE        = 64
 IO_INRXF        = 128
+IO_FPU          = $FE40         ; 68882 $FE40-$FE5F
 
 IO_RTC_S1       ENUM IO_RTC
 IO_RTC_S10      ENUM
