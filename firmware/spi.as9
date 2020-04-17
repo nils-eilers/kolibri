@@ -91,7 +91,7 @@ SPI_MOSI_HI
 ***********
 
         PSHS    A
-        LDA     #1
+        LDA     #$80            ; bit 7
         STA     IO_SPI_DATA
         PULS    A,PC
 
@@ -101,7 +101,7 @@ SPI_MOSI_LO
 ***********
 
         PSHS    A
-        CLRA
+        CLRA                    ; clear bit 7
         STA     IO_SPI_DATA
         PULS    A,PC
 
