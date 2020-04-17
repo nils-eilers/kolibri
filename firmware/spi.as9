@@ -100,10 +100,8 @@ SPI_MOSI_HI
 SPI_MOSI_LO
 ***********
 
-        PSHS    A
-        CLRA                    ; clear bit 7
-        STA     IO_SPI_DATA
-        PULS    A,PC
+        CLR     IO_SPI_DATA
+        RTS
 
 
 ******************
