@@ -37,11 +37,11 @@ module kolibri (
     output wire nCS8742,    // Keyboard, Mouse and Gamepad Controller
 
 
-    output wire nSD0,       // SD card chip select
-    output wire nSD1,
+    output reg  nSD0,       // SD card chip select
+    output reg  nSD1,
 
-    output wire MOSI,       // SPI
-    output wire SCLK,
+    output reg  MOSI,       // SPI
+    output reg  SCLK,
     input       MISO
 
 
@@ -82,10 +82,47 @@ module kolibri (
 
     assign nNMI = 1;
 
-    assign nSD0 = 1;
-    assign nSD1 = 1;
-    assign MOSI = 1;
-    assign SCLK = 1;
+
+    // SD Card Select Signals
+    // $FE30 bit 0: card select drive 0
+    // $FE30 bit 1: card select drive 1
+    always @(negedge nE or negedge nRES)
+    begin
+        if (nRES == 0) begin
+            nSD0 <= 1;
+            nSD1 <= 1;
+        end else if (A[15:0] == 16'hFE30) begin     // $FE30
+            nSD0 <= D[0];
+            nSD1 <= D[1];
+        end
+    end
+
+
+    // SPI Clock
+    // any access to $FE2E resets SCLK
+    // any access to $FE2F sets   SCLK
+    always @(negedge nE or negedge nRES)
+    begin
+        if (nRES == 0) begin
+            SCLK <= 0;                              // SCLK low when in idle
+        end else if (A[15:1]==15'b111111100010111) begin
+            SCLK <= A[0];
+        end
+    end
+
+
+    // SPI MOSI
+    always @(negedge nE or negedge nRES)
+    begin
+        if (nRES == 0) begin
+            MOSI <= 1;
+        end else if (A[15:0] == 16'hFE31 && RW == 0) begin
+            MOSI <= D[7];
+        end
+    end
+
+    // SPI MISO
+    assign D[7] = (A[15:0] == 16'hFE31 && RW == 1) ? MISO : 1'bz;
 
 
 endmodule

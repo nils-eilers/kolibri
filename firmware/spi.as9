@@ -1,0 +1,184 @@
+********
+SPI_Init
+********
+
+        BSR     SPI_Deselect_Cards
+
+        LDX     #Msg_CD         ; Output Card 0 Status
+        CALL    PUTS
+        LDA     #'0'
+        CALL    PUTC
+        TIM     #IO_INCD0,IO_INPORT
+        BEQ     +
+        LDX     #Msg_NOT
+        CALL    PUTS
++       LDX     #Msg_DET
+        CALL    PUTS
+        LDX     #Msg_ON
+        TIM     #IO_INWP0,IO_INPORT
+        BNE     +
+        LDX     #Msg_OFF
++       CALL    PUTS
+        JSR     Mon_CRLF
+
+        LDX     #Msg_CD         ; Output Card 1 Status
+        CALL    PUTS
+        LDA     #'1'
+        CALL    PUTC
+        TIM     #IO_INCD1,IO_INPORT
+        BEQ     +
+        LDX     #Msg_NOT
+        CALL    PUTS
++       LDX     #Msg_DET
+        CALL    PUTS
+        LDX     #Msg_ON
+        TIM     #IO_INWP1,IO_INPORT
+        BNE     +
+        LDX     #Msg_OFF
++       CALL    PUTS
+        JSR     Mon_CRLF
+
+        RTS
+
+
+******************
+SPI_Deselect_Cards
+******************
+
+        PSHS    A
+        LDA     #IO_CS_DRV_0 | IO_CS_DRV_1
+        STA     IO_CARDSEL
+        PULS    A,PC
+
+*****************
+SPI_Select_Card_0
+*****************
+
+        PSHS    A
+        LDA     #$FF-IO_CS_DRV_0
+        STA     IO_CARDSEL
+        PULS    A,PC
+
+
+*****************
+SPI_Select_Card_1
+*****************
+
+        PSHS    A
+        LDA     #$FF-IO_CS_DRV_1
+        STA     IO_CARDSEL
+        PULS    A,PC
+
+
+**********
+SPI_CLK_HI
+**********
+
+        STA     IO_SPI_CLK_1
+        RTS
+
+
+**********
+SPI_CLK_LO
+**********
+
+        STA     IO_SPI_CLK_0
+        RTS
+
+
+***********
+SPI_MOSI_HI
+***********
+
+        PSHS    A
+        LDA     #1
+        STA     IO_SPI_DATA
+        PULS    A,PC
+
+
+***********
+SPI_MOSI_LO
+***********
+
+        PSHS    A
+        CLRA
+        STA     IO_SPI_DATA
+        PULS    A,PC
+
+
+******************
+SUBROUTINE SPI_XCG
+******************
+
+************************************************
+* Exchange bytes over the SPI bus: writes byte *
+* in A to SPI bus and reads from bus to B.     *
+* A isn't touched for further writes           *
+* -------------------------------------------- *
+* Input : A = byte to write out over SPI bus   *
+* Output: A = written byte, untouched          *
+*         B = byte read in from SPI bus        *
+************************************************
+
+        PSHSW
+        LDE     #8              ; shift 8 bits out, MSB first
+.loop   STA     IO_SPI_DATA     ; MOSI = bit 7
+; DIY rotate without carry:
+        LSLA                    ; shift left, C = former bit 7, bit 0=0
+        BCC     .nocarry
+        INCA                    ; bit 7 was set: set bit 1
+.nocarry
+        LSLB                    ; shift left, bit 0=0
+        STA     IO_SPI_CLK_0    ; SCLK = 0
+        TST     IO_SPI_DATA     ; N flag = MISO
+        BPL     .bit            ; branch if N==0
+        INCB                    ; sets bit 0
+.bit    STA     IO_SPI_CLK_1    ; SCLK = 1
+        DECE
+        BNE     .loop
+        PULSW
+        RTS
+ENDSUB
+
+
+
+*******************
+SUBROUTINE XCG_test
+*******************
+
+**********************************************************
+* Test routine for SPI byte exchange                     *
+* Prerequisite: short-circuit MISO and MOSI              *
+* This routine will then send all values from $00 to $FF *
+* over the SPI bus and read them back.                   *
+* If a value read back differs from the sent one, the    *
+* values are printed and the test aborts.                *
+**********************************************************
+
+        CLRA
+.loop   TFR     A,B             ; ensure that A != B
+        COMB
+        JSR     SPI_XCG         ; shift bits out and in
+        CMPR    A,B             ; B must be A, read in again
+        BEQ     .ok
+        PSHS    D               ; show A
+        JSR     Mon_Show_Blank_Byte
+        PULS    D
+        TFR     B,A             ; show B
+        JSR     Mon_Show_Blank_Byte
+        JSR     Mon_CRLF
+        RTS
+.ok     DECA
+        BNE .loop
+        RTS
+ENDSUB
+
+
+
+Msg_CD  FCB "Card in drive \0"
+Msg_NOT FCB " not\0"
+Msg_DET FCB " detected, write protect \0"
+Msg_ON  FCB "ON\0"
+Msg_OFF FCB "OFF\0"
+
+

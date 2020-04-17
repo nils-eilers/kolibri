@@ -43,7 +43,7 @@ GRTLP   LDA     ,X+
         BRA     GRTLP
 
 FT245PR FCC "\r\n\r\n"
-BOOTPRM FCC "kolibri.computer BIOS 2020-04-10\n\0"
+BOOTPRM FCC "kolibri.computer BIOS 2020-04-16\n\0"
 Greet_20
 
 ; Write greeter to V9958 screen
@@ -76,6 +76,7 @@ Greet_80
         JSR     Init_Vectors
         JSR     RTC_Init
         JSR     OPL2_Init
+        JSR     SPI_Init
         CALL    FLUSH
 
 ; Call S-record loader if BOOT switch is pressed
@@ -132,6 +133,7 @@ Init_Vectors
         INCLUDE "edit.as9"      ; Screen editor
         INCLUDE "rtc.as9"       ; Real Time Clock
         INCLUDE "opl2.as9"      ; OPL2 sound chip routines
+        INCLUDE "spi.as9"       ; SPI interface for SD cards
 
 
 ********
