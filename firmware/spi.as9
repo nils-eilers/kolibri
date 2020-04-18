@@ -3,7 +3,7 @@ SPI_Init
 ********
 
         BSR     SPI_Deselect_Cards
-        STA     IO_SPI_CLK_1
+        STA     IO_SPI_CLK_0
         RTS
 
 
@@ -123,11 +123,11 @@ SUBROUTINE SPI_XCG
 .loop   STA     IO_SPI_DATA     ; MOSI = bit 7
         LSLA                    ; left shift A, C = former bit 7 of A
         ADCA    #0              ; put carry into bit 0 of A
-        STA     IO_SPI_CLK_0    ; SCLK = 0
+        STA     IO_SPI_CLK_1    ; SCLK = 1
         TST     IO_SPI_DATA     ; N flag = MISO
         BPL     .bit            ; branch if N==0
         ORCC    #1              ; set carry (otherwise clear from ADCA)
-.bit    STA     IO_SPI_CLK_1    ; SCLK = 1
+.bit    STA     IO_SPI_CLK_0    ; SCLK = 0
         ROLB                    ; put carry into bit 0 of B
         BCC     .loop           ; loop for 8 shifts
         RTS
