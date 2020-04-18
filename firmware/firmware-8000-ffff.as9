@@ -77,6 +77,10 @@ Greet_80
         JSR     RTC_Init
         JSR     OPL2_Init
         JSR     SPI_Init
+        CLRA                    ; Status of Card 0
+        JSR     SD_Card_Info
+        LDA     #1              ; Status of Card 1
+        JSR     SD_Card_Info
         CALL    FLUSH
 
 ; Call S-record loader if BOOT switch is pressed

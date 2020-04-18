@@ -3,42 +3,42 @@ SPI_Init
 ********
 
         BSR     SPI_Deselect_Cards
-
-        LDX     #Msg_CD         ; Output Card 0 Status
-        CALL    PUTS
-        LDA     #'0'
-        CALL    PUTC
-        TIM     #IO_INCD0,IO_INPORT
-        BEQ     +
-        LDX     #Msg_NOT
-        CALL    PUTS
-+       LDX     #Msg_DET
-        CALL    PUTS
-        LDX     #Msg_ON
-        TIM     #IO_INWP0,IO_INPORT
-        BNE     +
-        LDX     #Msg_OFF
-+       CALL    PUTS
-        JSR     Mon_CRLF
-
-        LDX     #Msg_CD         ; Output Card 1 Status
-        CALL    PUTS
-        LDA     #'1'
-        CALL    PUTC
-        TIM     #IO_INCD1,IO_INPORT
-        BEQ     +
-        LDX     #Msg_NOT
-        CALL    PUTS
-+       LDX     #Msg_DET
-        CALL    PUTS
-        LDX     #Msg_ON
-        TIM     #IO_INWP1,IO_INPORT
-        BNE     +
-        LDX     #Msg_OFF
-+       CALL    PUTS
-        JSR     Mon_CRLF
-
+        STA     IO_SPI_CLK_1
         RTS
+
+
+***********************
+SUBROUTINE SD_Card_Info
+***********************
+
+*****************************
+* Input : A = Card (0 or 1) *
+* Used  : W,X               *
+*****************************
+
+        LDW     #(IO_INCD1 << 8) | IO_INWP1 ; card 1
+        TSTA
+        BNE     +
+        LSRW                    ; shift E & F for card 0
++       LDX     #Msg_CD         ; "Card in drive "
+        CALL    PUTS
+        ORA     #'0'            ; Convert # to ASCII
+        CALL    PUTC
+        LDA     IO_INPORT
+        ANDR    A,E             ; test IO_INCD#
+        BEQ     +
+        LDX     #Msg_NOT        ; " not"
+        CALL    PUTS
++       LDX     #Msg_DET        ; " detected, write protect "
+        CALL    PUTS
+        LDX     #Msg_ON         ; "ON"
+        LDA     IO_INPORT
+        ANDR    A,F             ; test IO_INWP#
+        BNE     +
+        LDX     #Msg_OFF        ; "OFF"
++       CALL    PUTS
+        JMP     Mon_CRLF
+ENDSUB
 
 
 ******************
@@ -49,6 +49,7 @@ SPI_Deselect_Cards
         LDA     #IO_CS_DRV_0 | IO_CS_DRV_1
         STA     IO_CARDSEL
         PULS    A,PC
+
 
 *****************
 SPI_Select_Card_0
