@@ -1,27 +1,9 @@
-;
-; 6809 Disassembler
-;
-; Copyright (C) 2019 by Jeff Tranter <tranter@pobox.com>
-;
-; Licensed under the Apache License, Version 2.0 (the "License");
-; you may not use this file except in compliance with the License.
-; You may obtain a copy of the License at
-;
-;   http://www.apache.org/licenses/LICENSE-2.0
-;
-; Unless required by applicable law or agreed to in writing, software
-; distributed under the License is distributed on an "AS IS" BASIS,
-; WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-; See the License for the specific language governing permissions and
-; limitations under the License.
-;
-; Revision History
-; Version Date         Comments
-; 0.0     29-Jan-2019  First version started, based on 6502 code.
-; 0.1     03-Feb-2019  All instructions now supported.
-; 0.2     10-Apr-2020  Implemented in Kolibri monitor program (BS)
-
-; Instructions. Matches indexes into entries in table MNEMONICS.
+**************************************************************
+* Unassembler for the Hitachi 6309 CPU : 19-APR-2020         *
+* ---------------------------------------------------------- *
+* Parts of this code were derived from the 6809 disassembler *
+* of Jeff Tranter "https://github.com/jefftranter/6809"      *
+**************************************************************
 
 OP_INV   EQU    $00
 OP_ABX   EQU    $01
@@ -1137,12 +1119,24 @@ SUBROUTINE PrintMinus
         PULS    D,PC
 ENDSUB
 
-; *** DATA
+***********************
+SUBROUTINE Mon_Assemble
+***********************
+
+        RTS
+ENDSUB
+
+****************
+* DATA SECTION *
+****************
 
 MNE5    BYTE    " CDRW"
 
-; Table of instruction strings.
-; 5 chars packed in 3 byte per table entry
+**************************************
+* Table of mnemonic strings          *
+* 5 chars packed in 3 byte per entry *
+**************************************
+
 MNEMONICS
         C5TO3   "???  "         ; $00
         C5TO3   "ABX  "         ; $01

@@ -61,6 +61,7 @@ Msg_Help
         FCB     "h      display this help text\n"
         FCB     "l xxxx load (and run) a program as S19 record\n"
         FCB     "m xxxx yyyy display memory dump\n"
+        FCB     "o xxxx yyyy bytes : display occurances\n"
         FCB     "r      display saved registers\n"
         FCB     "t=yyyy-mm-dd hh:mm:ss set or display date & time\n"
         FCB     "u xxxx yyyy unassemble\n"
@@ -73,17 +74,71 @@ Mon_Commands
         FCB     '$',Mon_Toggle_Dollar
         FCB     ':',Mon_Modify_Memory
         FCB     ';',Mon_Modify_Register
+        FCB     'A',Mon_Assemble
         FCB     'E',Mon_Execute
         FCB     'F',Mon_Fill
         FCB     'G',Mon_Go
         FCB     'H',Mon_Help
         FCB     'L',Mon_Load
         FCB     'M',Mon_Show_Memory
+        FCB     'O',Mon_Occurance
         FCB     'R',Mon_Show_Register
         FCB     'T',Mon_Time
         FCB     'U',Mon_Unassemble
         FCB     'X',Mon_Exit
         FCB     0
+
+************************
+SUBROUTINE Mon_Occurance
+************************
+
+***************************************
+* Search a memory range for the       *
+* occurances of a byte sequence       *
+* ----------------------------------- *
+* Input : X = pointer to input buffer *
+*         MON_MEM = default start     *
+* Output: D,W,X,Y modified            *
+***************************************
+
+        CLRW                    ; preset
+        JSR     Mon_Get_Word
+        PSHSW                   ; push start
+        LDW     #$ffff          ; preset: fill a page
+        JSR     Mon_Get_Word
+        STW     MON_TMP         ; end address
+        CLRW                    ; string index
+.OccA   JSR     Mon_Get_Byte    ; A = search value
+        BCS     .OccB           ; -> end of string
+        STA     Mon_String,W    ; store search value
+        INCW                    ; ++index
+        CMPW    #16             ; max. string length = 16
+        BLO     .OccA           ; loop
+.OccB   PULS    Y               ; Y = start address
+        STW     Mon_Len
+        TSTW
+        BEQ     .Return         ; empty string
+
+.LoopO  TFR     Y,X             ; next search address
+        CLRW                    ; index = 0
+
+.LoopI  LDA     ,X+             ; load from memory
+        CMPA    Mon_String,W    ; compare with pattern
+        BNE     .OccC           ; -> not equal
+        INCW                    ; ++index
+        CMPW    Mon_Len         ; at end ?
+        BNE     .LoopI          ; continue comparison
+
+        JSR     Mon_Blank       ; print address
+        TFR     Y,D
+        JSR     Mon_Show_Word
+
+.OccC   LEAY    1,Y
+        CMPY    MON_TMP
+        BLS     .LoopO
+.Return JMP     Mon_CRLF
+ENDSUB
+
 
 *******************
 SUBROUTINE Mon_Fill
@@ -116,34 +171,37 @@ SUBROUTINE Mon_Fill
 ENDSUB
 
 
-********
-Mon_Help
-********
+*******************
+SUBROUTINE Mon_Help
+*******************
 
         LDX     #Msg_Help
         CALL    PUTS
         RTS
+ENDSUB
 
-*****************
-Mon_Toggle_Dollar
-*****************
+****************************
+SUBROUTINE Mon_Toggle_Dollar
+****************************
 
         EIM     #1,Mon_Dollar
         RTS
+ENDSUB
 
 ******************************
 * Execute a subroutine       *
 * Read a hex address and JSR *
 ******************************
 
-***********
-Mon_Execute
-***********
+**********************
+SUBROUTINE Mon_Execute
+**********************
 
         LDW     #Mon_Hello      ; preset
         JSR     Mon_Get_Word
         JSR     ,W
         BRA     Mon_Hello
+ENDSUB
 
 ******
 Mon_Go
@@ -363,9 +421,9 @@ MoGW_20 BSR     Mon_Get_Byte    ; 2 hex to byte
         TFR     A,F             ; low   byte
 MoGW_Ret RTS
 
-************
-Mon_Get_Byte
-************
+***********************
+SUBROUTINE Mon_Get_Byte
+***********************
 
 ****************************************
 * Convert two hex digits to byte value *
@@ -373,12 +431,15 @@ Mon_Get_Byte
 * ------------------------------------ *
 * Input :  X = pointer to input buffer *
 * Output:  A = byte value              *
+*          C = carry set on failure    *
 *          X = advanced after hex byte *
 ****************************************
 
         PSHS    B               ; save B
+        CLRA                    ; default return value
 MoGB_05 LDB     ,X              ; next char
         CMPB    #' '            ; leading blank ?
+        BCS     .Return         ; error or EOT
         BNE     MoGB_10         ; -> no
         LEAX    1,X             ; skip blank
         BRA     MoGB_05
@@ -390,7 +451,9 @@ MoGB_10 BSR     Mon_Get_Nibble  ; get high nibble
         LSLA
         BSR     Mon_Get_Nibble  ; get low nibble
         ORR     B,A             ; combine nibbles -> A
-        PULS    PC,B
+        ANDCC   #%1111 1110     ; clear carry
+.Return PULS    PC,B
+ENDSUB
 
 **************
 Mon_Get_Nibble

@@ -79,6 +79,8 @@ Mon_First       RMB 1         ; Flag used to indicate first time an item printed
 Mon_Pg23        RMB 1         ; Flag indicating page2/3 instruction when non-zero
 Mon_Dollar      RMB 1         ; Flag for using $ in hex operand
 
+Mon_String      RMB 16        ; Search string
+
 *********
 * Video *
 *********
