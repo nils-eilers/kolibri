@@ -47,9 +47,23 @@ TRAPMON
 *****************************************
 
 Msg_MonHello
-        FCB     "Bit Shifter's M/L Monitor\n\0"
+        FCB     "Bit Shifter's M/L Monitor - type h for help\n\0"
 Msg_Mon FCB     "  PC  DP CC  A B  E F    X    Y    U    S    V"
         FCB     " EFHINZVC\n;\0"
+Msg_Help
+        FCB     '\n'
+        FCB     "$      toggle unassembler hex display\n"
+        FCB     ":xxxx  modify RAM\n"
+        FCB     ";      modify register\n"
+        FCB     "e xxxx execute subroutine\n"
+        FCB     "g xxxx go (load saved registers and run)\n"
+        FCB     "h      display this help text\n"
+        FCB     "l xxxx load (and run) a program as S19 record\n"
+        FCB     "m xxxx yyyy display memory dump\n"
+        FCB     "r      display saved registers\n"
+        FCB     "t=yyyy-mm-dd hh:mm:ss set or display date & time\n"
+        FCB     "u xxxx yyyy unassemble\n"
+        FCB     "x      exit monitor\n",0
 
 ************
 Mon_Commands
@@ -60,6 +74,7 @@ Mon_Commands
         FCB     ';',Mon_Modify_Register
         FCB     'E',Mon_Execute
         FCB     'G',Mon_Go
+        FCB     'H',Mon_Help
         FCB     'L',Mon_Load
         FCB     'M',Mon_Show_Memory
         FCB     'R',Mon_Show_Register
@@ -68,6 +83,13 @@ Mon_Commands
         FCB     'X',Mon_Exit
         FCB     0
 
+********
+Mon_Help
+********
+
+        LDX     #Msg_Help
+        CALL    PUTS
+        RTS
 
 *****************
 Mon_Toggle_Dollar
