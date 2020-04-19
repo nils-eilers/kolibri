@@ -104,7 +104,7 @@ SUBROUTINE Mon_Occurance
         CLRW                    ; preset
         JSR     Mon_Get_Word
         PSHSW                   ; push start
-        LDW     #$ffff          ; preset: fill a page
+        LDW     #$ffff          ; preset: end
         JSR     Mon_Get_Word
         STW     MON_TMP         ; end address
         CLRW                    ; string index
@@ -322,18 +322,20 @@ MoSM_10 JSR     Mon_Dump_Row
 MoSM_20 STX     MON_MEM         ; remember last used
         RTS
 
-*****************
-Mon_Modify_Memory
-*****************
+****************************
+SUBROUTINE Mon_Modify_Memory
+****************************
 
         BSR     Mon_Get_Word
         TFR     W,Y             ; Y = start address
         LDB     #16
-MoMM_10 LBSR    Mon_Get_Byte
+.Loop   LBSR    Mon_Get_Byte
+        BCS     .Return
         STA     ,Y+
         DECB
-        BNE     MoMM_10
-        RTS
+        BNE     .Loop
+.Return RTS
+ENDSUB
 
 *******************
 Mon_Modify_Register
