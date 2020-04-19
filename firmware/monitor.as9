@@ -109,6 +109,23 @@ SUBROUTINE Mon_Occurance
         STW     MON_TMP         ; end address
         CLRF                    ; string index
         LDY     #Mon_String
+        JSR     Mon_Get_Char    ; A = next char
+        BCS     .Return         ; error or EOT
+        CMPA    #'"'            ; quote ?
+        BNE     .OccA           ; -> read hex bytes
+
+.StrL   LEAX    1,X             ; advance buffer pointer
+        LDA     ,X              ; next character
+        CMPA    #'"'            ; end quote ?
+        BEQ     .OccB           ; -> end of string
+        CMPA    #' '            ; printable ?
+        BCS     .OccB           ; -> end of string
+        STA     F,Y             ; store it
+        INCF
+        CMPF    #16
+        BLO     .StrL           ; loop
+        BRA     .OccB           ; -> end of string
+
 .OccA   JSR     Mon_Get_Byte    ; A = search value
         BCS     .OccB           ; -> end of string
         STA     F,Y             ; store search value
@@ -358,9 +375,9 @@ Mon_Show_Register
         LDD     ,X++            ; PC
         JSR     Mon_Show_Word
         LDA     ,X+             ; DP
-        BSR     Mon_Show_Blank_Byte
+        JSR     Mon_Show_Blank_Byte
         LDA     ,X+             ; CC
-        BSR     Mon_Show_Blank_Byte
+        JSR     Mon_Show_Blank_Byte
 MoSR_10 JSR     Mon_Blank
         LDD     ,X++            ; D W X Y U S V
         JSR     Mon_Show_Word
@@ -378,24 +395,40 @@ MoSR_20 LDA     #'0'
         BNE     MoSR_20
         JMP     Mon_CRLF
 
-*******************
-Mon_Show_Blank_Byte
-*******************
-
-        PSHS    A
-        JSR     Mon_Blank
-        PULS    A
-        JMP     Mon_Show_Byte
-
 ********
 Mon_Exit
 ********
 
         JMP     DIE
 
-************
-Mon_Get_Word
-************
+***********************
+SUBROUTINE Mon_Get_Char
+***********************
+
+*************************************
+* Load the next non blank character *
+* from buffer pointer X             *
+* Return carry set for unprintable  *
+* character or end of buffer        *
+* --------------------------------- *
+* Input : X = buffer pointer        *
+* Output: X = advanced pointer      *
+*         A = character from ,X     *
+*         C = set for printable     *
+*************************************
+
+.Loop   LDA     ,X
+        CMPA    #' '
+        BCS     .Return
+        BNE     .Return
+        LEAX    1,X
+        BRA     .Loop
+.Return RTS
+ENDSUB
+
+***********************
+SUBROUTINE Mon_Get_Word
+***********************
 
 *****************************************
 * Convert four hex digits to word value *
@@ -405,22 +438,25 @@ Mon_Get_Word
 *       : W = default result            *
 * Output: W = word value                *
 *       : X = advanced after hex word   *
+*       : C = set for error or EOT      *
 *****************************************
 
-        LDA     ,X              ; next char
-        CMPA    #' '            ; leading blank ?
-        BLO     MoGW_Ret        ; -> error
-        BEQ     MoGW_10         ; -> skip
+        BSR     Mon_Get_Char    ; next char
+        BCS     .Return         ; error or EOT
         CMPA    #','            ; comma separator ?
         BEQ     MoGW_10         ; -> yes
         CMPA    #'-'            ; dash separator ?
         BNE     MoGW_20         ; -> no
 MoGW_10 LEAX    1,X             ; skip 1 char
 MoGW_20 BSR     Mon_Get_Byte    ; 2 hex to byte
+        BCS     .Return         ; -> error
         TFR     A,E             ; high byte
         BSR     Mon_Get_Byte    ; 2 hex to byte
+        BCS     .Return         ; -> error
         TFR     A,F             ; low   byte
-MoGW_Ret RTS
+        ANDCC   #%1111 1110     ; clear carry
+.Return RTS
+ENDSUB
 
 ***********************
 SUBROUTINE Mon_Get_Byte
@@ -476,9 +512,9 @@ Mon_Get_Nibble
 MGB_10  ANDB    #15             ; to binary
         RTS
 
-************
-Mon_Dump_Row
-************
+***********************
+SUBROUTINE Mon_Dump_Row
+***********************
 
 *****************************************************
 * Print a row of 16 bytes as hexdump and ASCII dump *
@@ -493,9 +529,8 @@ Mon_Dump_Row
         TFR     X,D
         BSR     Mon_Show_Word   ; print start address
         CLRE                    ; index
-MDR_10  BSR     Mon_Blank
-        LDA     E,X             ; next byte
-        BSR     Mon_Show_Byte
+MDR_10  LDA     E,X             ; next byte
+        BSR     Mon_Show_Blank_Byte
         CMPE    #7
         BNE     MDR_20
         BSR     Mon_Blank       ; insert blank after 8
@@ -515,7 +550,7 @@ MDR_50  CALL    PUTC
         BSR     Mon_Blank
 MDR_60  DECE
         BNE     MDR_30          ; fall through at end
-        SIZE
+ENDSUB
 
 ********
 Mon_CRLF
@@ -550,10 +585,24 @@ Mon_Colon
         CALL    PUTC
         RTS
 
+******************************
+SUBROUTINE Mon_Show_Blank_Byte
+******************************
 
-*************
-Mon_Show_Word
-*************
+********************************
+* Print a blank and a hex byte *
+* Input : A = value to print   *
+********************************
+
+        PSHS    A
+        BSR     Mon_Blank
+        PULS    A
+        BRA     Mon_Show_Byte
+ENDSUB
+
+************************
+SUBROUTINE Mon_Show_Word
+************************
 
 ******************************
 * Print D as four hex digits *
