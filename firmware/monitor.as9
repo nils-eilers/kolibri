@@ -107,35 +107,34 @@ SUBROUTINE Mon_Occurance
         LDW     #$ffff          ; preset: end
         JSR     Mon_Get_Word
         STW     MON_TMP         ; end address
-        CLRW                    ; string index
+        CLRF                    ; string index
+        LDY     #Mon_String
 .OccA   JSR     Mon_Get_Byte    ; A = search value
         BCS     .OccB           ; -> end of string
-        STA     Mon_String,W    ; store search value
-        INCW                    ; ++index
-        CMPW    #16             ; max. string length = 16
+        STA     F,Y             ; store search value
+        INCF                    ; ++index
+        CMPF    #16             ; max. string length = 16
         BLO     .OccA           ; loop
-.OccB   PULS    Y               ; Y = start address
-        STW     Mon_Len
-        TSTW
+.OccB   PULS    X               ; X = start address
+        STF     Mon_Len
+        TSTF
         BEQ     .Return         ; empty string
 
-.LoopO  TFR     Y,X             ; next search address
-        CLRW                    ; index = 0
-
-.LoopI  LDA     ,X+             ; load from memory
-        CMPA    Mon_String,W    ; compare with pattern
+.LoopO  CLRB                    ; index = 0
+.LoopI  LDA     B,X             ; load from memory
+        CMPA    B,Y             ; compare with pattern
         BNE     .OccC           ; -> not equal
-        INCW                    ; ++index
-        CMPW    Mon_Len         ; at end ?
+        INCB                    ; ++index
+        CMPB    Mon_Len         ; at end ?
         BNE     .LoopI          ; continue comparison
 
         JSR     Mon_Blank       ; print address
-        TFR     Y,D
+        TFR     X,D
         JSR     Mon_Show_Word
 
-.OccC   LEAY    1,Y
-        CMPY    MON_TMP
-        BLS     .LoopO
+.OccC   LEAX    1,X
+        CMPX    MON_TMP
+        BLO     .LoopO
 .Return JMP     Mon_CRLF
 ENDSUB
 
