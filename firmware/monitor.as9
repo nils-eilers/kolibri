@@ -47,7 +47,7 @@ TRAPMON
 *****************************************
 
 Msg_MonHello
-        FCB     "Bit Shifter's M/L Monitor - type h for help\n\0"
+        FCB     "Bit Shifter's 6309 Monitor - type h for help\n\0"
 Msg_Mon FCB     "  PC  DP CC  A B  E F    X    Y    U    S    V"
         FCB     " EFHINZVC\n;\0"
 Msg_Help
@@ -56,6 +56,7 @@ Msg_Help
         FCB     ":xxxx  modify RAM\n"
         FCB     ";      modify register\n"
         FCB     "e xxxx execute subroutine\n"
+        FCB     "f xxxx yyyy bb fill RAM with (bb)\n"
         FCB     "g xxxx go (load saved registers and run)\n"
         FCB     "h      display this help text\n"
         FCB     "l xxxx load (and run) a program as S19 record\n"
@@ -73,6 +74,7 @@ Mon_Commands
         FCB     ':',Mon_Modify_Memory
         FCB     ';',Mon_Modify_Register
         FCB     'E',Mon_Execute
+        FCB     'F',Mon_Fill
         FCB     'G',Mon_Go
         FCB     'H',Mon_Help
         FCB     'L',Mon_Load
@@ -82,6 +84,37 @@ Mon_Commands
         FCB     'U',Mon_Unassemble
         FCB     'X',Mon_Exit
         FCB     0
+
+*******************
+SUBROUTINE Mon_Fill
+*******************
+
+***************************************
+* Fill a memory range                 *
+* f start stop byte                   *
+* ----------------------------------- *
+* Input : X = pointer to input buffer *
+*         MON_MEM = default start     *
+* Output: X = advanced                *
+*         D,W modified                *
+***************************************
+
+        LDW     MON_MEM         ; preset
+        JSR     Mon_Get_Word
+        PSHSW                   ; push start
+        ADDW    #255            ; preset: fill a page
+        JSR     Mon_Get_Word    ; W = end address
+        JSR     Mon_Get_Byte    ; A = fill value
+        STA     MON_TMP         ; store fill value
+        PULS    X               ; X = start address
+        SUBR    X,W             ; W = end - start
+        BMI     .Return         ; safety
+        INCW                    ; W = length
+        LDD     #MON_TMP        ; point to fill byte
+        TFM     D,X+            ; fill
+.Return RTS
+ENDSUB
+
 
 ********
 Mon_Help
