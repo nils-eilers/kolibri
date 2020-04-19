@@ -101,12 +101,10 @@ SUBROUTINE Mon_Occurance
 * Output: D,W,X,Y modified            *
 ***************************************
 
-        CLRW                    ; preset
-        JSR     Mon_Get_Word
-        PSHSW                   ; push start
-        LDW     #$ffff          ; preset: end
-        JSR     Mon_Get_Word
-        STW     MON_TMP         ; end address
+        LDW     MON_MEM         ; preset
+        JSR     Mon_Get_Long    ; W -> Y
+        PSHSW                   ; start address
+        STY     MON_TMP         ; end   address
         CLRF                    ; string index
         LDY     #Mon_String
         JSR     Mon_Get_Char    ; A = next char
@@ -171,18 +169,16 @@ SUBROUTINE Mon_Fill
 ***************************************
 
         LDW     MON_MEM         ; preset
-        JSR     Mon_Get_Word
-        PSHSW                   ; push start
-        ADDW    #255            ; preset: fill a page
-        JSR     Mon_Get_Word    ; W = end address
+        LDY     #255            ; preset: fill a page
+        JSR     Mon_Get_Long    ; W -> Y
         JSR     Mon_Get_Byte    ; A = fill value
         STA     MON_TMP         ; store fill value
-        PULS    X               ; X = start address
-        SUBR    X,W             ; W = end - start
+        SUBR    W,Y             ; Y = end - start
         BMI     .Return         ; safety
+        EXG     W,Y             ; W = length - 1
         INCW                    ; W = length
         LDD     #MON_TMP        ; point to fill byte
-        TFM     D,X+            ; fill
+        TFM     D,Y+            ; fill
 .Return RTS
 ENDSUB
 
@@ -308,9 +304,9 @@ Moni_30 JSR     Mon_CRLF
         BRA     Main_Loop
 
 
-***************
-Mon_Show_Memory
-***************
+**************************
+SUBROUTINE Mon_Show_Memory
+**************************
 
 ***************************************
 * Dump a memory range to screen       *
@@ -324,25 +320,23 @@ Mon_Show_Memory
 *         D,W modified                *
 ***************************************
 
-        LDW     MON_MEM         ; preset
-        JSR     Mon_Get_Word
-        PSHSW                   ; push start
-        ADDW    #127            ; preset
-        JSR     Mon_Get_Word
-        PULS    X               ; X = start address
-        TFR     W,Y             ; Y = last  address
+        LDW     MON_MEM         ; preset start
+        LDY     #127            ; preset length
+        JSR     Mon_Get_Long    ; from W -> Y
+        TFR     W,X             ; X = start
 MoSM_10 JSR     Mon_Dump_Row
                                 ; TODO: check STOP key
         CMPR    X,Y
         BHS     MoSM_10
 MoSM_20 STX     MON_MEM         ; remember last used
         RTS
+ENDSUB
 
 ****************************
 SUBROUTINE Mon_Modify_Memory
 ****************************
 
-        BSR     Mon_Get_Word
+        JSR     Mon_Get_Word
         TFR     W,Y             ; Y = start address
         LDB     #16
 .Loop   LBSR    Mon_Get_Byte
@@ -358,7 +352,7 @@ Mon_Modify_Register
 *******************
 
         LDY     #MONBUF
-MoMR_10 BSR     Mon_Get_Byte
+MoMR_10 JSR     Mon_Get_Byte
         STA     ,Y+
         CMPY    #MONBUF+18
         BLO     MoMR_10
@@ -424,6 +418,30 @@ SUBROUTINE Mon_Get_Char
         LEAX    1,X
         BRA     .Loop
 .Return RTS
+ENDSUB
+
+***********************
+SUBROUTINE Mon_Get_Long
+***********************
+
+*************************************
+* Read two 4-dgit hex words from ,X *
+* and return values in W,Y          *
+* AABB EEFF                         *
+* --------------------------------- *
+* Input : W = preset 1st. word      *
+*         Y = preset length         *
+* Output: W = 1st. value            *
+*         Y = 2nd. value            *
+*************************************
+
+        BSR     Mon_Get_Word  ; read 1st. word
+        PSHSW                 ; save 1st. word
+        ADDR    Y,W           ; preset
+        BSR     Mon_Get_Word
+        TFR     W,Y           ; Y = 2nd. word
+        PULSW                 ; W = 1st. word
+        RTS
 ENDSUB
 
 ***********************
