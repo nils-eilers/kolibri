@@ -51,21 +51,21 @@ Msg_MonHello
 Msg_Mon FCB     "  PC  DP CC  A B  E F    X    Y    U    S    V"
         FCB     " EFHINZVC\n;\0"
 Msg_Help
-        FCB     '\n'
         FCB     "$      toggle unassembler hex display\n"
         FCB     ":xxxx  modify RAM\n"
         FCB     ";      modify register\n"
-        FCB     "e xxxx execute subroutine\n"
-        FCB     "f xxxx yyyy bb fill RAM with (bb)\n"
-        FCB     "g xxxx go (load saved registers and run)\n"
-        FCB     "h      display this help text\n"
-        FCB     "l xxxx load (and run) a program as S19 record\n"
-        FCB     "m xxxx yyyy display memory dump\n"
-        FCB     "o xxxx yyyy bytes : display occurances\n"
-        FCB     "r      display saved registers\n"
-        FCB     "t=yyyy-mm-dd hh:mm:ss set or display date & time\n"
-        FCB     "u xxxx yyyy unassemble\n"
-        FCB     "x      exit monitor\n",0
+        FCB     "C xxxx yyyy zzzz copy range\n"
+        FCB     "E xxxx execute subroutine\n"
+        FCB     "F xxxx yyyy bb fill RAM with (bb)\n"
+        FCB     "G xxxx go (load saved registers and run)\n"
+        FCB     "H      display this help text\n"
+        FCB     "L xxxx load (and run) a program as S19 record\n"
+        FCB     "M xxxx yyyy display memory dump\n"
+        FCB     "O xxxx yyyy bytes : display occurances\n"
+        FCB     "R      display saved registers\n"
+        FCB     "T=yyyy-mm-dd hh:mm:ss set or display date & time\n"
+        FCB     "U xxxx yyyy unassemble\n"
+        FCB     "X      exit monitor\n",0
 Msg_Not_RAM
         FCB     "Not RAM\n",0
 
@@ -77,6 +77,7 @@ Mon_Commands
         FCB     ':',Mon_Modify_Memory
         FCB     ';',Mon_Modify_Register
         FCB     'A',Mon_Assemble
+        FCB     'C',Mon_Copy
         FCB     'E',Mon_Execute
         FCB     'F',Mon_Fill
         FCB     'G',Mon_Go
@@ -186,6 +187,34 @@ ENDSUB
 
 
 *******************
+SUBROUTINE Mon_Copy
+*******************
+
+***************************************
+* Copy a memory range                 *
+* c from to target                    *
+* ----------------------------------- *
+* Input : X = pointer to input buffer *
+* Output: X = advanced                *
+*         D,W modified                *
+***************************************
+
+        JSR     Mon_Get_Long    ; W -> Y
+        BCS     .Return
+        EXG     W,Y             ; Y -> W
+        INCW                    ; W = end + 1
+        SUBR    Y,W             ; W = length
+        PSHSW                   ; save length
+        JSR     Mon_Get_Word    ; W = target
+        TFR     W,X             ; X = target
+        PULSW                   ; W = length
+        BCS     .Return         ; error
+        TFM     Y+,X+           ; copy
+.Return RTS
+ENDSUB
+
+
+*******************
 SUBROUTINE Mon_Help
 *******************
 
@@ -217,9 +246,10 @@ SUBROUTINE Mon_Execute
         BRA     Mon_Hello
 ENDSUB
 
-******
-Mon_Go
-******
+
+*****************
+SUBROUTINE Mon_Go
+*****************
 
         LDX     #BUF_TXT+2
         LDW     MON_PC          ; preset
@@ -240,6 +270,8 @@ Mon_Go
         LDD     MON_V           ; V
         TFR     D,V
         RTI
+ENDSUB
+
 
 *******
 Monitor
@@ -334,6 +366,7 @@ MoSM_20 STX     MON_MEM         ; remember last used
         RTS
 ENDSUB
 
+
 ****************************
 SUBROUTINE Mon_Modify_Memory
 ****************************
@@ -354,20 +387,24 @@ SUBROUTINE Mon_Modify_Memory
 .Return RTS
 ENDSUB
 
-*******************
-Mon_Modify_Register
-*******************
+
+******************************
+SUBROUTINE Mon_Modify_Register
+******************************
 
         LDY     #MONBUF
-MoMR_10 JSR     Mon_Get_Byte
+.Loop   JSR     Mon_Get_Byte
+        BCS     .Return
         STA     ,Y+
         CMPY    #MONBUF+18
-        BLO     MoMR_10
-        RTS
+        BLO     .Loop
+.Return RTS
+ENDSUB
 
-*****************
-Mon_Show_Register
-*****************
+
+****************************
+SUBROUTINE Mon_Show_Register
+****************************
 
         LDX     #Msg_Mon
         JSR     [VECTBL+PUTS*2]
@@ -379,22 +416,26 @@ Mon_Show_Register
         JSR     Mon_Show_Blank_Byte
         LDA     ,X+             ; CC
         JSR     Mon_Show_Blank_Byte
-MoSR_10 JSR     Mon_Blank
+
+.Loop   JSR     Mon_Blank
         LDD     ,X++            ; D W X Y U S V
         JSR     Mon_Show_Word
         CMPX    #MONBUF+18
-        BLO     MoSR_10
+        BLO     .Loop
+
         JSR     Mon_Blank
-        LDA     MON_CC
-        STA     MON_TMP
-        LDB     #8
-MoSR_20 LDA     #'0'
-        ROL     MON_TMP
-        ADCA    #0
+        LDB     MON_CC
+        LDE     #8
+
+.Bits   CLRA
+        LSLB
+        ADCA    #'0'
         JSR     [VECTBL+PUTC*2]
-        DECB
-        BNE     MoSR_20
+        DECE
+        BNE     .Bits
         JMP     Mon_CRLF
+ENDSUB
+
 
 ********
 Mon_Exit
