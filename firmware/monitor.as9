@@ -66,6 +66,8 @@ Msg_Help
         FCB     "t=yyyy-mm-dd hh:mm:ss set or display date & time\n"
         FCB     "u xxxx yyyy unassemble\n"
         FCB     "x      exit monitor\n",0
+Msg_Not_RAM
+        FCB     "Not RAM\n",0
 
 ************
 Mon_Commands
@@ -339,10 +341,15 @@ SUBROUTINE Mon_Modify_Memory
         JSR     Mon_Get_Word
         TFR     W,Y             ; Y = start address
         LDB     #16
-.Loop   LBSR    Mon_Get_Byte
+.Loop   JSR     Mon_Get_Byte
         BCS     .Return
-        STA     ,Y+
-        DECB
+        STA     ,Y
+        CMPA    ,Y+
+        BEQ     .OK
+        LDX     #Msg_Not_RAM
+        CALL    PUTS
+        RTS
+.OK     DECB
         BNE     .Loop
 .Return RTS
 ENDSUB
