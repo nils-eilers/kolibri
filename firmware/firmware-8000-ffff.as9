@@ -92,6 +92,7 @@ Greet_80
 ; Power Chime! Well, actually, right now it's just a simple beep.
         JSR     OPL2_Power_Chime
 
+        JMP     Basic_Coldstart
         ILLOP                   ; Call monitor
 
 
@@ -132,6 +133,7 @@ Init_Vectors
 **********************************
 
         INCLUDE "vdp.as9"       ; VDP Definitions + Subroutines
+        INCLUDE "basic.as9"     ; BASIC Interpreter / Shell
         INCLUDE "monitor.as9"   ; Machine Language Monitor
         INCLUDE "unas.as9"      ; Machine Language Unassembler
         INCLUDE "edit.as9"      ; Screen editor

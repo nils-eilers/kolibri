@@ -19,19 +19,24 @@ BIOS_DP = $00                   ; BIOS Direct Page
 
       & = BIOS_DP << 8          ; set BSS counter
 
-BIOS_ADR        BSS 2           ; JSR vector for SWI
-BIOS_EMU_Flag   BSS 1           ; 1 = EMU active
-BIOS_CursorX    BSS 1
-BIOS_CursorY    BSS 1
-BIOS_CursorChar BSS 1
+BIOS_ADR         BSS 2          ; JSR vector for SWI
+BIOS_EMU_Flag    BSS 1          ; 1 = EMU active
+BIOS_CursorX     BSS 1
+BIOS_CursorY     BSS 1
+BIOS_CursorChar  BSS 1
 BIOS_CursorHeigh BSS 1
-BIOS_Color1     BSS 1
-BIOS_BGColor1   BSS 1
-BIOS_Color2     BSS 1
-BIOS_BGColor2   BSS 1
-BIOS_RowTop     BSS 1
-BIOS_RowBottom  BSS 1
+BIOS_Color1      BSS 1
+BIOS_BGColor1    BSS 1
+BIOS_Color2      BSS 1
+BIOS_BGColor2    BSS 1
+BIOS_RowTop      BSS 1
+BIOS_RowBottom   BSS 1
 
+*********************
+* BASIC direct page *
+*********************
+
+BASIC_DP = $01
 
 **************
 * Memory map *

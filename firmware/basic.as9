@@ -1,0 +1,41 @@
+***************
+Basic_Coldstart
+***************
+
+        LDB   #BASIC_DP
+        TFR   B,DP           ; BASIC DP = $01
+        SETDP BASIC_DP
+;       BSR   BASIC_CLS      ; clear screen
+;       LDB   #$a5
+;       CMPB  WRMTST
+;       BEQ   Basic_Warmstart
+
+        LDS   #MACHINESTACK
+;       BSR   Basic_Init
+        LDX   #Bam_Start
+        CALL  PUTS
+;       JSR   NEW_10
+        BRA   Warm_20
+
+***************
+Basic_Warmstart
+***************
+
+;       LDS   FRETOP
+;       LDB   WRMFLG
+;       BEQ   Warm_10
+;       JSR   NEW_10
+;arm_10 JSR   NEW_40
+;       JSR   Close_All
+Warm_20 ANDCC #$af            ; enable interrupts
+        LDX   #Bam_Any
+        CALL  PUTS
+        CALL  GETC
+        ILLOP                 ; trigger trap
+
+
+Bam_Start
+        FCB     "\nKolibri Basic\n",0
+Bam_Any
+        FCB     "Type <RETURN> to enter monitor:",0
+
