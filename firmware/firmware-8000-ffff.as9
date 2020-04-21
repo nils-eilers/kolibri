@@ -133,9 +133,12 @@ Init_Vectors
 **********************************
 
         INCLUDE "vdp.as9"       ; VDP Definitions + Subroutines
+        SETDP   BASIC_DP
         INCLUDE "basic.as9"     ; BASIC Interpreter / Shell
+        SETDP   MONITOR_DP
         INCLUDE "monitor.as9"   ; Machine Language Monitor
         INCLUDE "unas.as9"      ; Machine Language Unassembler
+        SETDP   BIOS_DP
         INCLUDE "edit.as9"      ; Screen editor
         INCLUDE "rtc.as9"       ; Real Time Clock
         INCLUDE "opl2.as9"      ; OPL2 sound chip routines

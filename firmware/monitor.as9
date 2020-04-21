@@ -37,9 +37,9 @@ TRAPMON
 *******
 
         ANDCC   #%1010 1111   ; enable FIRQ & IRQ
-        LDA     #BIOS_DP      ; BIOS direct page
+        LDA     #MONITOR_DP
         TFR     A,DP          ; set DP
-        SETDP   BIOS_DP       ; inform assembler
+        SETDP   MONITOR_DP    ; inform assembler
         JMP     Monitor
 
 *****************************************

@@ -46,6 +46,14 @@ BASIC_DP = $01
 
 VECTBL          RMB $0100
 
+***********************
+* Monitor direct page *
+***********************
+
+MONITOR_DP = $03
+
+                ORG $0300
+
 BUF_TXT         RMB 82
 BUF_TXT_BYND    = *-1           ; allow extra space for terminating zero
 
