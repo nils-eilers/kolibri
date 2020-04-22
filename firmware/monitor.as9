@@ -91,6 +91,157 @@ Mon_Commands
         FCB     'X',Mon_Exit
         FCB     0
 
+
+***********************
+SUBROUTINE Mon_Get_Char
+***********************
+
+*************************************
+* Load the next non blank character *
+* from buffer pointer X             *
+* Return carry set for unprintable  *
+* character or end of buffer        *
+* --------------------------------- *
+* Input : X = buffer pointer        *
+* Output: X = advanced pointer      *
+*         A = character from ,X     *
+*         C = set for printable     *
+*************************************
+
+.Loop   LDA     ,X              ; next bye from buffer
+        CMPA    #' '            ; blank ?
+        BCS     .Return         ; code < $20: unprintabel
+        BNE     .Return         ; code != : ' 'OK
+        LEAX    1,X             ; skip blank
+        BRA     .Loop           ; loop
+.Return RTS
+ENDSUB
+
+
+*************************
+SUBROUTINE Mon_Get_Nibble
+*************************
+
+*****************************************
+* Get a hex digit from buffer pointer X *
+* convert it to binary  and return in A *
+* allowed: 0-9, A-F, a-f                *
+* ------------------------------------- *
+* Input : X = pointer to next hex digit *
+* Output: B = nibble value              *
+*         C = carry set on failure      *
+*****************************************
+
+        LDB     ,X+             ; get hex digit
+        CMPB    #'0'
+        BCS     .Return         ; -> not hex < '0'
+        CMPB    #'9'+1          ; (0 .. 9) ?
+        BCS     .OK             ; -> yes
+        ANDB    #%1101 1111     ; (a-z) -> (A-Z)
+        SUBB    #'A'
+        BCS     .Return         ; -> not hex < 'A'
+        ADDB    #10             ; (A-F)
+        CMPB    #16
+        BCS     .OK
+        ORCC    #%0000 0001     ; set carry
+        RTS
+.OK     ANDB    #15             ; to binary
+        ANDCC   #%1111 1110     ; clear carry
+.Return RTS
+ENDSUB
+
+
+***********************
+SUBROUTINE Mon_Get_Byte
+***********************
+
+****************************************
+* Convert two hex digits to byte value *
+* skipping leading blanks              *
+* ------------------------------------ *
+* Input :  X = pointer to input buffer *
+* Output:  A = byte value              *
+*          C = carry set on failure    *
+****************************************
+
+        PSHS    B               ; save B
+        BSR     Mon_Get_Char    ; 1st. non blank char
+        BCS     .Return         ; error or EOT
+        BSR     Mon_Get_Nibble  ; get high nibble
+        BCS     .Return         ; error or EOT
+        TFR     B,A             ; store in A
+        LSLA                    ; shift to high
+        LSLA
+        LSLA
+        LSLA
+        BSR     Mon_Get_Nibble  ; get low nibble
+        BCS     .Return         ; error or EOT
+        ORR     B,A             ; combine nibbles -> A
+        ANDCC   #%1111 1110     ; clear carry
+.Return PULS    PC,B
+ENDSUB
+
+
+***********************
+SUBROUTINE Mon_Get_Word
+***********************
+
+*****************************************
+* Convert four hex digits to word value *
+* skipping an optional leading blank    *
+* or separator like comma or dash       *
+* ------------------------------------- *
+* Input : X = pointer to input buffer   *
+*       : W = default result            *
+* Output: W = word value                *
+*       : X = advanced after hex word   *
+*       : C = set for error or EOT      *
+*****************************************
+
+        BSR     Mon_Get_Char    ; next char
+        BCS     .Return         ; error or EOT
+        CMPA    #','            ; comma separator ?
+        BEQ     MoGW_10         ; -> yes
+        CMPA    #'-'            ; dash separator ?
+        BNE     MoGW_20         ; -> no
+MoGW_10 LEAX    1,X             ; skip 1 char
+MoGW_20 BSR     Mon_Get_Byte    ; 2 hex to byte
+        BCS     .Return         ; -> error
+        TFR     A,E             ; high byte
+        BSR     Mon_Get_Byte    ; 2 hex to byte
+        BCS     .Return         ; -> error
+        TFR     A,F             ; low   byte
+        ANDCC   #%1111 1110     ; clear carry
+.Return RTS
+ENDSUB
+
+
+***********************
+SUBROUTINE Mon_Get_Long
+***********************
+
+*************************************
+* Read two 4-dgit hex words from ,X *
+* and return values in W,Y          *
+* --------------------------------- *
+* Input : W = preset 1st. word      *
+*         Y = preset offset to W    *
+* Output: W = 1st. value            *
+*         Y = 2nd. value            *
+*       : C = set for error or EOT  *
+*************************************
+
+        BSR     Mon_Get_Word  ; read 1st. word
+        BCS     .Return         ; -> error
+        PSHSW                 ; save 1st. word
+        ADDR    Y,W           ; preset
+        BSR     Mon_Get_Word
+        TFR     W,Y           ; Y = 2nd. word
+        PULSW                 ; W = 1st. word
+.Return RTS
+ENDSUB
+
+
 ************************
 SUBROUTINE Mon_Occurance
 ************************
@@ -106,6 +257,7 @@ SUBROUTINE Mon_Occurance
 
         LDW     MON_MEM         ; preset
         JSR     Mon_Get_Long    ; W -> Y
+        BCS     .Return         ; -> error
         PSHSW                   ; start address
         STY     MON_TMP         ; end   address
         CLRF                    ; string index
@@ -127,7 +279,7 @@ SUBROUTINE Mon_Occurance
         BLO     .StrL           ; loop
         BRA     .OccB           ; -> end of string
 
-.OccA   JSR     Mon_Get_Byte    ; A = search value
+.OccA   BSR     Mon_Get_Byte    ; A = search value
         BCS     .OccB           ; -> end of string
         STA     F,Y             ; store search value
         INCF                    ; ++index
@@ -153,6 +305,7 @@ SUBROUTINE Mon_Occurance
 .OccC   LEAX    1,X
         CMPX    MON_TMP
         BLO     .LoopO
+        ANDCC   #%1111 1110     ; clear carry
 .Return JMP     Mon_CRLF
 ENDSUB
 
@@ -174,10 +327,12 @@ SUBROUTINE Mon_Fill
         LDW     MON_MEM         ; preset
         LDY     #255            ; preset: fill a page
         JSR     Mon_Get_Long    ; W -> Y
+        BCS     .Return
         JSR     Mon_Get_Byte    ; A = fill value
+        BCS     .Return
         STA     MON_TMP         ; store fill value
         SUBR    W,Y             ; Y = end - start
-        BMI     .Return         ; safety
+        BCS     .Return         ; safety
         EXG     W,Y             ; W = length - 1
         INCW                    ; W = length
         LDD     #MON_TMP        ; point to fill byte
@@ -220,6 +375,7 @@ SUBROUTINE Mon_Help
 
         LDX     #Msg_Help
         CALL    PUTS
+        ANDCC   #%1111 1110     ; clear carry
         RTS
 ENDSUB
 
@@ -228,6 +384,7 @@ SUBROUTINE Mon_Toggle_Dollar
 ****************************
 
         EIM     #1,Mon_Dollar
+        ANDCC   #%1111 1110     ; clear carry
         RTS
 ENDSUB
 
@@ -321,16 +478,19 @@ Main_Loop
         ANDA    #%1101 1111     ; force upper case
 
 Moni_20 LDB     ,X+             ; command char
-        BEQ     Moni_30         ; not in list
+        BEQ     Mon_Syntax_Error
         LDU     ,X++            ; command subroutine
         CMPR    A,B
         BNE     Moni_20         ; next
         LDX     #BUF_TXT+2
         JSR     ,U
-        BRA     Main_Loop
+        BCC     Main_Loop       ; C = error flag
 
+****************
 Mon_Syntax_Error
-Moni_30 JSR     Mon_CRLF
+****************
+
+        JSR     Mon_CRLF
         LDA     #'?'
         CALL    PUTC
         LDA     #BS
@@ -357,13 +517,14 @@ SUBROUTINE Mon_Show_Memory
         LDW     MON_MEM         ; preset start
         LDY     #127            ; preset length
         JSR     Mon_Get_Long    ; from W -> Y
+        BCS     .Return
         TFR     W,X             ; X = start
-MoSM_10 JSR     Mon_Dump_Row
-                                ; TODO: check STOP key
+.Loop   JSR     Mon_Dump_Row    ; TODO: check STOP key
         CMPR    X,Y
-        BHS     MoSM_10
-MoSM_20 STX     MON_MEM         ; remember last used
-        RTS
+        BHS     .Loop
+        STX     MON_MEM         ; remember last used
+        ANDCC   #%1111 1110     ; clear carry
+.Return RTS
 ENDSUB
 
 
@@ -371,19 +532,32 @@ ENDSUB
 SUBROUTINE Mon_Modify_Memory
 ****************************
 
+***************************************
+* Modify up to 16 bytes in RAM        *
+* Read a hex word for start           *
+* followed by 1 - 16 hex bytes        *
+* ----------------------------------- *
+* Input : X = pointer to input buffer *
+* Output: X = advanced                *
+*         D,W modified                *
+***************************************
+
         JSR     Mon_Get_Word
+        BCS     .Return
         TFR     W,Y             ; Y = start address
         LDB     #16
 .Loop   JSR     Mon_Get_Byte
-        BCS     .Return
+        BCS     .Clear          ; less than 16 is OK
         STA     ,Y
-        CMPA    ,Y+
+        CMPA    ,Y+             ; check write success
         BEQ     .OK
         LDX     #Msg_Not_RAM
         CALL    PUTS
+        ORCC    #%0000 0001     ; set carry
         RTS
 .OK     DECB
         BNE     .Loop
+.Clear  ANDCC   #%1111 1110     ; clear carry
 .Return RTS
 ENDSUB
 
@@ -433,7 +607,9 @@ SUBROUTINE Mon_Show_Register
         JSR     [VECTBL+PUTC*2]
         DECE
         BNE     .Bits
-        JMP     Mon_CRLF
+        JSR     Mon_CRLF
+        ANDCC   #%1111 1110   ; clear carry
+        RTS
 ENDSUB
 
 
@@ -442,141 +618,6 @@ Mon_Exit
 ********
 
         JMP     DIE
-
-***********************
-SUBROUTINE Mon_Get_Char
-***********************
-
-*************************************
-* Load the next non blank character *
-* from buffer pointer X             *
-* Return carry set for unprintable  *
-* character or end of buffer        *
-* --------------------------------- *
-* Input : X = buffer pointer        *
-* Output: X = advanced pointer      *
-*         A = character from ,X     *
-*         C = set for printable     *
-*************************************
-
-.Loop   LDA     ,X
-        CMPA    #' '
-        BCS     .Return
-        BNE     .Return
-        LEAX    1,X
-        BRA     .Loop
-.Return RTS
-ENDSUB
-
-***********************
-SUBROUTINE Mon_Get_Long
-***********************
-
-*************************************
-* Read two 4-dgit hex words from ,X *
-* and return values in W,Y          *
-* AABB EEFF                         *
-* --------------------------------- *
-* Input : W = preset 1st. word      *
-*         Y = preset length         *
-* Output: W = 1st. value            *
-*         Y = 2nd. value            *
-*************************************
-
-        BSR     Mon_Get_Word  ; read 1st. word
-        PSHSW                 ; save 1st. word
-        ADDR    Y,W           ; preset
-        BSR     Mon_Get_Word
-        TFR     W,Y           ; Y = 2nd. word
-        PULSW                 ; W = 1st. word
-        RTS
-ENDSUB
-
-***********************
-SUBROUTINE Mon_Get_Word
-***********************
-
-*****************************************
-* Convert four hex digits to word value *
-* skipping an optional leading blank    *
-* ------------------------------------- *
-* Input : X = pointer to input buffer   *
-*       : W = default result            *
-* Output: W = word value                *
-*       : X = advanced after hex word   *
-*       : C = set for error or EOT      *
-*****************************************
-
-        BSR     Mon_Get_Char    ; next char
-        BCS     .Return         ; error or EOT
-        CMPA    #','            ; comma separator ?
-        BEQ     MoGW_10         ; -> yes
-        CMPA    #'-'            ; dash separator ?
-        BNE     MoGW_20         ; -> no
-MoGW_10 LEAX    1,X             ; skip 1 char
-MoGW_20 BSR     Mon_Get_Byte    ; 2 hex to byte
-        BCS     .Return         ; -> error
-        TFR     A,E             ; high byte
-        BSR     Mon_Get_Byte    ; 2 hex to byte
-        BCS     .Return         ; -> error
-        TFR     A,F             ; low   byte
-        ANDCC   #%1111 1110     ; clear carry
-.Return RTS
-ENDSUB
-
-***********************
-SUBROUTINE Mon_Get_Byte
-***********************
-
-****************************************
-* Convert two hex digits to byte value *
-* skipping leading blanks              *
-* ------------------------------------ *
-* Input :  X = pointer to input buffer *
-* Output:  A = byte value              *
-*          C = carry set on failure    *
-*          X = advanced after hex byte *
-****************************************
-
-        PSHS    B               ; save B
-        CLRA                    ; default return value
-MoGB_05 LDB     ,X              ; next char
-        CMPB    #' '            ; leading blank ?
-        BCS     .Return         ; error or EOT
-        BNE     MoGB_10         ; -> no
-        LEAX    1,X             ; skip blank
-        BRA     MoGB_05
-MoGB_10 BSR     Mon_Get_Nibble  ; get high nibble
-        TFR     B,A             ; store in A
-        LSLA                    ; shift to high
-        LSLA
-        LSLA
-        LSLA
-        BSR     Mon_Get_Nibble  ; get low nibble
-        ORR     B,A             ; combine nibbles -> A
-        ANDCC   #%1111 1110     ; clear carry
-.Return PULS    PC,B
-ENDSUB
-
-**************
-Mon_Get_Nibble
-**************
-
-*****************************************
-* Get a hex digit from buffer pointer X *
-* convert it to binary  and return in A *
-* ------------------------------------- *
-* Input : X = pointer to next hex digit *
-* Output: B = nibble value              *
-*         X++                           *
-*****************************************
-
-        LDB     ,X+             ; get hex digit
-        CMPB    #'9'+1          ; numeric ?
-        BLO     MGB_10          ; -> yes
-        SUBB    #7              ; assume A -> F
-MGB_10  ANDB    #15             ; to binary
-        RTS
 
 ***********************
 SUBROUTINE Mon_Dump_Row
@@ -797,6 +838,7 @@ ML_10   JSR     Mon_Getch       ; read next character of S-Record
         BEQ     ML_10           ; ignore CR
         CMPA    #LF             ; LF here indicates empty line,
         BNE     ML_20           ; which means end of transmission
+        ANDCC   #%1111 1110     ; clear carry
         RTS                     ; LF -> we're done
 ML_20   CMPA    #'S'            ; lines with content must start with 'S'
         LBNE    ML_90           ; this line doesn't
@@ -811,6 +853,7 @@ ML_20   CMPA    #'S'            ; lines with content must start with 'S'
         LBEQ     Mon_Load_S9    ; -> S9 record
 ML_90   LDX     #Msg_Bad_SRec   ; Output error message
         CALL    PUTS            ; and abort
+        ORCC    #%0000 0001     ; set carry
         RTS
 
 
@@ -988,7 +1031,8 @@ Mon_Time
         BEQ     Mon_Time_Get
         CMPA    #'='
         BEQ     Mon_Time_Set
-        JMP     Mon_Syntax_Error
+        ORCC    #%0000 0001     ; error
+        RTS
 
 Mon_Time_Get
         LDY     #BUF_TXT
@@ -1016,6 +1060,7 @@ Mon_Time_Get
         LDA     ,Y+             ; ss
         JSR     Mon_Show_Byte
         JSR     Mon_CRLF
+        ANDCC   #%1111 1110     ; clear carry
         RTS
 
 Mon_Time_Set
@@ -1044,5 +1089,6 @@ Mon_Time_Set
         PULS    Y
         JSR     RTC_Set
         LEAS    +6,S
+        ANDCC   #%1111 1110     ; clear carry
         RTS
 
