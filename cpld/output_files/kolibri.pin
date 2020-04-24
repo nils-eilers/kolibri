@@ -68,7 +68,7 @@ nPORT                        : 4         : output : TTL               :         
 nE                           : 5         : output : TTL               :         :           : Y              
 nSD0                         : 6         : output : TTL               :         :           : Y              
 GND                          : 7         : gnd    :                   :         :           :                
-RESERVED                     : 8         :        :                   :         :           :                
+nFPUCS                       : 8         : output : TTL               :         :           : Y              
 nQ                           : 9         : output : TTL               :         :           : Y              
 nSD1                         : 10        : output : TTL               :         :           : Y              
 nCSR                         : 11        : output : TTL               :         :           : Y              

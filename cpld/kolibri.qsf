@@ -123,3 +123,4 @@ set_location_assignment PIN_71 -to TDO
 set_global_assignment -name CDF_FILE "output_files/kolibri-cpld.cdf"
 set_location_assignment PIN_69 -to MHZ24
 set_location_assignment PIN_1 -to nRES
+set_location_assignment PIN_8 -to nFPUCS

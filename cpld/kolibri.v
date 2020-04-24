@@ -35,6 +35,7 @@ module kolibri (
     output wire nOPL2,      // YM3812
     output wire nRTC,       // RTC 16 bytes
     output wire nCS8742,    // Keyboard, Mouse and Gamepad Controller
+    output wire nFPUCS,     // 68882 floating point processor
 
 
     output reg  nSD0,       // SD card chip select
@@ -69,7 +70,7 @@ module kolibri (
     assign nRTC    = nIOEN |       !(A[7:4] == 4'h0001);    // $FE10-$FE1F
     assign nCS8742 = nIOEN |       !(A[7:1] == 7'b0010010); // $FE24-$FE25
     assign nOPL2   = nIOEN |       !(A[7:1] == 7'b0010011); // $FE26-$FE27
-    assign nFPU    = nIOEN |       !(A[7:5] == 3'b010);     // $FE40-$FE5F
+    assign nFPUCS  = nIOEN |       !(A[7:5] == 3'b010);     // $FE40-$FE5F
 
 
     // ===== Static assignments ========================================
