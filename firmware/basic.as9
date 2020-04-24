@@ -30,7 +30,10 @@ Basic_Warmstart
 Warm_20 ANDCC #$af            ; enable interrupts
         LDX   #Bam_Any
         CALL  PUTS
-        CALL  GETC
+-       CALL  GETC
+        TSTA
+        BEQ   -
+        JSR   Mon_CRLF
         ILLOP                 ; trigger trap
 
 
