@@ -13,9 +13,9 @@ module kolibri (
     inout       [7:0] D,    // data bus
     input       [15:0] A,   // address bus
     input       [21:17] MA, // extended address lines
-    output wire P0,         // predefined memory map configuration
-    output wire P1,
-    output wire nSTROBE,    // low during MMU access
+    output reg  P0,         // predefined memory map configuration
+    output reg  P1,
+    output      nSTROBE,    // low during MMU access
     output wire nMM,        // 1: pass mode, 0: map mode
 
     input       RW,         // R/W from 6309
@@ -48,7 +48,7 @@ module kolibri (
 );
 
 
-    clock clock_gen(MHZ48, nWAIT, MHZ24, MHZ12, nQ, nE);
+    clock clock_gen(MHZ48, nWAIT, MHZ24, MHZ12, nQ, nE, nSTROBE);
 
     assign nRD     = nE | ~RW;
     assign nWR     = nE |  RW;
@@ -75,9 +75,6 @@ module kolibri (
     // ===== Static assignments ========================================
 
     // No MMU yet
-    assign P0 = 0;
-    assign P1 = 0;
-    assign nSTROBE = 1;
     assign nMM = 1;     // 1: pass mode
 
     assign nNMI = 1;
@@ -124,6 +121,18 @@ module kolibri (
     // SPI MISO
     assign D[7] = (A[15:0] == 16'hFE31 && RW == 1) ? MISO : 1'bz;
 
+
+    // select predefined memory map configurations $FE20-$FE23
+    always @(negedge nE or negedge nRES)
+    begin
+        if (nRES == 0) begin
+            P0 <= 0;
+            P1 <= 0;
+        end else if (A[15:2]==15'b11111110001000) begin
+            P0 <= A[0];
+            P1 <= A[1];
+        end
+    end
 
 endmodule
 

@@ -8,13 +8,14 @@ module clock_tb;
     input wire MHZ12;
     input wire nQ;
     input wire nE;
+    input wire nSTROBE;
 
     wire Q;
     wire E;
     assign Q = ~nQ;
     assign E = ~nE;
 
-    clock clock_tb(MHZ48, nWAIT, MHZ24, MHZ12, nQ, nE);
+    clock clock_tb(MHZ48, nWAIT, MHZ24, MHZ12, nQ, nE, nSTROBE);
 
     always
     #10.41666666 MHZ48 = ~MHZ48;
