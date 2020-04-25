@@ -120,7 +120,7 @@ module kolibri (
     end
 
     // SPI MISO
-    assign D[7] = (A[15:0] == 16'hFE31 && RW == 1) ? MISO : 1'bz;
+    assign D[7] = (A[15:0] == 16'hFE31 && RW == 1 && nE == 0) ? MISO : 1'bz;
 
 
     // select predefined memory map configurations $FE20-$FE23
