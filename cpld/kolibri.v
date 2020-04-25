@@ -16,7 +16,7 @@ module kolibri (
     output reg  P0,         // predefined memory map configuration
     output reg  P1,
     output      nSTROBE,    // low during MMU access
-    output wire nMM,        // 1: pass mode, 0: map mode
+    output reg  nMM,        // 1: pass mode, 0: map mode
 
     input       RW,         // R/W from 6309
     output wire nRD,        // to /OE of Flash and RAM
@@ -134,6 +134,17 @@ module kolibri (
             P1 <= A[1];
         end
     end
+
+    // enable/disable MMU mapping
+    always @(negedge nE or negedge nRES)
+    begin
+        if (nRES == 0) begin
+            nMM <= 1;           // 1: pass mode
+        end else if (A[15:0] == 16'hFE32 && RW == 0) begin
+            nMM <= D[0];
+        end
+    end
+
 
 endmodule
 
