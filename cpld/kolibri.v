@@ -129,7 +129,7 @@ module kolibri (
         if (nRES == 0) begin
             P0 <= 0;
             P1 <= 0;
-        end else if (A[15:2]==15'b11111110001000) begin
+        end else if (A[15:2]==15'b11111110001000 && RW == 0) begin
             P0 <= A[0];
             P1 <= A[1];
         end
