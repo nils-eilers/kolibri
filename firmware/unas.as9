@@ -272,7 +272,7 @@ SUBROUTINE Mon_Unassemble
         JSR     DISASM          ; Do disassembly of one instruction
         PULSW                   ; Restore end address
         CMPW    Mon_Adr         ; Compare end condition
-        BCS     .loop           ; Loop until done
+        BHI     .loop           ; Loop until done
         RTS                     ; Return to caller
 ENDSUB
 

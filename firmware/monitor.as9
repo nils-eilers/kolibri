@@ -517,7 +517,6 @@ SUBROUTINE Mon_Show_Memory
         LDW     MON_MEM         ; preset start
         LDY     #127            ; preset length
         JSR     Mon_Get_Long    ; from W -> Y
-        BCS     .Return
         TFR     W,X             ; X = start
 .Loop   JSR     Mon_Dump_Row    ; TODO: check STOP key
         CMPR    X,Y
