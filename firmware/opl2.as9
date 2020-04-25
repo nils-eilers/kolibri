@@ -16,15 +16,15 @@ OPL2_Write
 
 
         STA     IO_OPL2REGSEL   ; select OPL2 register
-        JSR     VDP_Wait11c     ; wait at least 3.3 uS (11/3=3.666)
+        JSR     OPL2_Wait11c    ; wait at least 3.3 uS (11/3=3.666)
         STB     IO_OPL2DATA     ; write data to sound chip register
-        JSR     VDP_Wait11c     ; wait at least 23 uS
-        JSR     VDP_Wait11c     ; TODO: write a better delay routine
-        JSR     VDP_Wait11c
-        JSR     VDP_Wait11c
-        JSR     VDP_Wait11c
-        JSR     VDP_Wait11c
-        JMP     VDP_Wait11c
+        JSR     OPL2_Wait11c    ; wait at least 23 uS
+        JSR     OPL2_Wait11c    ; TODO: write a better delay routine
+        JSR     OPL2_Wait11c
+        JSR     OPL2_Wait11c
+        JSR     OPL2_Wait11c
+        JSR     OPL2_Wait11c
+        JMP     OPL2_Wait11c
 
 
 *******************
@@ -53,6 +53,7 @@ OPL2_Init
 -       JSR     OPL2_Write
         DECA
         BNE     -
+OPL2_Wait11c                    ; wait 11 cycles (jsr=7c, rts=4c)
         RTS
 
 ****************
