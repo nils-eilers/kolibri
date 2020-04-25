@@ -1,0 +1,3 @@
+        ORG     0
+        FILL    32768($FF)
+        STORE   0,32768,"firmware-18000-1ffff.bin"

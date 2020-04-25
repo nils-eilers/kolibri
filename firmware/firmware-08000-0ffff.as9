@@ -1,4 +1,4 @@
-        STORE   $8000,$8000,"firmware-8000-ffff.bin"
+        STORE   $8000,$8000,"firmware-08000-0ffff.bin"
         INCLUDE "kolibri-definitions.as9"
         INCLUDE "macros.as9"
 
