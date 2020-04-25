@@ -51,21 +51,27 @@ module kolibri (
 
     clock clock_gen(MHZ48, nWAIT, MHZ24, MHZ12, nQ, nE, nSTROBE);
 
+    assign nNMI = 1;    // nothing triggers NMI yet
+
+
+
+    // =======================================================================
+    //
+    //      I / O   a r e a
+    //
+    // =======================================================================
+
+
     assign nRD     = nE | ~RW;
     assign nWR     = nE |  RW;
     assign nIOEN   = nE | !(A[15:8] == 8'hFE);
 
-    // Pass Mode
-    assign nRAMCS  = nE |  A[15];                           //  0-32 KB
-    assign nROMCS  = nE | ~A[15] | ~nIOEN;                  // 32-64 KB \ $FExx
 
     assign nCSR    = nIOEN | ~RW | !(A[7:2] == 6'b001010);  // $FE28-$FE2B
     assign nCSW    = nIOEN |  RW | !(A[7:2] == 6'b001010);  // $FE28-$FE2B
     assign nRD245  = nIOEN | ~RW | !(A[7:0] == 8'h2C);      // $FE2C
     assign WR245   = nIOEN |  RW | !(A[7:0] == 8'h2C);      // $FE2C
     assign nPORT   = nIOEN | ~RW | !(A[7:0] == 8'h2D);      // $FE2D
-
-
     assign nMMUCS  = nIOEN |       !(A[7:4] == 4'b0000);    // $FE00-$FE0F
     assign nRTC    = nIOEN |       !(A[7:4] == 4'h0001);    // $FE10-$FE1F
     assign nCS8742 = nIOEN |       !(A[7:1] == 7'b0010010); // $FE24-$FE25
@@ -73,12 +79,12 @@ module kolibri (
     assign nFPUCS  = nIOEN |       !(A[7:5] == 3'b010);     // $FE40-$FE5F
 
 
-    // ===== Static assignments ========================================
 
-    // No MMU yet
-    assign nMM = 1;     // 1: pass mode
-
-    assign nNMI = 1;
+    // =======================================================================
+    //
+    //      S D - C a r d s
+    //
+    // =======================================================================
 
 
     // SD Card Select Signals
@@ -122,6 +128,17 @@ module kolibri (
     // SPI MISO
     assign D[7] = (A[15:0] == 16'hFE31 && RW == 1 && nE == 0) ? MISO : 1'bz;
 
+
+
+    // =======================================================================
+    //
+    //      M e m o r y   M a n a g e m e n t   U n i t
+    //
+    // =======================================================================
+
+    // Pass Mode
+    assign nRAMCS  = nE |  A[15];                           //  0-32 KB
+    assign nROMCS  = nE | ~A[15] | ~nIOEN;                  // 32-64 KB \ $FExx
 
     // select predefined memory map configurations $FE20-$FE23
     always @(negedge nE or negedge nRES)
