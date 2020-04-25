@@ -23,6 +23,7 @@
         RTS
 
         INCLUDE "edit.as9"      ; FIXME: we need a better way to read a line
+        INCLUDE "opl2.as9"      ; required by edit.as9
 
 QUESTION FCC    "What's your name? \0"
 HELLO   FCC     "Hi \0"
