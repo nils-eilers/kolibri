@@ -43,7 +43,8 @@ GRTLP   LDA     ,X+
         BRA     GRTLP
 
 FT245PR FCC "\r\n\r\n"
-BOOTPRM FCC "kolibri.computer BIOS 2020-04-16\n\0"
+BOOTPRM FCC "kolibri.computer BIOS 2020-04-26\n"
+NULBYT  FCB 0
 Greet_20
 
 ; Write greeter to V9958 screen
@@ -74,6 +75,7 @@ Greet_80
 
 ; Further machine initialization
         JSR     Init_Vectors
+        JSR     Init_MMU
         JSR     RTC_Init
         JSR     OPL2_Init
         JSR     SPI_Init
@@ -125,6 +127,17 @@ Init_Vectors
         LDY     #VECTBL
         LDW     #VECT_ROMTBL_END - VECT_ROMTBL
         TFM     X+,Y+
+        RTS
+
+
+********
+Init_MMU
+********
+
+        LDW     #16
+        LDY     #$FE00
+        LDD     #NULBYT
+        TFM     D,Y+
         RTS
 
 

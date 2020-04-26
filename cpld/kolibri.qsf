@@ -103,8 +103,6 @@ set_location_assignment PIN_25 -to nOPL2
 set_location_assignment PIN_27 -to P0
 set_location_assignment PIN_28 -to nMMUCS
 set_location_assignment PIN_29 -to nSTROBE
-set_location_assignment PIN_63 -to MA[17]
-set_location_assignment PIN_64 -to MA[18]
 set_location_assignment PIN_65 -to MA[19]
 set_location_assignment PIN_67 -to MA[20]
 set_location_assignment PIN_68 -to nIOEN
@@ -120,7 +118,6 @@ set_location_assignment PIN_23 -to TMS
 set_location_assignment PIN_62 -to TCK
 set_location_assignment PIN_14 -to TDI
 set_location_assignment PIN_71 -to TDO
-set_global_assignment -name CDF_FILE "output_files/kolibri-cpld.cdf"
 set_location_assignment PIN_69 -to MHZ24
 set_location_assignment PIN_1 -to nRES
 set_location_assignment PIN_8 -to nFPUCS

@@ -12,9 +12,9 @@ module kolibri (
 
     inout       [7:0] D,    // data bus
     input       [15:0] A,   // address bus
-    input       [21:17] MA, // extended address lines
-    output reg  P0,         // predefined memory map configuration
-    output reg  P1,
+    input       [21:19] MA, // extended address lines
+    output wire P0,         // predefined memory map configuration
+    output wire P1,
     output      nSTROBE,    // low during MMU access
     output reg  nMM,        // 1: pass mode, 0: map mode
 
@@ -136,19 +136,32 @@ module kolibri (
     //
     // =======================================================================
 
-    // Pass Mode
-    assign nRAMCS  = nE |  A[15];                           //  0-32 KB
-    assign nROMCS  = nE | ~A[15] | ~nIOEN;                  // 32-64 KB \ $FExx
+    // Memory below $0400 is always common RAM
+    // Memory at $FExx is always I/O
+    // Memory at $FFxx is always common ROM
+    wire mapped;
+    assign mapped = nMM == 0 && A[15:0] >= 16'h0400 && A[15:0] < 16'hFE00;
+
+    // P0 and P1 output zero when mapping is disabled
+    reg PM0;
+    reg PM1;
+    assign P0 = mapped ? PM0 : 1'b0;
+    assign P1 = mapped ? PM1 : 1'b0;
+
+
+    // chip select signals for memory chips
+    assign nRAMCS = mapped ? MA[21:19] == 3'b001 : nE |  A[15];             // 512-1024 KB ||  0-32 KB
+    assign nROMCS = mapped ? MA[21:19] == 3'b000 : nE | ~A[15] | ~nIOEN;    //   0- 512 KB || 32-64 KB \ $FExx
 
     // select predefined memory map configurations $FE20-$FE23
     always @(negedge nE or negedge nRES)
     begin
         if (nRES == 0) begin
-            P0 <= 0;
-            P1 <= 0;
+            PM0 <= 0;
+            PM1 <= 0;
         end else if (A[15:2]==15'b11111110001000 && RW == 0) begin
-            P0 <= A[0];
-            P1 <= A[1];
+            PM0 <= A[0];
+            PM1 <= A[1];
         end
     end
 

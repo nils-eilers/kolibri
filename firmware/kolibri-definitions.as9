@@ -142,6 +142,7 @@ IO_CARDSEL      = $FE30
 IO_CS_DRV_0     = 1
 IO_CS_DRV_1     = 2
 IO_SPI_DATA     = $FE31
+IO_MMU_DISABLE  = $FE32         ; 0: MMU enabled, 1: MMU disabled
 IO_FPU          = $FE40         ; 68882 $FE40-$FE5F
 
 IO_RTC_S1       ENUM IO_RTC
