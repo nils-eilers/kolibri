@@ -1,3 +1,387 @@
         ORG     0
-        FILL    32768($FF)
         STORE   0,32768,"firmware-18000-1ffff.bin"
+
+        FDB $1800
+        FILL 254($FF)
+
+        FDB $1801
+        FILL 254($FF)
+
+        FDB $1802
+        FILL 254($FF)
+
+        FDB $1803
+        FILL 254($FF)
+
+        FDB $1804
+        FILL 254($FF)
+
+        FDB $1805
+        FILL 254($FF)
+
+        FDB $1806
+        FILL 254($FF)
+
+        FDB $1807
+        FILL 254($FF)
+
+        FDB $1808
+        FILL 254($FF)
+
+        FDB $1809
+        FILL 254($FF)
+
+        FDB $180A
+        FILL 254($FF)
+
+        FDB $180B
+        FILL 254($FF)
+
+        FDB $180C
+        FILL 254($FF)
+
+        FDB $180D
+        FILL 254($FF)
+
+        FDB $180E
+        FILL 254($FF)
+
+        FDB $180F
+        FILL 254($FF)
+
+        FDB $1810
+        FILL 254($FF)
+
+        FDB $1811
+        FILL 254($FF)
+
+        FDB $1812
+        FILL 254($FF)
+
+        FDB $1813
+        FILL 254($FF)
+
+        FDB $1814
+        FILL 254($FF)
+
+        FDB $1815
+        FILL 254($FF)
+
+        FDB $1816
+        FILL 254($FF)
+
+        FDB $1817
+        FILL 254($FF)
+
+        FDB $1818
+        FILL 254($FF)
+
+        FDB $1819
+        FILL 254($FF)
+
+        FDB $181A
+        FILL 254($FF)
+
+        FDB $181B
+        FILL 254($FF)
+
+        FDB $181C
+        FILL 254($FF)
+
+        FDB $181D
+        FILL 254($FF)
+
+        FDB $181E
+        FILL 254($FF)
+
+        FDB $181F
+        FILL 254($FF)
+
+        FDB $1820
+        FILL 254($FF)
+
+        FDB $1821
+        FILL 254($FF)
+
+        FDB $1822
+        FILL 254($FF)
+
+        FDB $1823
+        FILL 254($FF)
+
+        FDB $1824
+        FILL 254($FF)
+
+        FDB $1825
+        FILL 254($FF)
+
+        FDB $1826
+        FILL 254($FF)
+
+        FDB $1827
+        FILL 254($FF)
+
+        FDB $1828
+        FILL 254($FF)
+
+        FDB $1829
+        FILL 254($FF)
+
+        FDB $182A
+        FILL 254($FF)
+
+        FDB $182B
+        FILL 254($FF)
+
+        FDB $182C
+        FILL 254($FF)
+
+        FDB $182D
+        FILL 254($FF)
+
+        FDB $182E
+        FILL 254($FF)
+
+        FDB $182F
+        FILL 254($FF)
+
+        FDB $1830
+        FILL 254($FF)
+
+        FDB $1831
+        FILL 254($FF)
+
+        FDB $1832
+        FILL 254($FF)
+
+        FDB $1833
+        FILL 254($FF)
+
+        FDB $1834
+        FILL 254($FF)
+
+        FDB $1835
+        FILL 254($FF)
+
+        FDB $1836
+        FILL 254($FF)
+
+        FDB $1837
+        FILL 254($FF)
+
+        FDB $1838
+        FILL 254($FF)
+
+        FDB $1839
+        FILL 254($FF)
+
+        FDB $183A
+        FILL 254($FF)
+
+        FDB $183B
+        FILL 254($FF)
+
+        FDB $183C
+        FILL 254($FF)
+
+        FDB $183D
+        FILL 254($FF)
+
+        FDB $183E
+        FILL 254($FF)
+
+        FDB $183F
+        FILL 254($FF)
+
+        FDB $1840
+        FILL 254($FF)
+
+        FDB $1841
+        FILL 254($FF)
+
+        FDB $1842
+        FILL 254($FF)
+
+        FDB $1843
+        FILL 254($FF)
+
+        FDB $1844
+        FILL 254($FF)
+
+        FDB $1845
+        FILL 254($FF)
+
+        FDB $1846
+        FILL 254($FF)
+
+        FDB $1847
+        FILL 254($FF)
+
+        FDB $1848
+        FILL 254($FF)
+
+        FDB $1849
+        FILL 254($FF)
+
+        FDB $184A
+        FILL 254($FF)
+
+        FDB $184B
+        FILL 254($FF)
+
+        FDB $184C
+        FILL 254($FF)
+
+        FDB $184D
+        FILL 254($FF)
+
+        FDB $184E
+        FILL 254($FF)
+
+        FDB $184F
+        FILL 254($FF)
+
+        FDB $1850
+        FILL 254($FF)
+
+        FDB $1851
+        FILL 254($FF)
+
+        FDB $1852
+        FILL 254($FF)
+
+        FDB $1853
+        FILL 254($FF)
+
+        FDB $1854
+        FILL 254($FF)
+
+        FDB $1855
+        FILL 254($FF)
+
+        FDB $1856
+        FILL 254($FF)
+
+        FDB $1857
+        FILL 254($FF)
+
+        FDB $1858
+        FILL 254($FF)
+
+        FDB $1859
+        FILL 254($FF)
+
+        FDB $185A
+        FILL 254($FF)
+
+        FDB $185B
+        FILL 254($FF)
+
+        FDB $185C
+        FILL 254($FF)
+
+        FDB $185D
+        FILL 254($FF)
+
+        FDB $185E
+        FILL 254($FF)
+
+        FDB $185F
+        FILL 254($FF)
+
+        FDB $1860
+        FILL 254($FF)
+
+        FDB $1861
+        FILL 254($FF)
+
+        FDB $1862
+        FILL 254($FF)
+
+        FDB $1863
+        FILL 254($FF)
+
+        FDB $1864
+        FILL 254($FF)
+
+        FDB $1865
+        FILL 254($FF)
+
+        FDB $1866
+        FILL 254($FF)
+
+        FDB $1867
+        FILL 254($FF)
+
+        FDB $1868
+        FILL 254($FF)
+
+        FDB $1869
+        FILL 254($FF)
+
+        FDB $186A
+        FILL 254($FF)
+
+        FDB $186B
+        FILL 254($FF)
+
+        FDB $186C
+        FILL 254($FF)
+
+        FDB $186D
+        FILL 254($FF)
+
+        FDB $186E
+        FILL 254($FF)
+
+        FDB $186F
+        FILL 254($FF)
+
+        FDB $1870
+        FILL 254($FF)
+
+        FDB $1871
+        FILL 254($FF)
+
+        FDB $1872
+        FILL 254($FF)
+
+        FDB $1873
+        FILL 254($FF)
+
+        FDB $1874
+        FILL 254($FF)
+
+        FDB $1875
+        FILL 254($FF)
+
+        FDB $1876
+        FILL 254($FF)
+
+        FDB $1877
+        FILL 254($FF)
+
+        FDB $1878
+        FILL 254($FF)
+
+        FDB $1879
+        FILL 254($FF)
+
+        FDB $187A
+        FILL 254($FF)
+
+        FDB $187B
+        FILL 254($FF)
+
+        FDB $187C
+        FILL 254($FF)
+
+        FDB $187D
+        FILL 254($FF)
+
+        FDB $187E
+        FILL 254($FF)
+
+        FDB $187F
+        FILL 254($FF)
+

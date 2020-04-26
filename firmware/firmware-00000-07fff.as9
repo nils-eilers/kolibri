@@ -1,3 +1,387 @@
         ORG     0
-        FILL    32768($FF)
         STORE   0,32768,"firmware-00000-07fff.bin"
+
+        FDB $0000
+        FILL 254($FF)
+
+        FDB $0001
+        FILL 254($FF)
+
+        FDB $0002
+        FILL 254($FF)
+
+        FDB $0003
+        FILL 254($FF)
+
+        FDB $0004
+        FILL 254($FF)
+
+        FDB $0005
+        FILL 254($FF)
+
+        FDB $0006
+        FILL 254($FF)
+
+        FDB $0007
+        FILL 254($FF)
+
+        FDB $0008
+        FILL 254($FF)
+
+        FDB $0009
+        FILL 254($FF)
+
+        FDB $000A
+        FILL 254($FF)
+
+        FDB $000B
+        FILL 254($FF)
+
+        FDB $000C
+        FILL 254($FF)
+
+        FDB $000D
+        FILL 254($FF)
+
+        FDB $000E
+        FILL 254($FF)
+
+        FDB $000F
+        FILL 254($FF)
+
+        FDB $0010
+        FILL 254($FF)
+
+        FDB $0011
+        FILL 254($FF)
+
+        FDB $0012
+        FILL 254($FF)
+
+        FDB $0013
+        FILL 254($FF)
+
+        FDB $0014
+        FILL 254($FF)
+
+        FDB $0015
+        FILL 254($FF)
+
+        FDB $0016
+        FILL 254($FF)
+
+        FDB $0017
+        FILL 254($FF)
+
+        FDB $0018
+        FILL 254($FF)
+
+        FDB $0019
+        FILL 254($FF)
+
+        FDB $001A
+        FILL 254($FF)
+
+        FDB $001B
+        FILL 254($FF)
+
+        FDB $001C
+        FILL 254($FF)
+
+        FDB $001D
+        FILL 254($FF)
+
+        FDB $001E
+        FILL 254($FF)
+
+        FDB $001F
+        FILL 254($FF)
+
+        FDB $0020
+        FILL 254($FF)
+
+        FDB $0021
+        FILL 254($FF)
+
+        FDB $0022
+        FILL 254($FF)
+
+        FDB $0023
+        FILL 254($FF)
+
+        FDB $0024
+        FILL 254($FF)
+
+        FDB $0025
+        FILL 254($FF)
+
+        FDB $0026
+        FILL 254($FF)
+
+        FDB $0027
+        FILL 254($FF)
+
+        FDB $0028
+        FILL 254($FF)
+
+        FDB $0029
+        FILL 254($FF)
+
+        FDB $002A
+        FILL 254($FF)
+
+        FDB $002B
+        FILL 254($FF)
+
+        FDB $002C
+        FILL 254($FF)
+
+        FDB $002D
+        FILL 254($FF)
+
+        FDB $002E
+        FILL 254($FF)
+
+        FDB $002F
+        FILL 254($FF)
+
+        FDB $0030
+        FILL 254($FF)
+
+        FDB $0031
+        FILL 254($FF)
+
+        FDB $0032
+        FILL 254($FF)
+
+        FDB $0033
+        FILL 254($FF)
+
+        FDB $0034
+        FILL 254($FF)
+
+        FDB $0035
+        FILL 254($FF)
+
+        FDB $0036
+        FILL 254($FF)
+
+        FDB $0037
+        FILL 254($FF)
+
+        FDB $0038
+        FILL 254($FF)
+
+        FDB $0039
+        FILL 254($FF)
+
+        FDB $003A
+        FILL 254($FF)
+
+        FDB $003B
+        FILL 254($FF)
+
+        FDB $003C
+        FILL 254($FF)
+
+        FDB $003D
+        FILL 254($FF)
+
+        FDB $003E
+        FILL 254($FF)
+
+        FDB $003F
+        FILL 254($FF)
+
+        FDB $0040
+        FILL 254($FF)
+
+        FDB $0041
+        FILL 254($FF)
+
+        FDB $0042
+        FILL 254($FF)
+
+        FDB $0043
+        FILL 254($FF)
+
+        FDB $0044
+        FILL 254($FF)
+
+        FDB $0045
+        FILL 254($FF)
+
+        FDB $0046
+        FILL 254($FF)
+
+        FDB $0047
+        FILL 254($FF)
+
+        FDB $0048
+        FILL 254($FF)
+
+        FDB $0049
+        FILL 254($FF)
+
+        FDB $004A
+        FILL 254($FF)
+
+        FDB $004B
+        FILL 254($FF)
+
+        FDB $004C
+        FILL 254($FF)
+
+        FDB $004D
+        FILL 254($FF)
+
+        FDB $004E
+        FILL 254($FF)
+
+        FDB $004F
+        FILL 254($FF)
+
+        FDB $0050
+        FILL 254($FF)
+
+        FDB $0051
+        FILL 254($FF)
+
+        FDB $0052
+        FILL 254($FF)
+
+        FDB $0053
+        FILL 254($FF)
+
+        FDB $0054
+        FILL 254($FF)
+
+        FDB $0055
+        FILL 254($FF)
+
+        FDB $0056
+        FILL 254($FF)
+
+        FDB $0057
+        FILL 254($FF)
+
+        FDB $0058
+        FILL 254($FF)
+
+        FDB $0059
+        FILL 254($FF)
+
+        FDB $005A
+        FILL 254($FF)
+
+        FDB $005B
+        FILL 254($FF)
+
+        FDB $005C
+        FILL 254($FF)
+
+        FDB $005D
+        FILL 254($FF)
+
+        FDB $005E
+        FILL 254($FF)
+
+        FDB $005F
+        FILL 254($FF)
+
+        FDB $0060
+        FILL 254($FF)
+
+        FDB $0061
+        FILL 254($FF)
+
+        FDB $0062
+        FILL 254($FF)
+
+        FDB $0063
+        FILL 254($FF)
+
+        FDB $0064
+        FILL 254($FF)
+
+        FDB $0065
+        FILL 254($FF)
+
+        FDB $0066
+        FILL 254($FF)
+
+        FDB $0067
+        FILL 254($FF)
+
+        FDB $0068
+        FILL 254($FF)
+
+        FDB $0069
+        FILL 254($FF)
+
+        FDB $006A
+        FILL 254($FF)
+
+        FDB $006B
+        FILL 254($FF)
+
+        FDB $006C
+        FILL 254($FF)
+
+        FDB $006D
+        FILL 254($FF)
+
+        FDB $006E
+        FILL 254($FF)
+
+        FDB $006F
+        FILL 254($FF)
+
+        FDB $0070
+        FILL 254($FF)
+
+        FDB $0071
+        FILL 254($FF)
+
+        FDB $0072
+        FILL 254($FF)
+
+        FDB $0073
+        FILL 254($FF)
+
+        FDB $0074
+        FILL 254($FF)
+
+        FDB $0075
+        FILL 254($FF)
+
+        FDB $0076
+        FILL 254($FF)
+
+        FDB $0077
+        FILL 254($FF)
+
+        FDB $0078
+        FILL 254($FF)
+
+        FDB $0079
+        FILL 254($FF)
+
+        FDB $007A
+        FILL 254($FF)
+
+        FDB $007B
+        FILL 254($FF)
+
+        FDB $007C
+        FILL 254($FF)
+
+        FDB $007D
+        FILL 254($FF)
+
+        FDB $007E
+        FILL 254($FF)
+
+        FDB $007F
+        FILL 254($FF)
+

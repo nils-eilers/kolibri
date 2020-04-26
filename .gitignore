@@ -12,6 +12,7 @@
 *.pdf
 emu/kolibri
 firmware/tools/char2asm
+firmware/tools/crumbs
 *.vcd
 *.vvp
 *.DS_Store
