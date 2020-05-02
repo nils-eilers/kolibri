@@ -1,0 +1,19 @@
+# minicom terminal program configuration file
+# Linux users: copy this file to /etc/minirc.kolibri
+# Start minicom with:
+#
+#       minicom kolibri
+#
+pu minit
+pu mreset
+pu mhangup
+pu port         /dev/ttyUSB0
+pu baudrate     115200
+pu bits         8
+pu parity       N
+pu stopbits     1
+pu rtscts       No
+pu xonxoff      No
+pu localecho    No
+pu linewrap     Yes
+pu addcarreturn Yes
