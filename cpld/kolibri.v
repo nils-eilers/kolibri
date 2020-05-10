@@ -150,8 +150,8 @@ module kolibri (
 
 
     // chip select signals for memory chips
-    assign nRAMCS = mapped ? MA[21:19] == 3'b001 : nE |  A[15];             // 512-1024 KB ||  0-32 KB
-    assign nROMCS = mapped ? MA[21:19] == 3'b000 : nE | ~A[15] | ~nIOEN;    //   0- 512 KB || 32-64 KB \ $FExx
+    assign nRAMCS = mapped ? ~(nE == 0 && MA[21:19] == 3'b001) : nE |  A[15];             // 512-1024 KB ||  0-32 KB
+    assign nROMCS = mapped ? ~(nE == 0 && MA[21:19] == 3'b000) : nE | ~A[15] | ~nIOEN;    //   0- 512 KB || 32-64 KB \ $FExx
 
     // select predefined memory map configurations $FE20-$FE23
     always @(negedge nE or negedge nRES)
