@@ -59,7 +59,7 @@ Msg_Help
         FCB     "F xxxx yyyy bb fill RAM with (bb)\n"
         FCB     "G xxxx go (load saved registers and run)\n"
         FCB     "H      display this help text\n"
-        FCB     "L xxxx load (and run) a program as S19 record\n"
+        FCB     "L      load (and run) a program as S19 record\n"
         FCB     "M xxxx yyyy display memory dump\n"
         FCB     "O xxxx yyyy bytes : display occurances\n"
         FCB     "R      display saved registers\n"
