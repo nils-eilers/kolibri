@@ -3,10 +3,49 @@
 %\usepackage{hyperref}
 \usepackage[a5paper]{geometry}
 \usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage[singlespacing]{setspace}
 
 \begin{document}
+
+% ***********
+% front cover
+% ***********
+
 \thispagestyle{empty}
 \input{frontcover}
+
+% ***************
+% title & authors
+% ***************
+
+\cleardoublepage
+\pagenumbering{roman}
+\begin{titlepage}
+\pagecolor{blue}
+\begin{center}
+{
+   \large
+   \vspace*{2cm}
+   { \Huge\textcolor{white}{\bf{Kolibri Manual}} }\\
+   \vspace{\fill}
+   {
+      \doublespacing
+      \textcolor{white}
+      {
+         Nils Eilers \\
+         Christian Forstreuter \\
+         Edilbert Kirk \\
+         Thomas Winkler \\
+      }
+   }
+}
+\end{center}
+\end{titlepage}
+\pagecolor{white}
+
+
 \input{bios}
 \input{memorymap}
+\input{monitor}
 \end{document}
