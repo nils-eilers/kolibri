@@ -111,32 +111,4 @@ shall be used.
 \section{Description of I/O area addresses}
 TODO
 
-\section{Numbering of address lines}
-This section is only of interest when you want or need to study
-the datasheet of the 74HCT612 or 74LS612 memory management unit.
-If not, skip it completely.
-
-It's common sense to start the numbering of address lines with
-zero for the least significant address line, A0. If you want to
-double the addressable address space, just add another address
-line and increment the number by one: A1. In theory, you can do
-this over and over and over again without having to rename an
-existing address line.
-
-But there seems to be barely anything which couldn't be done in
-another way and so Texas Instruments decided to start with A0
-for the most significant address line instead of the least
-significant address line. This works well (well, okay, at least
-it works) as long as you don't change the amount of address
-lines. Because just when you need a memory expansion and decide
-to double the address lines (or even add some more), A0 won't be
-the most significant address line any longer. So what would you
-do now? Would you rename all existing address lines, ending up
-with the now most significant address line still being called
-A0? Or would you just decrement the counter for the new address
-lines ending up with address lines A-1, A-2 and A-3?
-
-So be warned when studying the datasheet because all address
-lines are numbered in that inverse, insane way.
-
 
