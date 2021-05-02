@@ -1,0 +1,259 @@
+EESchema Schematic File Version 4
+EELAYER 30 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 8 9
+Title "kolibri"
+Date "2021-03-09"
+Rev "issue two"
+Comp "nils.eilers@gmx.de"
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+Text GLabel 5225 2775 2    39   BiDi ~ 0
+D0
+Text GLabel 5225 2875 2    39   BiDi ~ 0
+D1
+Text GLabel 5225 2975 2    39   BiDi ~ 0
+D2
+Text GLabel 5225 3075 2    39   BiDi ~ 0
+D3
+Text GLabel 5225 2675 2    39   Input ~ 0
+~RES
+Text GLabel 4050 2675 0    39   Input ~ 0
+A0
+Text GLabel 4050 2775 0    39   Input ~ 0
+A1
+Text GLabel 4050 2875 0    39   Input ~ 0
+A2
+Text GLabel 4050 2975 0    39   Input ~ 0
+A3
+Text GLabel 4050 3075 0    39   Input ~ 0
+~RD
+Text GLabel 5225 3175 2    39   Input ~ 0
+~WR
+Text GLabel 4050 2475 0    39   Input ~ 0
+~RTC
+$Comp
+L eilers:RTC-72421 U27
+U 1 1 5C86B579
+P 4600 2775
+F 0 "U27" H 4625 3376 39  0000 C CNN
+F 1 "RTC-72421" H 4625 3301 39  0000 C CNN
+F 2 "kolibri:DIP-18" H 4150 3175 39  0001 C CNN
+F 3 "" H 4150 3175 39  0001 C CNN
+	1    4600 2775
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:Battery_Cell BT1
+U 1 1 5C86B69C
+P 6325 1675
+F 0 "BT1" V 6580 1725 50  0000 C CNN
+F 1 "CR2032" V 6489 1725 50  0000 C CNN
+F 2 "kolibri:KZH20SMD" V 6325 1735 50  0001 C CNN
+F 3 "~" V 6325 1735 50  0001 C CNN
+	1    6325 1675
+	0    -1   -1   0   
+$EndComp
+$Comp
+L main-rescue:VCC #PWR0140
+U 1 1 5C86B79E
+P 5200 1725
+F 0 "#PWR0140" H 5200 1575 50  0001 C CNN
+F 1 "VCC" H 5217 1898 50  0000 C CNN
+F 2 "" H 5200 1725 50  0001 C CNN
+F 3 "" H 5200 1725 50  0001 C CNN
+	1    5200 1725
+	1    0    0    -1  
+$EndComp
+$Comp
+L Diode:BAT42 D4
+U 1 1 5C86B821
+P 5200 1925
+F 0 "D4" V 5246 1846 50  0000 R CNN
+F 1 "BAT42" V 5155 1846 50  0000 R CNN
+F 2 "kolibri:DO35" H 5200 1750 50  0001 C CNN
+F 3 "http://www.vishay.com/docs/85660/bat42.pdf" H 5200 1925 50  0001 C CNN
+	1    5200 1925
+	0    -1   -1   0   
+$EndComp
+$Comp
+L Diode:BAT42 D5
+U 1 1 5C86B914
+P 5825 1925
+F 0 "D5" V 5871 1846 50  0000 R CNN
+F 1 "BAT42" V 5780 1846 50  0000 R CNN
+F 2 "kolibri:DO35" H 5825 1750 50  0001 C CNN
+F 3 "http://www.vishay.com/docs/85660/bat42.pdf" H 5825 1925 50  0001 C CNN
+	1    5825 1925
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	5200 2075 5200 2125
+Wire Wire Line
+	5200 2575 5100 2575
+Wire Wire Line
+	5100 2475 5200 2475
+Connection ~ 5200 2475
+Wire Wire Line
+	5200 2475 5200 2575
+Wire Wire Line
+	5100 2375 5200 2375
+Connection ~ 5200 2375
+Wire Wire Line
+	5200 2375 5200 2475
+Wire Wire Line
+	5200 1725 5200 1775
+Wire Wire Line
+	5825 1775 5825 1675
+Wire Wire Line
+	5825 1675 6125 1675
+$Comp
+L main-rescue:GND #PWR0139
+U 1 1 5C86BB23
+P 6600 1750
+F 0 "#PWR0139" H 6600 1500 50  0001 C CNN
+F 1 "GND" H 6605 1577 50  0000 C CNN
+F 2 "" H 6600 1750 50  0001 C CNN
+F 3 "" H 6600 1750 50  0001 C CNN
+	1    6600 1750
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	6600 1675 6425 1675
+$Comp
+L main-rescue:GND #PWR0141
+U 1 1 5C86BBB4
+P 2850 3200
+F 0 "#PWR0141" H 2850 2950 50  0001 C CNN
+F 1 "GND" H 2855 3027 50  0000 C CNN
+F 2 "" H 2850 3200 50  0001 C CNN
+F 3 "" H 2850 3200 50  0001 C CNN
+	1    2850 3200
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	4150 3175 2850 3175
+Wire Wire Line
+	2850 3175 2850 3200
+Wire Wire Line
+	4150 2675 4050 2675
+Wire Wire Line
+	4150 2775 4050 2775
+Wire Wire Line
+	4150 2875 4050 2875
+Wire Wire Line
+	4150 2975 4050 2975
+Wire Wire Line
+	4150 3075 4050 3075
+Wire Wire Line
+	4150 2475 4050 2475
+Wire Wire Line
+	5100 2675 5225 2675
+Wire Wire Line
+	5100 2775 5225 2775
+Wire Wire Line
+	5100 2875 5225 2875
+Wire Wire Line
+	5100 2975 5225 2975
+Wire Wire Line
+	5100 3075 5225 3075
+Wire Wire Line
+	5100 3175 5225 3175
+Wire Wire Line
+	5200 2125 3825 2125
+Wire Wire Line
+	3825 2125 3825 2575
+Wire Wire Line
+	3825 2575 4150 2575
+Connection ~ 5200 2125
+Wire Wire Line
+	5200 2125 5200 2375
+Wire Wire Line
+	5825 2075 5825 2375
+$Comp
+L power:PWR_FLAG #FLG01
+U 1 1 5C86E7D1
+P 6075 2375
+F 0 "#FLG01" H 6075 2450 50  0001 C CNN
+F 1 "PWR_FLAG" H 6075 2549 50  0000 C CNN
+F 2 "" H 6075 2375 50  0001 C CNN
+F 3 "~" H 6075 2375 50  0001 C CNN
+	1    6075 2375
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	6075 2375 5825 2375
+Connection ~ 5825 2375
+Wire Wire Line
+	5200 2375 5825 2375
+$Comp
+L main-rescue:CP C32
+U 1 1 5E927449
+P 2850 2350
+F 0 "C32" H 2968 2396 50  0000 L CNN
+F 1 "47µF" H 2968 2305 50  0000 L CNN
+F 2 "kolibri:CP-2-5" H 2888 2200 50  0001 C CNN
+F 3 "" H 2850 2350 50  0001 C CNN
+	1    2850 2350
+	1    0    0    -1  
+$EndComp
+$Comp
+L main-rescue:C C33
+U 1 1 5E927A84
+P 3350 2350
+F 0 "C33" H 3465 2396 50  0000 L CNN
+F 1 "100nF" H 3465 2305 50  0000 L CNN
+F 2 "kolibri:KERKO-5" H 3388 2200 50  0001 C CNN
+F 3 "" H 3350 2350 50  0001 C CNN
+	1    3350 2350
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	3825 2125 3350 2125
+Wire Wire Line
+	2850 2125 2850 2200
+Connection ~ 3825 2125
+Wire Wire Line
+	2850 2500 2850 2600
+Connection ~ 2850 3175
+Wire Wire Line
+	3350 2200 3350 2125
+Connection ~ 3350 2125
+Wire Wire Line
+	3350 2125 2850 2125
+Wire Wire Line
+	3350 2500 3350 2600
+Wire Wire Line
+	3350 2600 2850 2600
+Connection ~ 2850 2600
+Wire Wire Line
+	2850 2600 2850 3175
+Text GLabel 4050 2375 0    39   Output ~ 0
+~STD.P
+Wire Wire Line
+	4150 2375 4050 2375
+$Comp
+L Connector:TestPoint TP?
+U 1 1 639A7E26
+P 5825 1600
+AR Path="/60F127A0/639A7E26" Ref="TP?"  Part="1" 
+AR Path="/56B86A26/639A7E26" Ref="TP?"  Part="1" 
+AR Path="/5C869F11/639A7E26" Ref="TP61"  Part="1" 
+F 0 "TP61" H 5775 1900 50  0000 L CNN
+F 1 "VBAT" H 5750 1825 50  0000 L CNN
+F 2 "kolibri:PINTST" H 6025 1600 50  0001 C CNN
+F 3 "~" H 6025 1600 50  0001 C CNN
+	1    5825 1600
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	6600 1675 6600 1750
+Wire Wire Line
+	5825 1600 5825 1675
+Connection ~ 5825 1675
+$EndSCHEMATC

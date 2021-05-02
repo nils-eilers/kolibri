@@ -1,0 +1,56 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP 7805
+D Linear Regulator +5V
+K POWER REGUL
+F regulator\lm78xx.pdf
+$ENDCMP
+#
+$CMP 78L05
+D Linear Regulator +5V
+K POWER REGUL
+F regulator\lm78lxx.pdf
+$ENDCMP
+#
+$CMP 8243
+D MCS-48 INPUT/OUTPUT EXPANDER
+K MCS-48 uC Microcontroller
+$ENDCMP
+#
+$CMP 8742
+D MCS-48 8-bit Microcontroller, No (EP)ROM, 64B RAM, DIP-40
+K MCS-48 uC Microcontroller
+$ENDCMP
+#
+$CMP DA15F
+K CONN
+$ENDCMP
+#
+$CMP LF33CV
+D Linear Regulator +3.3V
+K POWER REGUL
+$ENDCMP
+#
+$CMP LM7805
+D Linear Regulator +5V
+K POWER REGUL
+F regulator\lm78xx.pdf
+$ENDCMP
+#
+$CMP LM7812
+D Linear Regulator +12V
+K POWER REGUL
+F regulator\lm78xx.pdf
+$ENDCMP
+#
+$CMP RP-10-5
+D 4 resistors Pack
+K R DEV
+$ENDCMP
+#
+$CMP RR-8-4
+D 4 resistors Pack
+K R DEV
+$ENDCMP
+#
+#End Doc Library

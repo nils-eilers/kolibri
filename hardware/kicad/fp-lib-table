@@ -1,0 +1,6 @@
+(fp_lib_table
+  (lib (name footprints)(type Legacy)(uri "$(KIPRJMOD)/footprints.mod")(options "")(descr "")(disabled))
+  (lib (name KiCAD)(type KiCad)(uri /home/j/Projekte/my/kolibri-alt/hardware/KiCAD)(options "")(descr "")(disabled))
+  (lib (name w_conn_d-sub)(type KiCad)(uri /home/j/Projekte/my/kolibri-alt/hardware/archiv/kicad-1.0-bak/w_conn_d-sub.pretty)(options "")(descr ""))
+  (lib (name kolibri)(type KiCad)(uri ${KIPRJMOD}/kolibri.pretty)(options "")(descr ""))
+)

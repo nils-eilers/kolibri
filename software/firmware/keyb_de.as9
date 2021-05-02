@@ -1,0 +1,409 @@
+KBD_DE
+        FCB Kbd_AltGr           ; +0 layout sets besides shifted+unshifted
+        FDB KBD_DE_UNSHIFTED    ; +1
+        FDB KBD_DE_SHIFTED      ; +3
+        FDB KBD_DE_ALT_GR       ; +5
+        FDB 0                   ; +7 CTRL --> TODO
+        FDB 0                   ; +9 ALT
+        FDB 0                   ; +11 RESERVED 3
+        FDB 0                   ; +13 RESERVED 4
+        FDB 0                   ; +15 RESERVED 5
+        FDB 0                   ; +17 RESERVED 6
+        FDB 0                   ; +19 RESERVED 7
+        FDB DO_NOTHING          ; +21 called with scan code in A
+        FCC "DE\0"              ; +23
+        FCC "German (no dead keys)\0"
+
+KBD_DE_UNSHIFTED
+
+        FCB $00                 ; $00
+        FCB $00                 ; $01
+        FCB $00                 ; $02
+        FCB $00                 ; $03
+        FCB $00                 ; $04
+        FCB $00                 ; $05
+        FCB $00                 ; $06
+        FCB $00                 ; $07
+        FCB $00                 ; $08
+        FCB $00                 ; $09
+        FCB $00                 ; $0A
+        FCB $00                 ; $0B
+        FCB $00                 ; $0C
+        FCB $09                 ; $0D horizontal tabulation
+        FCB '^'                 ; $0E circumflex accent
+        FCB $00                 ; $0F
+        FCB $00                 ; $10
+        FCB $00                 ; $11
+        FCB $00                 ; $12
+        FCB $00                 ; $13
+        FCB $00                 ; $14
+        FCB 'q'                 ; $15
+        FCB '1'                 ; $16
+        FCB $00                 ; $17
+        FCB $00                 ; $18
+        FCB $00                 ; $19
+        FCB 'y'                 ; $1A
+        FCB 's'                 ; $1B
+        FCB 'a'                 ; $1C
+        FCB 'w'                 ; $1D
+        FCB '2'                 ; $1E
+        FCB $00                 ; $1F
+        FCB $00                 ; $20
+        FCB 'c'                 ; $21
+        FCB 'x'                 ; $22
+        FCB 'd'                 ; $23
+        FCB 'e'                 ; $24
+        FCB '4'                 ; $25
+        FCB '3'                 ; $26
+        FCB $00                 ; $27
+        FCB $00                 ; $28
+        FCB ' '                 ; $29 space
+        FCB 'v'                 ; $2A
+        FCB 'f'                 ; $2B
+        FCB 't'                 ; $2C
+        FCB 'r'                 ; $2D
+        FCB '5'                 ; $2E
+        FCB $00                 ; $2F
+        FCB $00                 ; $30
+        FCB 'n'                 ; $31
+        FCB 'b'                 ; $32
+        FCB 'h'                 ; $33
+        FCB 'g'                 ; $34
+        FCB 'z'                 ; $35
+        FCB '6'                 ; $36
+        FCB $00                 ; $37
+        FCB $00                 ; $38
+        FCB $00                 ; $39
+        FCB 'm'                 ; $3A
+        FCB 'j'                 ; $3B
+        FCB 'u'                 ; $3C
+        FCB '7'                 ; $3D
+        FCB '8'                 ; $3E
+        FCB $00                 ; $3F
+        FCB $00                 ; $40
+        FCB ','                 ; $41 comma
+        FCB 'k'                 ; $42
+        FCB 'i'                 ; $43
+        FCB 'o'                 ; $44
+        FCB '0'                 ; $45
+        FCB '9'                 ; $46
+        FCB $00                 ; $47
+        FCB $00                 ; $48
+        FCB '.'                 ; $49 full stop
+        FCB '-'                 ; $4A hyphen-minus
+        FCB 'l'                 ; $4B
+        FCB $94                 ; $4C small letter o with diaeresis
+        FCB 'p'                 ; $4D
+        FCB $E1                 ; $4E latin small letter sharp s
+        FCB $00                 ; $4F
+        FCB $00                 ; $50
+        FCB $00                 ; $51
+        FCB $84                 ; $52 small letter a with diaeresis
+        FCB $00                 ; $53
+        FCB $81                 ; $54 small letter u with diaeresis
+        FCB $00                 ; $55 acute accent
+        FCB $00                 ; $56
+        FCB $00                 ; $57
+        FCB $00                 ; $58
+        FCB $00                 ; $59
+        FCB $0D                 ; $5A '\r\ carriage return
+        FCB '+'                 ; $5B plus sign
+        FCB $00                 ; $5C
+        FCB $23                 ; $5D number sign
+        FCB $00                 ; $5E
+        FCB $00                 ; $5F
+        FCB $00                 ; $60
+        FCB '<'                 ; $61 less-than sign
+        FCB $00                 ; $62
+        FCB $00                 ; $63
+        FCB $00                 ; $64
+        FCB $00                 ; $65
+        FCB $08                 ; $66 backspace
+        FCB $00                 ; $67
+        FCB $00                 ; $68
+        FCB $00                 ; $69
+        FCB $00                 ; $6A
+        FCB $00                 ; $6B
+        FCB $00                 ; $6C
+        FCB $00                 ; $6D
+        FCB $00                 ; $6E
+        FCB $00                 ; $6F
+        FCB $00                 ; $70
+        FCB $00                 ; $71
+        FCB $00                 ; $72
+        FCB $00                 ; $73
+        FCB $00                 ; $74
+        FCB $00                 ; $75
+        FCB $1B                 ; $76 ESCAPE
+        FCB $00                 ; $77
+        FCB $00                 ; $78
+        FCB $00                 ; $79
+        FCB $00                 ; $7A
+        FCB $00                 ; $7B
+        FCB $00                 ; $7C
+        FCB $00                 ; $7D
+        FCB $00                 ; $7E
+        FCB $00                 ; $7F
+
+KBD_DE_SHIFTED
+
+        FCB $00                 ; $00
+        FCB $00                 ; $01
+        FCB $00                 ; $02
+        FCB $00                 ; $03
+        FCB $00                 ; $04
+        FCB $00                 ; $05
+        FCB $00                 ; $06
+        FCB $00                 ; $07
+        FCB $00                 ; $08
+        FCB $00                 ; $09
+        FCB $00                 ; $0A
+        FCB $00                 ; $0B
+        FCB $00                 ; $0C
+        FCB $0F                 ; $0D shift tab --> shift in
+        FCB $F8                 ; $0E degree sign
+        FCB $00                 ; $0F
+        FCB $00                 ; $10
+        FCB $00                 ; $11
+        FCB $00                 ; $12
+        FCB $00                 ; $13
+        FCB $00                 ; $14
+        FCB 'Q'                 ; $15
+        FCB '!'                 ; $16
+        FCB $00                 ; $17
+        FCB $00                 ; $18
+        FCB $00                 ; $19
+        FCB 'Y'                 ; $1A
+        FCB 'S'                 ; $1B
+        FCB 'A'                 ; $1C
+        FCB 'W'                 ; $1D
+        FCB $22                 ; $1E quotation mark
+        FCB $00                 ; $1F
+        FCB $00                 ; $20
+        FCB 'C'                 ; $21
+        FCB 'X'                 ; $22
+        FCB 'D'                 ; $23
+        FCB 'E'                 ; $24
+        FCB '$'                 ; $25
+        FCB $15                 ; $26 section sign
+        FCB $00                 ; $27
+        FCB $00                 ; $28
+        FCB ' '                 ; $29 space
+        FCB 'V'                 ; $2A
+        FCB 'F'                 ; $2B
+        FCB 'T'                 ; $2C
+        FCB 'R'                 ; $2D
+        FCB '%'                 ; $2E
+        FCB $00                 ; $2F
+        FCB $00                 ; $30
+        FCB 'N'                 ; $31
+        FCB 'B'                 ; $32
+        FCB 'H'                 ; $33
+        FCB 'G'                 ; $34
+        FCB 'Z'                 ; $35
+        FCB '&'                 ; $36
+        FCB $00                 ; $37
+        FCB $00                 ; $38
+        FCB $00                 ; $39
+        FCB 'M'                 ; $3A
+        FCB 'J'                 ; $3B
+        FCB 'U'                 ; $3C
+        FCB '/'                 ; $3D
+        FCB '('                 ; $3E
+        FCB $00                 ; $3F
+        FCB $00                 ; $40
+        FCB ';'                 ; $41 comma
+        FCB 'K'                 ; $42
+        FCB 'I'                 ; $43
+        FCB 'O'                 ; $44
+        FCB '='                 ; $45
+        FCB ')'                 ; $46
+        FCB $00                 ; $47
+        FCB $00                 ; $48
+        FCB ':'                 ; $49 colon
+        FCB '_'                 ; $4A low line
+        FCB 'L'                 ; $4B
+        FCB $99                 ; $4C capital letter o with diaeresis
+        FCB 'P'                 ; $4D
+        FCB '?'                 ; $4E
+        FCB $00                 ; $4F
+        FCB $00                 ; $50
+        FCB $00                 ; $51
+        FCB $8E                 ; $52 capital letter a with diaeresis
+        FCB $00                 ; $53
+        FCB $9A                 ; $54 capital letter u with diaeresis
+        FCB $60                 ; $55 grave accent
+        FCB $00                 ; $56
+        FCB $00                 ; $57
+        FCB $00                 ; $58
+        FCB $00                 ; $59
+        FCB $0D                 ; $5A '\r\ carriage return
+        FCB '*'                 ; $5B asterisk
+        FCB $00                 ; $5C
+        FCB $27                 ; $5D apostrophe
+        FCB $00                 ; $5E
+        FCB $00                 ; $5F
+        FCB $00                 ; $60
+        FCB '>'                 ; $61 greater-than sign
+        FCB $00                 ; $62
+        FCB $00                 ; $63
+        FCB $00                 ; $64
+        FCB $00                 ; $65
+        FCB $08                 ; $66 backspace
+        FCB $00                 ; $67
+        FCB $00                 ; $68
+        FCB $00                 ; $69
+        FCB $00                 ; $6A
+        FCB $00                 ; $6B
+        FCB $00                 ; $6C
+        FCB $00                 ; $6D
+        FCB $00                 ; $6E
+        FCB $00                 ; $6F
+        FCB $00                 ; $70
+        FCB $00                 ; $71
+        FCB $00                 ; $72
+        FCB $00                 ; $73
+        FCB $00                 ; $74
+        FCB $00                 ; $75
+        FCB $1B                 ; $76 ESCAPE
+        FCB $00                 ; $77
+        FCB $00                 ; $78
+        FCB $00                 ; $79
+        FCB $00                 ; $7A
+        FCB $00                 ; $7B
+        FCB $00                 ; $7C
+        FCB $00                 ; $7D
+        FCB $00                 ; $7E
+        FCB $00                 ; $7F
+
+KBD_DE_ALT_GR
+
+        FCB $00                 ; $00
+        FCB $00                 ; $01
+        FCB $00                 ; $02
+        FCB $00                 ; $03
+        FCB $00                 ; $04
+        FCB $00                 ; $05
+        FCB $00                 ; $06
+        FCB $00                 ; $07
+        FCB $00                 ; $08
+        FCB $00                 ; $09
+        FCB $00                 ; $0A
+        FCB $00                 ; $0B
+        FCB $00                 ; $0C
+        FCB $00                 ; $0D horizontal tabulation
+        FCB $00                 ; $0E circumflex accent
+        FCB $00                 ; $0F
+        FCB $00                 ; $10
+        FCB $00                 ; $11
+        FCB $00                 ; $12
+        FCB $00                 ; $13
+        FCB $00                 ; $14
+        FCB '@'                 ; $15 'Q'
+        FCB $00                 ; $16 '1'
+        FCB $00                 ; $17
+        FCB $00                 ; $18
+        FCB $00                 ; $19
+        FCB $00                 ; $1A 'Y'
+        FCB $00                 ; $1B 'S'
+        FCB $00                 ; $1C 'A'
+        FCB $00                 ; $1D 'W'
+        FCB $FD                 ; $1E '2'
+        FCB $00                 ; $1F
+        FCB $00                 ; $20
+        FCB $00                 ; $21 'C'
+        FCB $00                 ; $22 'X'
+        FCB $00                 ; $23 'D'
+        FCB $9E                 ; $24 'E' Peseta sign --> Euro sign
+        FCB $00                 ; $25 '4'
+        FCB $00                 ; $26 '3'
+        FCB $00                 ; $27
+        FCB $00                 ; $28
+        FCB $00                 ; $29 space
+        FCB $00                 ; $2A 'V'
+        FCB $00                 ; $2B 'F'
+        FCB $00                 ; $2C 'T'
+        FCB $00                 ; $2D 'R'
+        FCB $00                 ; $2E '5'
+        FCB $00                 ; $2F
+        FCB $00                 ; $30
+        FCB $00                 ; $31 'N'
+        FCB $00                 ; $32 'B'
+        FCB $00                 ; $33 'H'
+        FCB $00                 ; $34 'G'
+        FCB $00                 ; $35 'Z'
+        FCB $00                 ; $36 '6'
+        FCB $00                 ; $37
+        FCB $00                 ; $38
+        FCB $00                 ; $39
+        FCB $E6                 ; $3A 'M' micro sign
+        FCB $00                 ; $3B 'J'
+        FCB $00                 ; $3C 'U'
+        FCB '{'                 ; $3D '7'
+        FCB '['                 ; $3E '8'
+        FCB $00                 ; $3F
+        FCB $00                 ; $40
+        FCB $00                 ; $41 comma
+        FCB $00                 ; $42 'K'
+        FCB $00                 ; $43 'I'
+        FCB $00                 ; $44 'O'
+        FCB '}'                 ; $45 '0'
+        FCB ']'                 ; $46 '9'
+        FCB $00                 ; $47
+        FCB $00                 ; $48
+        FCB $00                 ; $49 full stop
+        FCB $00                 ; $4A hyphen-minus
+        FCB $00                 ; $4B 'L'
+        FCB $00                 ; $4C small letter o with diaeresis
+        FCB $00                 ; $4D 'P'
+        FCB $5C                 ; $4E reverse solidus, backslash
+        FCB $00                 ; $4F
+        FCB $00                 ; $50
+        FCB $00                 ; $51
+        FCB $00                 ; $52 small letter a with diaeresis
+        FCB $00                 ; $53
+        FCB $00                 ; $54 small letter u with diaeresis
+        FCB $00                 ; $55 acute accent
+        FCB $00                 ; $56
+        FCB $00                 ; $57
+        FCB $00                 ; $58
+        FCB $00                 ; $59
+        FCB $00                 ; $5A '\r\ carriage return
+        FCB $00                 ; $5B plus sign
+        FCB $00                 ; $5C
+        FCB $00                 ; $5D number sign
+        FCB $00                 ; $5E
+        FCB $00                 ; $5F
+        FCB $00                 ; $60
+        FCB '|'                 ; $61 vertical line
+        FCB $00                 ; $62
+        FCB $00                 ; $63
+        FCB $00                 ; $64
+        FCB $00                 ; $65
+        FCB $00                 ; $66 backspace
+        FCB $00                 ; $67
+        FCB $00                 ; $68
+        FCB $00                 ; $69
+        FCB $00                 ; $6A
+        FCB $00                 ; $6B
+        FCB $00                 ; $6C
+        FCB $00                 ; $6D
+        FCB $00                 ; $6E
+        FCB $00                 ; $6F
+        FCB $00                 ; $70
+        FCB $00                 ; $71
+        FCB $00                 ; $72
+        FCB $00                 ; $73
+        FCB $00                 ; $74
+        FCB $00                 ; $75
+        FCB $00                 ; $76 ESCAPE
+        FCB $00                 ; $77
+        FCB $00                 ; $78
+        FCB $00                 ; $79
+        FCB $00                 ; $7A
+        FCB $00                 ; $7B
+        FCB $00                 ; $7C
+        FCB $00                 ; $7D
+        FCB $00                 ; $7E
+        FCB $00                 ; $7F
+

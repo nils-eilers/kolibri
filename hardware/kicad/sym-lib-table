@@ -1,0 +1,6 @@
+(sym_lib_table
+  (lib (name main-rescue)(type Legacy)(uri ${KIPRJMOD}/main-rescue.lib)(options "")(descr ""))
+  (lib (name eilers)(type Legacy)(uri ${KIPRJMOD}/eilers.lib)(options "")(descr ""))
+  (lib (name kolibri)(type Legacy)(uri /home/j/Projekte/my/kolibri-alt/hardware/kicad-1.1-wip/kolibri.lib)(options "")(descr ""))
+  (lib (name Type-C)(type Legacy)(uri /home/j/Projekte/my/kolibri-alt/hardware/kicad-1.1-wip/Type-C.lib)(options "")(descr ""))
+)

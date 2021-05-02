@@ -1,0 +1,731 @@
+EESchema Schematic File Version 4
+EELAYER 30 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 6 9
+Title "kolibri"
+Date "2021-03-09"
+Rev "issue two"
+Comp "nils.eilers@gmx.de"
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+$Comp
+L main-rescue:8742 U22
+U 1 1 58C65668
+P 2700 3250
+F 0 "U22" H 2600 3200 50  0000 L CNN
+F 1 "8742" H 2600 3350 50  0000 L CNN
+F 2 "kolibri:DIP-40" H 2700 3500 50  0001 C CNN
+F 3 "" H 2700 3500 50  0000 C CNN
+	1    2700 3250
+	1    0    0    -1  
+$EndComp
+$Comp
+L main-rescue:Mini-DIN_6pins_ver2 J10
+U 1 1 58C656D5
+P 7950 2000
+F 0 "J10" H 7950 2200 50  0000 C CNN
+F 1 "Keyboard" H 7950 1700 50  0000 C CNN
+F 2 "kolibri:EB-DIOS-M06" H 7950 2020 50  0001 C CNN
+F 3 "" H 7950 2020 50  0000 C CNN
+	1    7950 2000
+	1    0    0    -1  
+$EndComp
+$Comp
+L main-rescue:Mini-DIN_6pins_ver2 J11
+U 1 1 58C65713
+P 7950 2925
+F 0 "J11" H 7950 3125 50  0000 C CNN
+F 1 "Mouse" H 7950 2625 50  0000 C CNN
+F 2 "kolibri:EB-DIOS-M06" H 7950 2945 50  0001 C CNN
+F 3 "" H 7950 2945 50  0000 C CNN
+	1    7950 2925
+	1    0    0    -1  
+$EndComp
+$Comp
+L main-rescue:74LS06 U4
+U 5 1 58C657D3
+P 4825 3000
+F 0 "U4" H 5020 3115 50  0000 C CNN
+F 1 "74LS06" H 5015 2875 50  0000 C CNN
+F 2 "kolibri:DIP-14" H 4825 3000 50  0001 C CNN
+F 3 "" H 4825 3000 50  0000 C CNN
+	5    4825 3000
+	1    0    0    -1  
+$EndComp
+$Comp
+L main-rescue:74LS06 U4
+U 6 1 58C657FB
+P 4825 3400
+F 0 "U4" H 5020 3515 50  0000 C CNN
+F 1 "74LS06" H 5015 3275 50  0000 C CNN
+F 2 "kolibri:DIP-14" H 4825 3400 50  0001 C CNN
+F 3 "" H 4825 3400 50  0000 C CNN
+	6    4825 3400
+	1    0    0    -1  
+$EndComp
+Text GLabel 1950 2000 0    43   3State ~ 0
+D0
+Text GLabel 1950 2100 0    43   3State ~ 0
+D1
+Text GLabel 1950 2200 0    43   3State ~ 0
+D2
+Text GLabel 1950 2300 0    43   3State ~ 0
+D3
+Text GLabel 1950 2400 0    43   3State ~ 0
+D4
+Text GLabel 1950 2500 0    43   3State ~ 0
+D5
+Text GLabel 1950 2600 0    43   3State ~ 0
+D6
+Text GLabel 1950 2700 0    43   3State ~ 0
+D7
+Text GLabel 1950 2900 0    43   Input ~ 0
+A0
+Text GLabel 1950 3000 0    43   Input ~ 0
+~RD
+Text GLabel 1950 3100 0    43   Input ~ 0
+~WR
+Text GLabel 1950 3300 0    43   Input ~ 0
+~CS8742
+Text GLabel 1950 3400 0    43   Input ~ 0
+~RES
+Wire Wire Line
+	2000 2000 1950 2000
+Wire Wire Line
+	2000 2100 1950 2100
+Wire Wire Line
+	2000 2200 1950 2200
+Wire Wire Line
+	2000 2300 1950 2300
+Wire Wire Line
+	2000 2400 1950 2400
+Wire Wire Line
+	2000 2500 1950 2500
+Wire Wire Line
+	2000 2600 1950 2600
+Wire Wire Line
+	2000 2700 1950 2700
+Wire Wire Line
+	2000 2900 1950 2900
+Wire Wire Line
+	2000 3000 1950 3000
+Wire Wire Line
+	2000 3100 1950 3100
+Wire Wire Line
+	2000 3300 1950 3300
+Wire Wire Line
+	2000 3400 1950 3400
+$Comp
+L main-rescue:GND #PWR0117
+U 1 1 58C65947
+P 2700 4800
+F 0 "#PWR0117" H 2700 4550 50  0001 C CNN
+F 1 "GND" H 2700 4650 50  0000 C CNN
+F 2 "" H 2700 4800 50  0000 C CNN
+F 3 "" H 2700 4800 50  0000 C CNN
+	1    2700 4800
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	2650 4700 2650 4750
+Wire Wire Line
+	2650 4750 2700 4750
+Wire Wire Line
+	2750 4750 2750 4700
+Connection ~ 2700 4750
+$Comp
+L main-rescue:VCC #PWR0110
+U 1 1 58C659B7
+P 2700 1600
+F 0 "#PWR0110" H 2700 1450 50  0001 C CNN
+F 1 "VCC" H 2700 1750 50  0000 C CNN
+F 2 "" H 2700 1600 50  0000 C CNN
+F 3 "" H 2700 1600 50  0000 C CNN
+	1    2700 1600
+	1    0    0    -1  
+$EndComp
+NoConn ~ 3400 2000
+$Comp
+L main-rescue:VCC #PWR0109
+U 1 1 58C642A2
+P 5625 950
+F 0 "#PWR0109" H 5625 800 50  0001 C CNN
+F 1 "VCC" H 5625 1100 50  0000 C CNN
+F 2 "" H 5625 950 50  0000 C CNN
+F 3 "" H 5625 950 50  0000 C CNN
+	1    5625 950 
+	1    0    0    -1  
+$EndComp
+NoConn ~ 7650 1900
+NoConn ~ 7650 2100
+NoConn ~ 7650 2825
+NoConn ~ 7650 3025
+$Comp
+L main-rescue:VCC #PWR0111
+U 1 1 58C64329
+P 7550 1825
+F 0 "#PWR0111" H 7550 1675 50  0001 C CNN
+F 1 "VCC" H 7550 1975 50  0000 C CNN
+F 2 "" H 7550 1825 50  0000 C CNN
+F 3 "" H 7550 1825 50  0000 C CNN
+	1    7550 1825
+	-1   0    0    -1  
+$EndComp
+$Comp
+L main-rescue:GND #PWR0112
+U 1 1 58C64425
+P 8375 3225
+F 0 "#PWR0112" H 8375 2975 50  0001 C CNN
+F 1 "GND" H 8375 3075 50  0000 C CNN
+F 2 "" H 8375 3225 50  0000 C CNN
+F 3 "" H 8375 3225 50  0000 C CNN
+	1    8375 3225
+	-1   0    0    -1  
+$EndComp
+Wire Wire Line
+	5275 2200 5375 2200
+Wire Wire Line
+	5275 2600 5625 2600
+Wire Wire Line
+	5275 3000 5475 3000
+Wire Wire Line
+	6125 3400 5475 3400
+Wire Wire Line
+	5625 950  5625 975 
+$Comp
+L main-rescue:C C61
+U 1 1 58C64A3A
+P 6125 4350
+F 0 "C61" H 6150 4450 50  0000 L CNN
+F 1 "10nF" H 6150 4250 50  0000 L CNN
+F 2 "kolibri:KERKO-5" H 6163 4200 50  0001 C CNN
+F 3 "" H 6125 4350 50  0000 C CNN
+	1    6125 4350
+	1    0    0    -1  
+$EndComp
+$Comp
+L main-rescue:C C60
+U 1 1 58C64AEF
+P 5875 4350
+F 0 "C60" H 5900 4450 50  0000 L CNN
+F 1 "10nF" H 5900 4250 50  0000 L CNN
+F 2 "kolibri:KERKO-5" H 5913 4200 50  0001 C CNN
+F 3 "" H 5875 4350 50  0000 C CNN
+	1    5875 4350
+	1    0    0    -1  
+$EndComp
+$Comp
+L main-rescue:C C59
+U 1 1 58C64B20
+P 5625 4350
+F 0 "C59" H 5650 4450 50  0000 L CNN
+F 1 "10nF" H 5650 4250 50  0000 L CNN
+F 2 "kolibri:KERKO-5" H 5663 4200 50  0001 C CNN
+F 3 "" H 5625 4350 50  0000 C CNN
+	1    5625 4350
+	1    0    0    -1  
+$EndComp
+$Comp
+L main-rescue:C C58
+U 1 1 58C64B52
+P 5375 4350
+F 0 "C58" H 5400 4450 50  0000 L CNN
+F 1 "10nF" H 5400 4250 50  0000 L CNN
+F 2 "kolibri:KERKO-5" H 5413 4200 50  0001 C CNN
+F 3 "" H 5375 4350 50  0000 C CNN
+	1    5375 4350
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	5375 2200 5375 3700
+Connection ~ 5375 2200
+Wire Wire Line
+	5625 2600 5625 2800
+Connection ~ 5625 2600
+Connection ~ 6125 3400
+$Comp
+L main-rescue:GND #PWR0115
+U 1 1 58C650AA
+P 5750 4600
+F 0 "#PWR0115" H 5750 4350 50  0001 C CNN
+F 1 "GND" H 5750 4450 50  0000 C CNN
+F 2 "" H 5750 4600 50  0000 C CNN
+F 3 "" H 5750 4600 50  0000 C CNN
+	1    5750 4600
+	-1   0    0    -1  
+$EndComp
+Wire Wire Line
+	5375 4500 5375 4550
+Wire Wire Line
+	5375 4550 5625 4550
+Wire Wire Line
+	6125 4550 6125 4500
+Wire Wire Line
+	5875 4500 5875 4550
+Connection ~ 5875 4550
+Wire Wire Line
+	5625 4500 5625 4550
+Connection ~ 5625 4550
+Wire Wire Line
+	5750 4600 5750 4550
+Connection ~ 5750 4550
+Connection ~ 5625 2800
+Wire Wire Line
+	5475 3600 5475 3400
+Connection ~ 5475 3400
+Text Label 6925 2200 0    50   ~ 0
+KCLK
+Text Label 6925 2375 0    50   ~ 0
+KDTA
+Text Label 6950 3000 0    50   ~ 0
+MCLK
+Text Label 6950 3400 0    50   ~ 0
+MDTA
+Wire Wire Line
+	5725 1375 5725 2375
+$Comp
+L main-rescue:74HCT04 U2
+U 4 1 58C675AF
+P 1450 4400
+F 0 "U2" H 1600 4500 50  0000 C CNN
+F 1 "74HCT04" H 1650 4300 50  0000 C CNN
+F 2 "kolibri:DIP-14" H 1450 4400 50  0001 C CNN
+F 3 "" H 1450 4400 50  0000 C CNN
+	4    1450 4400
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	1000 4000 900  4000
+Text GLabel 900  4000 0    43   Input ~ 0
+MHZ12
+Text Notes 1500 4650 0    60   ~ 0
+Vih >= 3.5V
+$Comp
+L main-rescue:C C62
+U 1 1 58C67D69
+P 2300 6000
+F 0 "C62" H 2325 6100 50  0000 L CNN
+F 1 "100nF" H 2325 5900 50  0000 L CNN
+F 2 "kolibri:KERKO-5" H 2338 5850 50  0001 C CNN
+F 3 "" H 2300 6000 50  0000 C CNN
+	1    2300 6000
+	1    0    0    -1  
+$EndComp
+$Comp
+L main-rescue:C C63
+U 1 1 58C67EB2
+P 2600 6000
+F 0 "C63" H 2625 6100 50  0000 L CNN
+F 1 "100nF" H 2625 5900 50  0000 L CNN
+F 2 "kolibri:KERKO-5" H 2638 5850 50  0001 C CNN
+F 3 "" H 2600 6000 50  0000 C CNN
+	1    2600 6000
+	1    0    0    -1  
+$EndComp
+$Comp
+L main-rescue:VCC #PWR0120
+U 1 1 58C67F3C
+P 2300 5700
+F 0 "#PWR0120" H 2300 5550 50  0001 C CNN
+F 1 "VCC" H 2300 5850 50  0000 C CNN
+F 2 "" H 2300 5700 50  0000 C CNN
+F 3 "" H 2300 5700 50  0000 C CNN
+	1    2300 5700
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	1900 4000 1950 4000
+Wire Wire Line
+	4375 3400 4175 3400
+Wire Wire Line
+	2600 1700 2600 1650
+Wire Wire Line
+	2600 1650 2700 1650
+Wire Wire Line
+	2800 1650 2800 1700
+Wire Wire Line
+	2700 1600 2700 1650
+Connection ~ 2700 1650
+Connection ~ 5375 3700
+Connection ~ 5875 3800
+Text GLabel 1900 1225 0    43   Output ~ 0
+OBF
+$Comp
+L main-rescue:74HCT04 U2
+U 3 1 58C7666C
+P 1450 4000
+F 0 "U2" H 1600 4100 50  0000 C CNN
+F 1 "74HCT04" H 1650 3900 50  0000 C CNN
+F 2 "kolibri:DIP-14" H 1450 4000 50  0001 C CNN
+F 3 "" H 1450 4000 50  0000 C CNN
+	3    1450 4000
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	2000 4400 1900 4400
+Wire Wire Line
+	1950 4000 1950 4200
+Wire Wire Line
+	1950 4200 1000 4200
+Wire Wire Line
+	1000 4200 1000 4400
+Connection ~ 1950 4000
+Wire Wire Line
+	2700 4750 2750 4750
+Wire Wire Line
+	5625 2600 5725 2600
+Wire Wire Line
+	5875 4550 6125 4550
+Wire Wire Line
+	5625 4550 5750 4550
+Wire Wire Line
+	5750 4550 5875 4550
+Wire Wire Line
+	5475 3400 5275 3400
+Wire Wire Line
+	2700 1650 2800 1650
+Wire Wire Line
+	2700 1650 2700 1700
+Wire Wire Line
+	5375 3700 5375 3950
+Wire Wire Line
+	1950 4000 2000 4000
+Wire Wire Line
+	3400 3700 5375 3700
+Wire Wire Line
+	3400 3800 5875 3800
+Wire Wire Line
+	2700 4750 2700 4800
+$Comp
+L main-rescue:GND #PWR0123
+U 1 1 5C8E8396
+P 2300 6250
+F 0 "#PWR0123" H 2300 6000 50  0001 C CNN
+F 1 "GND" H 2300 6100 50  0000 C CNN
+F 2 "" H 2300 6250 50  0000 C CNN
+F 3 "" H 2300 6250 50  0000 C CNN
+	1    2300 6250
+	1    0    0    -1  
+$EndComp
+$Comp
+L main-rescue:VCC #PWR0116
+U 1 1 5C92E719
+P 3450 4400
+F 0 "#PWR0116" H 3450 4250 50  0001 C CNN
+F 1 "VCC" V 3450 4575 50  0000 C CNN
+F 2 "" H 3450 4400 50  0000 C CNN
+F 3 "" H 3450 4400 50  0000 C CNN
+	1    3450 4400
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	3450 4400 3400 4400
+Wire Wire Line
+	3400 2500 3625 2500
+Wire Wire Line
+	3625 2500 3625 1525
+Text GLabel 1900 1350 0    43   Output ~ 0
+~IBF
+Wire Wire Line
+	3400 2400 3550 2400
+Wire Wire Line
+	3550 1350 1900 1350
+$Comp
+L main-rescue:74LS06 U4
+U 4 1 58C6579F
+P 4825 2600
+F 0 "U4" H 5020 2715 50  0000 C CNN
+F 1 "74LS06" H 5015 2475 50  0000 C CNN
+F 2 "kolibri:DIP-14" H 4825 2600 50  0001 C CNN
+F 3 "" H 4825 2600 50  0000 C CNN
+	4    4825 2600
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	3400 3400 3975 3400
+Wire Wire Line
+	3975 2800 5625 2800
+Wire Wire Line
+	3400 4200 4175 4200
+Wire Wire Line
+	4175 3400 4175 4200
+Wire Wire Line
+	3400 4300 4075 4300
+Wire Wire Line
+	4075 4300 4075 3000
+Wire Wire Line
+	4075 3000 4375 3000
+Wire Wire Line
+	3400 2300 4075 2300
+Wire Wire Line
+	4075 2300 4075 2200
+Wire Wire Line
+	4075 2200 4375 2200
+Wire Wire Line
+	3400 2200 3975 2200
+Wire Wire Line
+	3975 2200 3975 2600
+Wire Wire Line
+	3975 2600 4375 2600
+Text GLabel 3450 4000 2    39   Output ~ 0
+~KBDRES
+Wire Wire Line
+	3975 3400 3975 2800
+Wire Wire Line
+	3750 3300 3400 3300
+Wire Wire Line
+	3750 3600 5475 3600
+Wire Wire Line
+	3750 3600 3750 3300
+Wire Wire Line
+	6525 1625 6325 1625
+Wire Wire Line
+	6325 1625 6325 1375
+Wire Wire Line
+	8250 2000 8375 2000
+Wire Wire Line
+	8375 2000 8375 2200
+Wire Wire Line
+	7950 2200 8375 2200
+Connection ~ 8375 2200
+Wire Wire Line
+	8375 2200 8375 2925
+Wire Wire Line
+	7650 2000 7550 2000
+Wire Wire Line
+	7550 2000 7550 1825
+Wire Wire Line
+	8250 2100 8250 2375
+Wire Wire Line
+	7450 2200 7450 1600
+Wire Wire Line
+	7450 1600 8375 1600
+Wire Wire Line
+	8375 1600 8375 1900
+Wire Wire Line
+	8375 1900 8250 1900
+Wire Wire Line
+	7650 2925 7550 2925
+Wire Wire Line
+	7550 2925 7550 2000
+Connection ~ 7550 2000
+Wire Wire Line
+	7950 3125 8375 3125
+Connection ~ 8375 3125
+Wire Wire Line
+	8375 3125 8375 3225
+Wire Wire Line
+	8250 2925 8375 2925
+Connection ~ 8375 2925
+Wire Wire Line
+	8375 2925 8375 3125
+Wire Wire Line
+	8250 3025 8250 3400
+Wire Wire Line
+	8250 3400 6225 3400
+Wire Wire Line
+	8250 2375 5725 2375
+Connection ~ 5725 2375
+Wire Wire Line
+	5725 2375 5725 2600
+Wire Wire Line
+	8250 2825 8250 2600
+Wire Wire Line
+	8250 2600 7450 2600
+Text Notes 8600 2025 0    67   ~ 0
+Female connector\nseen from the front
+$Comp
+L main-rescue:GND #PWR0113
+U 1 1 5DD7CB17
+P 8050 4225
+F 0 "#PWR0113" H 8050 3975 50  0001 C CNN
+F 1 "GND" H 8050 4075 50  0000 C CNN
+F 2 "" H 8050 4225 50  0000 C CNN
+F 3 "" H 8050 4225 50  0000 C CNN
+	1    8050 4225
+	-1   0    0    -1  
+$EndComp
+$Comp
+L main-rescue:VCC #PWR0114
+U 1 1 5DD7CFD0
+P 8050 3675
+F 0 "#PWR0114" H 8050 3525 50  0001 C CNN
+F 1 "VCC" H 8050 3825 50  0000 C CNN
+F 2 "" H 8050 3675 50  0000 C CNN
+F 3 "" H 8050 3675 50  0000 C CNN
+	1    8050 3675
+	-1   0    0    -1  
+$EndComp
+Wire Wire Line
+	8125 3750 8050 3750
+Wire Wire Line
+	8050 3750 8050 3675
+Wire Wire Line
+	8125 4150 8050 4150
+Wire Wire Line
+	8050 4150 8050 4225
+Text Label 7850 3950 0    50   ~ 0
+KCLK
+Text Label 7850 4050 0    50   ~ 0
+KDTA
+Wire Wire Line
+	2300 5800 2300 5850
+Wire Wire Line
+	2600 5850 2600 5800
+Wire Wire Line
+	2600 5800 2300 5800
+Wire Wire Line
+	2300 5800 2300 5700
+Connection ~ 2300 5800
+Wire Wire Line
+	2300 6250 2300 6200
+Wire Wire Line
+	2300 6200 2600 6200
+Connection ~ 2300 6200
+Wire Wire Line
+	2300 6200 2300 6150
+Wire Wire Line
+	2600 6150 2600 6200
+Wire Wire Line
+	5875 3800 5875 4200
+Wire Wire Line
+	6125 3400 6125 4200
+NoConn ~ 3400 2700
+NoConn ~ 3400 2800
+NoConn ~ 3400 2900
+NoConn ~ 3400 3000
+Text GLabel 6525 1725 2    39   Output ~ 0
+PU4
+$Comp
+L main-rescue:74LS06 U4
+U 3 1 58C6573F
+P 4825 2200
+F 0 "U4" H 5020 2315 50  0000 C CNN
+F 1 "74LS06" H 5015 2075 50  0000 C CNN
+F 2 "kolibri:DIP-14" H 4825 2200 50  0001 C CNN
+F 3 "" H 4825 2200 50  0000 C CNN
+	3    4825 2200
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	1900 1225 3625 1225
+NoConn ~ 3400 3200
+NoConn ~ 3400 3100
+Wire Wire Line
+	3450 4000 3400 4000
+NoConn ~ 3400 4100
+$Comp
+L main-rescue:C C41
+U 1 1 620AE0D1
+P 2900 6000
+F 0 "C41" H 2925 6100 50  0000 L CNN
+F 1 "100nF" H 2925 5900 50  0000 L CNN
+F 2 "kolibri:KERKO-5" H 2938 5850 50  0001 C CNN
+F 3 "" H 2900 6000 50  0000 C CNN
+	1    2900 6000
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	2900 5850 2900 5800
+Wire Wire Line
+	2900 5800 2600 5800
+Connection ~ 2600 5800
+Wire Wire Line
+	2900 6150 2900 6200
+Wire Wire Line
+	2900 6200 2600 6200
+Connection ~ 2600 6200
+$Comp
+L Device:R_Network09 RN?
+U 1 1 62061AFA
+P 6025 1175
+AR Path="/60F127A0/62061AFA" Ref="RN?"  Part="1" 
+AR Path="/58C640AE/62061AFA" Ref="RN5"  Part="1" 
+F 0 "RN5" H 6513 1221 50  0000 L CNN
+F 1 "9 x 10k" H 6513 1130 50  0000 L CNN
+F 2 "kolibri:R_Array_SIP10" V 6600 1175 50  0001 C CNN
+F 3 "http://www.vishay.com/docs/31509/csc.pdf" H 6025 1175 50  0001 C CNN
+	1    6025 1175
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	6025 1375 6025 1525
+Wire Wire Line
+	6025 1525 3625 1525
+Connection ~ 3625 1525
+Wire Wire Line
+	3625 1525 3625 1225
+$Comp
+L Connector_Generic:Conn_01x05 J16
+U 1 1 608C5420
+P 8325 3950
+F 0 "J16" H 8405 3992 50  0000 L CNN
+F 1 "Conn_01x05" H 8405 3901 50  0000 L CNN
+F 2 "kolibri:Pin_Header_Straight_1x05_Pitch2.54mm" H 8325 3950 50  0001 C CNN
+F 3 "~" H 8325 3950 50  0001 C CNN
+	1    8325 3950
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	5625 2800 5625 4050
+Wire Wire Line
+	8125 4050 5625 4050
+Connection ~ 5625 4050
+Wire Wire Line
+	5625 4050 5625 4200
+Wire Wire Line
+	8125 3950 5375 3950
+Connection ~ 5375 3950
+Wire Wire Line
+	5375 3950 5375 4200
+NoConn ~ 8125 3850
+NoConn ~ 6425 1375
+Wire Wire Line
+	5375 2200 5825 2200
+Wire Wire Line
+	5625 1375 5625 1925
+Wire Wire Line
+	5625 1925 5475 1925
+Wire Wire Line
+	5475 1925 5475 3000
+Connection ~ 5475 3000
+Wire Wire Line
+	5475 3000 5875 3000
+Wire Wire Line
+	5875 3000 7450 3000
+Connection ~ 5875 3000
+Wire Wire Line
+	7450 3000 7450 2600
+Wire Wire Line
+	5875 3000 5875 3800
+Wire Wire Line
+	3550 1350 3550 1625
+Wire Wire Line
+	3550 1625 5925 1625
+Wire Wire Line
+	5925 1625 5925 1375
+Connection ~ 3550 1625
+Wire Wire Line
+	3550 1625 3550 2400
+Wire Wire Line
+	6125 1375 6125 1725
+Wire Wire Line
+	6125 1725 6525 1725
+Wire Wire Line
+	6225 1375 6225 3400
+Connection ~ 6225 3400
+Wire Wire Line
+	6225 3400 6125 3400
+Text GLabel 6525 1625 2    39   Output ~ 0
+~KBDRES
+Wire Wire Line
+	5825 1375 5825 2200
+Connection ~ 5825 2200
+Wire Wire Line
+	5825 2200 7450 2200
+$EndSCHEMATC

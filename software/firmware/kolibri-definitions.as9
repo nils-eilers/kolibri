@@ -1,0 +1,237 @@
+        INCLUDE "control.as9"
+
+
+***********************
+* Software Interrupts *
+***********************
+
+PUTC            = $00
+GETC            = $01
+PUTS            = $02
+FLUSH           = $03
+
+
+*************
+* Zero page *
+*************
+
+BIOS_DP = $00                   ; BIOS Direct Page
+
+      & = BIOS_DP << 8          ; set BSS counter
+
+BIOS_ADR         BSS 2          ; JSR vector for SWI
+BIOS_EMU_Flag    BSS 1          ; 1 = EMU active
+BIOS_CursorX     BSS 1
+BIOS_CursorY     BSS 1
+BIOS_CursorChar  BSS 1
+BIOS_CursorHeigh BSS 1
+BIOS_Color1      BSS 1
+BIOS_BGColor1    BSS 1
+BIOS_Color2      BSS 1
+BIOS_BGColor2    BSS 1
+BIOS_RowTop      BSS 1
+BIOS_RowBottom   BSS 1
+BIOS_KeybShift   BSS 1
+BIOS_KeybAltGr   BSS 1
+
+*********************
+* BASIC direct page *
+*********************
+
+BASIC_DP = $01
+
+**************
+* Memory map *
+**************
+
+                ORG $0200
+
+VECTBL          RMB $0100
+
+***********************
+* Monitor direct page *
+***********************
+
+MONITOR_DP = $03
+
+                ORG $0300
+
+BUF_TXT         RMB 82
+BUF_TXT_BYND    = *-1           ; allow extra space for terminating zero
+
+MONBUF                          ; Monitor buffer
+MON_PC          RMB 2
+MON_DP          RMB 1
+MON_CC          RMB 1
+MON_A           RMB 1
+MON_B           RMB 1
+MON_W           RMB 2
+MON_X           RMB 2
+MON_Y           RMB 2
+MON_U           RMB 2
+MON_S           RMB 2
+MON_V           RMB 2
+MON_MEM         RMB 2
+MON_TMP         RMB 2
+Mon_ByteCount   = MON_TMP
+Mon_CRC         = MON_TMP+1
+Mon_Received_S5 RMB 1
+Mon_Received_S9 RMB 1
+Mon_Records     RMB 2         ; compared against S5
+Mon_Entry       RMB 2         ; set by S9
+
+***********************
+* Monitor Unassembler *
+***********************
+
+Mon_Adr         RMB 2         ; Current address to disassemble
+Mon_OC          RMB 1         ; Opcode of instruction
+Mon_AM          RMB 1         ; Addressing mode of instruction
+Mon_OT          RMB 1         ; Instruction type
+Mon_PB          RMB 1         ; Post byte (for indexed addressing)
+Mon_Len         RMB 1         ; Length of instruction
+Mon_First       RMB 1         ; Flag used to indicate first time an item printed
+Mon_Pg23        RMB 1         ; Flag indicating page2/3 instruction when non-zero
+Mon_Dollar      RMB 1         ; Flag for using $ in hex operand
+
+Mon_String      RMB 16        ; Search string
+
+*********
+* Video *
+*********
+
+LINEBUF         RMB 80          ; 80 Chars scrollbuffer
+
+DUMMY                           ; from here available
+
+MACHINESTACK    = $7FFF
+USERSTACK       = $7EFF
+
+
+************
+* I/O area *
+************
+
+IO_MMU          = $FE00
+IO_RTC          = $FE10
+IO_MEMCONF0     = $FE20
+IO_MEMCONF1     = $FE21
+IO_MEMCONF2     = $FE22
+IO_MEMCONF3     = $FE23
+IO_KBD_DATA     = $FE24
+IO_KBD_CMD      = $FE25
+IO_KBD_STATUS   = $FE25
+IO_OPL2REGSEL   = $FE26         ; write access
+IO_OPL2STATUS   = $FE26         ; read access
+IO_OPL2DATA     = $FE27         ; write only
+IO_VDPRAM       = $FE28
+IO_VDPSTATUS    = $FE29         ; read access
+IO_VDPCONTROL   = $FE29         ; write access
+IO_VDPPALETTE   = $FE2A         ; write access
+IO_VDPINDIRECT  = $FE2B         ; write access
+IO_FT245R       = $FE2C         ; virtual COM port R/W
+IO_INPORT       = $FE2D
+IO_INWP0        = 1
+IO_INWP1        = 2
+IO_INCD0        = 4
+IO_INCD1        = 8
+IO_INBOOT       = 16            ; low if boot switch pressed
+IO_INIBF        = 32
+IO_INTXE        = 64
+IO_INRXF        = 128
+IO_SPI_CLK_0    = $FE2E
+IO_SPI_CLK_1    = $FE2F
+IO_CARDSEL      = $FE30
+IO_CS_DRV_0     = 1
+IO_CS_DRV_1     = 2
+IO_SPI_DATA     = $FE31
+IO_MMU_DISABLE  = $FE32         ; 0: MMU enabled, 1: MMU disabled
+IO_FPU          = $FE40         ; 68882 $FE40-$FE5F
+
+IO_RTC_S1       ENUM IO_RTC
+IO_RTC_S10      ENUM
+IO_RTC_MI1      ENUM
+IO_RTC_MI10     ENUM
+IO_RTC_H1       ENUM
+IO_RTC_H10      ENUM
+IO_RTC_D1       ENUM
+IO_RTC_D10      ENUM
+IO_RTC_MO1      ENUM
+IO_RTC_MO10     ENUM
+IO_RTC_Y1       ENUM
+IO_RTC_Y10      ENUM
+IO_RTC_W        ENUM
+IO_RTC_CD       ENUM
+IO_RTC_CE       ENUM
+IO_RTC_CF       ENUM
+
+; IO_RTC_CF     Control Register F
+IO_RTC_RESET    = 1
+IO_RTC_STOP     = 2
+IO_RTC_24_12    = 4
+IO_RTC_TEST     = 8
+
+
+; IO_RTC_CE     Control Register E
+IO_RTC_MASK     = 1
+IO_RTC_ITRPT    = 2
+IO_RTC_T0       = 4
+IO_RTC_T1       = 8
+
+; IO_RTC_CD     Control Register D
+IO_RTC_HOLD     = 1
+IO_RTC_BUSY     = 2
+IO_RTC_IRQ      = 4
+IO_RTC_30SADJ   = 8
+
+
+
+*************
+* CPU flags *
+*************
+
+CARRYFLAG       = 1
+OVERFLOWFLAG    = 2
+ZEROFLAG        = 4
+NEGATIVEFLAG    = 8
+IRQFLAG         = 16
+HALFCARRYFLAG   = 32
+FIRQFLAG        = 64
+ENTIREFLAG      = 128
+
+****************************************
+* register position on stack after IRQ *
+****************************************
+
+***************
+* Stack       *
+*-------------*
+* 6809   6309 *
+* c:     PC   *
+* b:          *
+* a: PC  U    *
+* 9:          *
+* 8: U   Y    *
+* 7:          *
+* 6: Y   X    *
+* 5:     DP   *
+* 4: X   F    *
+* 3: DP  E    *
+* 2: B   B    *
+* 1: A   A    *
+* 0: CC  CC   *
+***************
+
+; Stack offsets for SWI routines = SWI offset + 2 for JSR
+
+SOFF_CC         = 2
+SOFF_A          = 3
+SOFF_B          = 4
+SOFF_E          = 5
+SOFF_F          = 6
+SOFF_DP         = 7
+SOFF_X          = 8
+SOFF_Y          = 10
+SOFF_U          = 12
+SOFF_PC         = 14
+

@@ -1,0 +1,457 @@
+        STORE   $8000,$8000,"firmware-08000-0ffff.bin"
+        INCLUDE "kolibri-definitions.as9"
+        INCLUDE "macros.as9"
+
+VDPFONTDATA = $E000             ; fontata start
+VDPFONTSIZE = $0800             ; fontdata size
+
+        LOAD    VDPFONTDATA,"fonts/font-6x8-437-euro.fon"
+
+        ORG     $8000
+
+********
+Do_Reset                        ; cold start machine
+********
+
+        ORCC    #IRQFLAG|FIRQFLAG ; disable interrupts
+        SETDP   BIOS_DP
+        LDA     #BIOS_DP
+        TFR     A,DP            ; Set direct page register
+        LDS     #MACHINESTACK
+        LDU     #USERSTACK
+        LDMD    #$01            ; Switch to 6309 native mode,
+                                ; FIRQ-handling as on the 6809
+        CLR     BIOS_EMU_Flag
+        LDA     #$55
+        STA     $FEFF
+        LDA     $FEFF
+        CMPA    #$aa
+        BNE     Greet
+        INC     BIOS_EMU_Flag   ; don't use VDP
+
+*****
+Greet
+*****
+
+; No high level code here, the output shall work even with broken RAM chip
+; Write greeter to USB virtual COM port
+        LDX     #FT245PR
+GRTLP   LDA     ,X+
+        BEQ     Greet_20
+; TODO: check if chip is ready
+        STA     IO_FT245R
+        BRA     GRTLP
+
+FT245PR FCC "\r\n\r\n"
+BOOTPRM FCC "kolibri.computer BIOS 2020-04-26\n"
+NULBYT  FCB 0
+Greet_20
+
+; Write greeter to V9958 screen
+        JSR     VDP_Init
+        JSR     VDP_On
+        LDA     #$01            ; blue
+        JSR     VDP_BGColor1
+        LDA     #$0F            ; white
+        JSR     VDP_Color1
+        LDA     #$01            ; blue
+        JSR     VDP_BGColor2
+        LDA     #$0C            ; lightred
+        JSR     VDP_Color2
+
+        jsr     VDP_PutColor2
+        LDX     #BOOTPRM
+GRTLP2  LDA     ,X+
+        BEQ     Greet_80
+        PSHS    X
+        JSR     VDP_Out
+        PULS    X
+        BRA     GRTLP2
+Greet_80
+        LDE #2
+        LDF #25
+        JSR VDP_SetWindow
+        JSR VDP_ClearWindow
+
+; Further machine initialization
+        JSR     Init_Vectors
+        JSR     Init_MMU
+        JSR     RTC_Init
+        JSR     OPL2_Init
+        JSR     SPI_Init
+        JSR     KBD_Init
+        CLRA                    ; Status of Card 0
+        JSR     SD_Card_Info
+        LDA     #1              ; Status of Card 1
+        JSR     SD_Card_Info
+        CALL    FLUSH
+
+; Call S-record loader if BOOT switch is pressed
+        TIM     #IO_INBOOT,IO_INPORT
+        BNE     +               ; branch if switch is not pressed
+        JSR     Mon_Load
++
+
+; Power Chime! Well, actually, right now it's just a simple beep.
+        JSR     OPL2_Power_Chime
+
+;       JMP     Basic_Coldstart
+        JMP KLOOP
+MONLP   ILLOP                   ; Call monitor
+
+
+DIE
+        SYNC                    ; stop execution
+        BRA     DIE             ; just in case
+
+
+CMD00   CLRA                    ; CMD $00: LED 0 ON
+        STA IO_KBD_CMD
+        RTS
+
+CMD01   LDA #$01                ; CMD $01: LED 0 OFF
+        STA IO_KBD_CMD
+        RTS
+
+CMD02   LDA #$02                ; CMD $02: LED 1 ON
+        STA IO_KBD_CMD
+        RTS
+
+CMD03   LDA #$03                ; CMD $03: LED 1 OFF
+        STA IO_KBD_CMD
+        RTS
+
+LEDSOFF JSR CMD01               ; switch both LEDs off
+        BRA CMD03
+
+
+LEDSON  JSR CMD00               ; switch both LEDs on
+        BRA CMD02
+
+KLOOP
+        LDA #$FF
+KLOOP10
+        DECA
+        BNE KLOOP10
+        LDA IO_KBD_STATUS
+        ANDA #1                 ; mask OBF flag: data present?
+        BEQ KLOOP
+        LDA IO_KBD_DATA
+        PSHS A
+        JSR Mon_Show_Blank_Byte
+        JSR Mon_Blank
+        PULS A
+
+        JSR KBD_Process_Scan_Code
+
+    if 0
+        CMPA #$F0
+        BEQ KLOOP
+        LDX #KBD_DE_UNSHIFTED
+        LDA A,X
+
+        LDA BIOS_Kbd_InKey
+        BEQ KLOOP
+        JSR Mon_Show_Blank_Byte
+    endif
+        BRA KLOOP
+
+        PSHS A
+        CALL PUTC
+        JSR Mon_Blank
+        PULS A
+        jsr VDP_PutChar
+        BRA KLOOP
+
+
+
+; ***** VDP Char Demo - start with G xxxx from Monitor *****
+VDPDEMO
+        clra
+LOOPASC pshs A
+        jsr VDP_PutChar
+        jsr VDP_PutColor2
+        puls A
+        inca
+        pshs A
+        jsr VDP_PutChar
+        jsr VDP_PutColor1
+        puls A
+        inca
+        bra LOOPASC
+
+
+
+************
+Init_Vectors
+************
+
+        LDX     #VECT_ROMTBL
+        LDY     #VECTBL
+        LDW     #VECT_ROMTBL_END - VECT_ROMTBL
+        TFM     X+,Y+
+        RTS
+
+
+********
+Init_MMU
+********
+
+        LDW     #16
+        LDY     #$IO_MMU
+        LDD     #NULBYT
+        TFM     D,Y+
+
+        LDA     #%00000000
+        STA     IO_MMU
+        STA     IO_MMU+4
+        STA     IO_MMU+8
+        STA     IO_MMU+12
+
+        LDA     #%00000100
+        STA     IO_MMU+1
+        STA     IO_MMU+5
+        STA     IO_MMU+9
+        STA     IO_MMU+13
+
+        LDA     #%00001000
+        STA     IO_MMU+2
+        STA     IO_MMU+6
+        STA     IO_MMU+10
+        STA     IO_MMU+14
+
+
+        LDA     #%00001100
+        STA     IO_MMU+3
+        STA     IO_MMU+7
+        STA     IO_MMU+11
+        STA     IO_MMU+15
+
+        RTS
+
+
+**********************************
+* Include library of subroutines *
+**********************************
+
+        INCLUDE "vdp.as9"       ; VDP Definitions + Subroutines
+        SETDP   BASIC_DP
+        INCLUDE "basic.as9"     ; BASIC Interpreter / Shell
+        SETDP   MONITOR_DP
+        INCLUDE "monitor.as9"   ; Machine Language Monitor
+        INCLUDE "unas.as9"      ; Machine Language Unassembler
+        SETDP   BIOS_DP
+        INCLUDE "edit.as9"      ; Screen editor
+        INCLUDE "rtc.as9"       ; Real Time Clock
+        INCLUDE "opl2.as9"      ; OPL2 sound chip routines
+        INCLUDE "spi.as9"       ; SPI interface for SD cards
+        INCLUDE "ps2_keyb.as9"  ; PS/2 keyboard driver
+        INCLUDE "keyb_de.as9"   ; German keyboard layout
+
+
+********
+To_Upper
+********
+
+*****************************************************
+* Convert character to uppercase                    *
+* ------------------------------------------------- *
+* Input : A = any value                             *
+* Output: A = upper case character if A was a lower *
+*             case character, unchanged if not      *
+*****************************************************
+
+        CMPA    #'a'
+        BLO     TU_80
+        CMPA    #'z'
+        BHI     TU_80
+        EORA    #$20
+TU_80   RTS
+
+*******
+VDP_Out
+*******
+
+*************************************************
+* Output a byte to the VDP or call VDP function *
+* --------------------------------------------- *
+* Input : A = character or control code (00-1F) *
+*************************************************
+
+        CMPA    #DEL          ; delete char right
+        BNE     VO_10
+        CLRA                  ; map DEL to NULL
+VO_10   CMPA    #' '
+        BLO     VO_20         ; -> control code
+        JMP     VDP_PutChar   ; printable
+
+VO_20   ASLA
+        LDX     #VDP_TABLE
+        JMP     [A,X]         ; VDP control
+
+*******
+USB_Out
+*******
+
+******************************************
+* Output a byte over the USB serial port *
+* -------------------------------------- *
+* Input : A = byte to be written         *
+******************************************
+
+; TODO: check if chip is ready
+        STA     IO_FT245R
+        RTS
+
+
+******
+USB_In
+******
+
+*****************************************
+* Read a byte from the USB serial port  *
+* ------------------------------------- *
+* Output: A:  read character            *
+*         B:  zero if no data available *
+*****************************************
+
+        LDB     #$01            ; data available flag
+        TST     BIOS_EMU_Flag
+        BNE     UI_70           ; -> emu active
+        LDA     IO_INPORT       ; data available?
+        BITA    #IO_INRXF
+        BEQ     UI_70           ; branch if data available
+        CLRD                    ; return '\0' and no data available flag
+        BRA     UI_80
+UI_70   LDA     IO_FT245R       ; read character from USB serial port
+UI_80   STA     SOFF_A,S        ; return character in stacked A
+        STB     SOFF_B,S        ; return flag in stacked B
+        RTS
+
+
+*******
+Do_PUTS
+*******
+
+******************************************
+* Write zero terminated string to stdout *
+* -------------------------------------- *
+* Input : X = start address of string    *
+* Output: A = \0                         *
+******************************************
+
+        LDA     ,X+
+        BEQ     PUTS_80
+        JSR     [VECTBL+PUTC*2]
+        BRA     Do_PUTS
+PUTS_80 RTS
+
+
+********
+Do_Flush
+********
+
+*************************************
+* Flush all buffers including stdin *
+*************************************
+
+        TST     BIOS_EMU_Flag
+        BNE     DFL_20          ; -> emu active
+DFL_10  LDA     IO_INPORT       ; data from USB serial port available?
+        BITA    #IO_INRXF
+        BNE     DFL_20          ; branch if no data available
+        LDA     IO_FT245R       ; read available data
+        BRA     DFL_10
+DFL_20  CLRA                    ; Clear text buffer
+        STA     BUF_TXT
+        RTS
+
+
+****************************************
+* Default values for vectored routines *
+****************************************
+
+VECT_ROMTBL
+        FDB     USB_Out         ; STDOUT
+        FDB     USB_In          ; STDIN
+        FDB     Do_PUTS
+        FDB     Do_Flush
+VECT_ROMTBL_END
+
+        IF ((VECT_ROMTBL_END - VECT_ROMTBL) >> 1) > 255
+                ERROR DO_SWI can't handle more than 255 entries
+        ENDIF
+
+*********************
+* Interrupt vectors *
+*********************
+
+***********
+* Stack   *
+*---------*
+* c: PC   *
+* b:      *
+* a: U    *
+* 9:      *
+* 8: Y    *
+* 7:      *
+* 6: X    *
+* 5: DP   *
+* 4: F    *
+* 3: E    *
+* 2: B    *
+* 1: A    *
+* 0: CC   *
+***********
+
+******
+DO_SWI
+******
+
+************************************
+* Entry for software interrupt SWI *
+* -------------------------------- *
+* Input: B = function number       *
+************************************
+
+        CMPB    #(VECT_ROMTBL_END - VECT_ROMTBL) >> 1
+        BHS     Do_Bad_SWI      ; -> illegal number
+        ANDCC   #%1010 1111     ; enable FIRQ & IRQ
+        LDA     #BIOS_DP        ; BIOS direct page
+        TFR     A,DP            ; set DP
+        SETDP   BIOS_DP         ; inform assembler
+        LDX     #VECTBL         ; switch table
+        ABX
+        ABX                     ; X += 2 * BL
+        LDD     ,X              ; D = function address [X+B+B]
+        STD     BIOS_ADR        ; store function address
+        LDD     1,S             ; restore D from stack
+        LDX     6,S             ; restore X from stack
+        JSR     [BIOS_ADR]      ; call BIOS subroutine
+        RTI                     ; return from interrupt
+
+Do_Bad_SWI
+        LDX     #Bad_SWI
+        JSR     Do_PUTS
+        RTI
+
+Bad_SWI FCC     "ILLEGAL SWI\n\0"
+
+
+DO_SWI2
+DO_SWI3
+DO_IRQ
+DO_FIRQ
+DO_NMI  JMP     TRAPMON
+
+        ORG     $FFF0
+
+HW_EXCEPTION FDB TRAPMON
+HW_SWI3      FDB DO_SWI3
+HW_SWI2      FDB DO_SWI2
+HW_FIRQ      FDB DO_FIRQ
+HW_IRQ       FDB DO_IRQ
+HW_SWI       FDB DO_SWI
+HW_NMI       FDB DO_NMI
+HW_RESET     FDB Do_Reset
+
