@@ -1,0 +1,168 @@
+DO_NOTHING RTS                  ; just do nothing
+
+KBD_Sets                EQU 0
+KBD_Set_Unshifted       EQU 1
+KBD_Set_Shifted         EQU 3
+KBD_Set_AltGr           EQU 5
+KBD_Set_Ctrl            EQU 7
+KBD_Set_Alt             EQU 9
+KBD_Set_Reserved3       EQU 11
+KBD_Set_Reserved4       EQU 13
+KBD_Set_Reserved5       EQU 15
+KBD_Set_Reserved6       EQU 17
+KBD_Set_Reserved7       EQU 19
+KBD_Layout_CodeName     EQU 21
+KBD_Layout_Description  EQU 23
+
+
+; Keyboard layouts are defined by a header and some tables
+; (at least two: unshifted and shifted)
+;
+; Header:
+;
+; - zero-terminated codename, used to switch between different layouts
+; - zero-terminated description (long name)
+; - byte indicating layout sets
+
+; Tables consists of at least two sets of 128 bytes each.
+; Set 2 scan codes are mapped to codepage 437 characters
+; Scan codes > 128 are ignored
+
+Kbd_AltGr               EQU 1 << 0
+Kbd_Ctrl                EQU 1 << 1
+Kbd_Alt                 EQU 1 << 2
+
+
+; Some scan codes
+SCAN_LeftShift          EQU $12
+SCAN_RightShift         EQU $59
+
+
+; Direct page variables for keyboard driver
+BIOS_Kbd_Modifiers      BSS 1
+
+Kbd_Flag_RightShift     EQU 1 << 0
+Kbd_Flag_LeftShift      EQU 1 << 1
+Kbd_Flag_Alt            EQU 1 << 2
+Kbd_Flag_AltGr          EQU 1 << 3
+Kbd_Flag_CtrlRight      EQU 1 << 4
+Kbd_Flag_CtrlLeft       EQU 1 << 5
+
+
+BIOS_Kbd_Flags          BSS 1
+
+Kbd_Flag2_BreakCode     EQU 1 << 0
+Kbd_Flag2_ExtCode       EQU 1 << 1
+
+BIOS_Kbd_InKey              BSS 1
+BIOS_Kbd_Layout         BSS 2
+
+
+*******************
+SUBROUTINE KBD_Init
+*******************
+
+        CLR BIOS_Kbd_Modifiers
+        CLR BIOS_Kbd_Flags
+        CLR BIOS_Kbd_InKey
+        LDX #KBD_DE                     ; Default keyboard layout
+        STX BIOS_Kbd_Layout
+        RTS
+ENDSUB
+
+
+********************************
+SUBROUTINE KBD_Process_Scan_Code
+********************************
+
+**********************
+* Input: A=Scan Code *
+**********************
+        CMPA #$E0                       ; Extended scan code?
+        BNE +
+        OIM #Kbd_Flag2_ExtCode,BIOS_Kbd_Flags ; yes, set flag
+        RTS
++
+        CMPA #$F0                       ; Break code (key released)?
+        BNE +
+        OIM #Kbd_Flag2_BreakCode,BIOS_Kbd_Flags
+;        CLR BIOS_Kbd_InKey
+; FIXME: CLR BIOS_Kbd_InKey springt in den Monitor
+        LDA #0
+        STA BIOS_Kbd_InKey
+        RTS
++
+        TSTA                            ; test bit 7, ignore codes >= $80
+        BPL +
+        RTS
++
+   LDA #'.'
+   STA BIOS_Kbd_InKey
+   RTS
+        TIM #Kbd_Flag2_BreakCode,BIOS_Kbd_Flags
+        BNE KBD_Release_key             ; branch if key was released
+
+; TODO: set flag in keyboard bitmap
+        CMPA #SCAN_LeftShift
+        BNE +
+        OIM #Kbd_Flag_LeftShift,BIOS_Kbd_Modifiers    ; set left shift flag
+        RTS
++       CMPA #SCAN_RightShift
+        BNE +
+        OIM #Kbd_Flag_RightShift,BIOS_Kbd_Modifiers   ; set right shift flag
+        RTS
++
+; TODO: process other modifier keys
+
+; compute start address of keyboard layout set
+        LDW BIOS_Kbd_Layout
+        LDB [,W++]                      ; fetch layout sets
+        TST BIOS_Kbd_Modifiers
+        BEQ KBD_Scan2Key                ; branch if no modifier keys pressed
+        TIM #Kbd_Flag_LeftShift|Kbd_Flag_RightShift,BIOS_Kbd_Modifiers      ; any shift key pressed?
+        BEQ KBD_NoShift                 ; branch if no shift key pressed
+        TIM #~(Kbd_Flag_LeftShift|Kbd_Flag_RightShift),BIOS_Kbd_Modifiers   ; no other modifier pressed?
+        BEQ +                           ; branch if no other modifier keys pressed
+        RTS                             ; ignore Shift+Ctrl, Shift+Alt, Shift+whatever
++       INCW
+        INCW                            ; W points now to shifted layout set
+        BRA KBD_Scan2Key
+
+KBD_NoShift
+; TODO: process modifier keys
+        RTS
+
+KBD_Scan2Key
+; fetch start address of keyboard layout set, then map character code
+; W points to a memory location holding the start address of the
+; keyboard layout set (e.g. shifted keys)
+; A: scan code
+        LDX [,W]
+        LDA [A,X]
+        STA BIOS_Kbd_InKey
+
+; TODO: insert character in keyboard buffer
+
+        RTS
+
+
+KBD_Release_key
+; TODO: reset flag in keyboard bitmap
+ ; Reset BreakCode and ExtCode flags
+        AIM #~(Kbd_Flag2_BreakCode|Kbd_Flag2_ExtCode),BIOS_Kbd_Flags
+
+        CMPA #SCAN_LeftShift
+        BNE +
+        AIM #~Kbd_Flag_LeftShift,BIOS_Kbd_Modifiers ; clear left shift flag
+        RTS
++
+        CMPA #SCAN_RightShift
+        BNE +
+        AIM #~Kbd_Flag_RightShift,BIOS_Kbd_Modifiers ; clear right shift flag
+        RTS
++
+; TODO: process other modifier keys
+        CLR BIOS_Kbd_InKey
+        RTS
+
+ENDSUB

@@ -79,6 +79,7 @@ Greet_80
         JSR     RTC_Init
         JSR     OPL2_Init
         JSR     SPI_Init
+        JSR     KBD_Init
         CLRA                    ; Status of Card 0
         JSR     SD_Card_Info
         LDA     #1              ; Status of Card 1
@@ -94,13 +95,75 @@ Greet_80
 ; Power Chime! Well, actually, right now it's just a simple beep.
         JSR     OPL2_Power_Chime
 
-        JMP     Basic_Coldstart
-        ILLOP                   ; Call monitor
+;       JMP     Basic_Coldstart
+        JMP KLOOP
+MONLP   ILLOP                   ; Call monitor
 
 
 DIE
         SYNC                    ; stop execution
         BRA     DIE             ; just in case
+
+
+CMD00   CLRA                    ; CMD $00: LED 0 ON
+        STA IO_KBD_CMD
+        RTS
+
+CMD01   LDA #$01                ; CMD $01: LED 0 OFF
+        STA IO_KBD_CMD
+        RTS
+
+CMD02   LDA #$02                ; CMD $02: LED 1 ON
+        STA IO_KBD_CMD
+        RTS
+
+CMD03   LDA #$03                ; CMD $03: LED 1 OFF
+        STA IO_KBD_CMD
+        RTS
+
+LEDSOFF JSR CMD01               ; switch both LEDs off
+        BRA CMD03
+
+
+LEDSON  JSR CMD00               ; switch both LEDs on
+        BRA CMD02
+
+KLOOP
+        LDA #$FF
+KLOOP10
+        DECA
+        BNE KLOOP10
+        LDA IO_KBD_STATUS
+        ANDA #1                 ; mask OBF flag: data present?
+        BEQ KLOOP
+        LDA IO_KBD_DATA
+        PSHS A
+        JSR Mon_Show_Blank_Byte
+        JSR Mon_Blank
+        PULS A
+
+        JSR KBD_Process_Scan_Code
+
+    if 0
+        CMPA #$F0
+        BEQ KLOOP
+        LDX #KBD_DE_UNSHIFTED
+        LDA A,X
+
+        LDA BIOS_Kbd_InKey
+        BEQ KLOOP
+        JSR Mon_Show_Blank_Byte
+    endif
+        BRA KLOOP
+
+        PSHS A
+        CALL PUTC
+        JSR Mon_Blank
+        PULS A
+        jsr VDP_PutChar
+        BRA KLOOP
+
+
 
 ; ***** VDP Char Demo - start with G xxxx from Monitor *****
 VDPDEMO
@@ -135,9 +198,35 @@ Init_MMU
 ********
 
         LDW     #16
-        LDY     #$FE00
+        LDY     #$IO_MMU
         LDD     #NULBYT
         TFM     D,Y+
+
+        LDA     #%00000000
+        STA     IO_MMU
+        STA     IO_MMU+4
+        STA     IO_MMU+8
+        STA     IO_MMU+12
+
+        LDA     #%00000100
+        STA     IO_MMU+1
+        STA     IO_MMU+5
+        STA     IO_MMU+9
+        STA     IO_MMU+13
+
+        LDA     #%00001000
+        STA     IO_MMU+2
+        STA     IO_MMU+6
+        STA     IO_MMU+10
+        STA     IO_MMU+14
+
+
+        LDA     #%00001100
+        STA     IO_MMU+3
+        STA     IO_MMU+7
+        STA     IO_MMU+11
+        STA     IO_MMU+15
+
         RTS
 
 
@@ -156,6 +245,8 @@ Init_MMU
         INCLUDE "rtc.as9"       ; Real Time Clock
         INCLUDE "opl2.as9"      ; OPL2 sound chip routines
         INCLUDE "spi.as9"       ; SPI interface for SD cards
+        INCLUDE "ps2_keyb.as9"  ; PS/2 keyboard driver
+        INCLUDE "keyb_de.as9"   ; German keyboard layout
 
 
 ********

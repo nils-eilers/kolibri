@@ -8,8 +8,8 @@ firmware-00000-07fff.bin: firmware-00000-07fff.as9
 
 firmware-08000-0ffff.bin: firmware-08000-0ffff.as9 kolibri-definitions.as9 \
 	control.as9 macros.as9 edit.as9 basic.as9 monitor.as9 vdp.as9 rtc.as9 \
-	opl2.as9 unas.as9 spi.as9
-	bs9 -q -n $< -l 0xff
+	opl2.as9 unas.as9 spi.as9 ps2_keyb.as9 keyb_de.as9
+	bs9 -q -n $< -l 0xff -d
 
 firmware-10000-17fff.bin: firmware-10000-17fff.as9
 	bs9 -q -n $< -l 0xff

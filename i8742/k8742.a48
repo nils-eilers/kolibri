@@ -1,0 +1,242 @@
+;: ************************************************************************
+; **                                                                    **
+; ** 8742 kolibri keyboard, mouse and gamepad controller                **
+; ** ROM filesize: 2048 bytes                                           **
+; **                                                                    **
+; ** Assemble with The Macroassembler AS, freely available from         **
+; ** http://john.ccac.rwth-aachen.de:8000/as/                           **
+; **                                                                    **
+; ************************************************************************
+
+; PORT 1
+
+KDTAIN	EQU 1
+MDTAIN	EQU 2
+LED1	EQU 4
+LED0	EQU 8
+PCLK	EQU 16
+LTCH	EQU 32
+PD1	EQU 64
+PD0	EQU 128
+
+
+; PORT 2
+
+RESOUT	EQU 1
+NMIOUT	EQU 2
+MOUDTA	EQU 4
+MOUCLK	EQU 8
+OBF	EQU 16
+IBF	EQU 32
+KBDCLK	EQU 64
+KBDDTA	EQU 128
+
+; TEST0: KEYBOARD CLOCK
+; TEST1: MOUSE CLOCK
+
+; ************************************************************************
+; **                                                                    **
+; ** PAGE 0								**
+; **                                                                    **
+; ** Interrupt vectors                                                  **
+; **                                                                    **
+; ** Location 0: Processor reset                                        **
+; ** Location 3: Input buffer full (IBF)                                **
+; ** Location 7: Timer overflow interrupt                               **
+; **                                                                    **
+; ************************************************************************
+
+
+	ORG 0000H		; RESET VETOR
+VECRES:	JMP RES			; --> Reset
+	NOP
+
+	ORG 0003H		; INPUT BUFFER FULL (IBF)
+VECIBF:	JMP IBFISR		; --> IBF ISR
+
+PAGE0:	MOVP A,@A
+	RET
+
+	ORG 00007H		; TIMER OVERFLOW INTERRUPT
+VECTIM:	JMP TIMER
+
+
+; Timer Overflow Interrupt Service Routine
+TIMER:	STOP TCNT
+	RETR
+
+; Input Buffer Full Interrupt Service Routine
+IBFISR:	STOP TCNT
+	RETR
+
+
+RES:
+	MOV A,#0
+	MOV STS,A
+	MOV A,#0FFH		; pull mouse and keyboard clock lines low
+	OUTL P2,A
+	MOV A,#0FFH-LED0-LED1	; switch LEDs off
+	OUTL P1,A
+;	CALL DELAY
+
+; fall trough
+
+; *****************************
+; ***	M A I N   L O O P   ***
+; *****************************
+
+MAIN:	ANL P2,#0FFH-KBDCLK-KBDDTA ; release clock and data lines
+	JOBF MAIN10		; DBBOUT still full? (wait until read by host)
+	JT0 MAIN10
+
+; Keyboard pulled CLK low, read scan code (1 start bit, LSB first, odd parity)
+	CALL RDKBD
+	MOV A,#010H		; Indicate keyboard data present
+	MOV STS,A
+	MOV A,R4		; write keyboard data to DBBOUT
+	OUT DBB,A
+
+MAIN10:
+	JNIBF MAIN		; Wait for master CPU
+
+; DBBIN is full: parse command/data
+
+	IN A,DBB
+	JF1 CMD00		; is commmand (A0=1) ?
+DATA:	JMP MAIN		; no, ignore data
+
+CMD00:	JNZ CMD01		; ***** CMD 00 - LED 0 ON *****
+	ORL P1, #LED0
+	JMP MAIN
+
+CMD01:	DEC A
+	JNZ CMD02		; ***** CMD 01 - LED 0 OFF *****
+	ANL P1,#~LED0
+	JMP MAIN
+
+CMD02:	DEC A
+	JNZ CMD03		; ***** CMD 02 - LED 1 ON *****
+	ORL P1, #LED1
+	JMP MAIN
+
+CMD03:	DEC A
+	JNZ CMD04		; ***** CMD 03 - LED 1 OFF *****
+	ANL P1,#~LED1
+	JMP MAIN
+
+CMD04:	JMP MAIN		; ignore invalid command
+
+DELAY:	MOV R5,#020H
+DLAY10:	DJNZ R5,DLAY10
+	RET
+
+
+; ************************************************************************
+; **                                                                    **
+; ** PAGE 1								**
+; **                                                                    **
+; **                                                                    **
+; **                                                                    **
+; ************************************************************************
+
+	ORG 100H
+
+
+; ************************************************************************
+; **                                                                    **
+; ** PAGE 2								**
+; **                                                                    **
+; **                                                                    **
+; **                                                                    **
+; ************************************************************************
+
+	ORG 200H
+
+
+; ************************************************************************
+; **                                                                    **
+; ** PAGE 3								**
+; **                                                                    **
+; **                                                                    **
+; **                                                                    **
+; ************************************************************************
+
+	ORG 300H
+
+
+; ************************************************************************
+; **                                                                    **
+; ** PAGE 4								**
+; **                                                                    **
+; ** Read byte from keyboard                                            **
+; **                                                                    **
+; ************************************************************************
+
+	ORG 400H
+
+RDKBD:
+; Keyboard pulled CLK low, read scan code
+; 1 start bit (always low), LSB first, odd parity, 1 stop bit (always high)
+	MOV R2,#8		; init loop counter
+	MOV R3,#0		; init parity
+RDKBD10	JNT0 RDKBD10		; wait for clock raising edge
+; we've seen the start bit, data bits are following, least significant bit first
+RDKBD12 JT0 RDKBD12		; wait for clock falling edge
+	CLR C			; read keyboard data into carry flag
+	IN A,P1
+	CPL A			; invert data bit
+	JB0 RDKBD20		; jump if bit 0 is set
+	CPL C			; invert carry flag, is now set
+	INC R3
+RDKBD20 MOV A,R4		; keyboard data
+	RRC A
+	MOV R4,A
+RDKBD30	JNT0 RDKBD30		; wait for clock rising edge
+	DJNZ R2,RDKBD12		; loop again?
+; parity bit
+RDKBD40	JT0 RDKBD40		; wait for clock falling edge
+RDKBD42	JNT0 RDKBD42		; wait for clock rising edge
+; stop bit
+RDKBD50	JT0 RDKBD50		; wait for clock falling edge
+RDKBD52	JNT0 RDKBD52		; wait for clock rising edge
+	ORL P2,#KBDCLK		; pull clock low: indicate BUSY to keyboard
+;	CALL DELAY
+	RET			; data byte is in A
+
+
+; ************************************************************************
+; **                                                                    **
+; ** PAGE 5								**
+; **                                                                    **
+; **                                                                    **
+; **                                                                    **
+; ************************************************************************
+
+	ORG 500H
+
+
+; ************************************************************************
+; **                                                                    **
+; ** PAGE 6								**
+; **                                                                    **
+; **                                                                    **
+; **                                                                    **
+; ************************************************************************
+
+	ORG 600H
+
+
+; ************************************************************************
+; **                                                                    **
+; ** PAGE 7								**
+; **                                                                    **
+; **                                                                    **
+; **                                                                    **
+; ************************************************************************
+
+	ORG 700H
+
+
+	END
+
+; ************************************************************************

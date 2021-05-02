@@ -31,6 +31,8 @@ BIOS_Color2      BSS 1
 BIOS_BGColor2    BSS 1
 BIOS_RowTop      BSS 1
 BIOS_RowBottom   BSS 1
+BIOS_KeybShift   BSS 1
+BIOS_KeybAltGr   BSS 1
 
 *********************
 * BASIC direct page *
@@ -118,6 +120,7 @@ IO_MEMCONF2     = $FE22
 IO_MEMCONF3     = $FE23
 IO_KBD_DATA     = $FE24
 IO_KBD_CMD      = $FE25
+IO_KBD_STATUS   = $FE25
 IO_OPL2REGSEL   = $FE26         ; write access
 IO_OPL2STATUS   = $FE26         ; read access
 IO_OPL2DATA     = $FE27         ; write only

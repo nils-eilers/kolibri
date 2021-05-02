@@ -122,3 +122,5 @@ set_location_assignment PIN_69 -to MHZ24
 set_location_assignment PIN_1 -to nRES
 set_location_assignment PIN_8 -to nFPUCS
 set_global_assignment -name CDF_FILE output_files/kolibri.cdf
+set_global_assignment -name USE_CONFIGURATION_DEVICE ON
+set_global_assignment -name RESERVE_ALL_UNUSED_PINS_NO_OUTPUT_GND "AS INPUT TRI-STATED"
