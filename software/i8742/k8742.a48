@@ -1,6 +1,6 @@
-;: ************************************************************************
+; ************************************************************************
 ; **                                                                    **
-; ** 8742 kolibri keyboard, mouse and gamepad controller                **
+; ** 8742 kolibri keyboard and mouse controller                         **
 ; ** ROM filesize: 2048 bytes                                           **
 ; **                                                                    **
 ; ** Assemble with The Macroassembler AS, freely available from         **
@@ -12,18 +12,10 @@
 
 KDTAIN	EQU 1
 MDTAIN	EQU 2
-LED1	EQU 4
-LED0	EQU 8
-PCLK	EQU 16
-LTCH	EQU 32
-PD1	EQU 64
-PD0	EQU 128
-
 
 ; PORT 2
 
 RESOUT	EQU 1
-NMIOUT	EQU 2
 MOUDTA	EQU 4
 MOUCLK	EQU 8
 OBF	EQU 16

@@ -62,13 +62,13 @@ CHIP  "kolibri"  ASSIGNED TO AN: EPM7128SLC84-15
 Pin Name/Usage               : Location  : Dir.   : I/O Standard      : Voltage : I/O Bank  : User Assignment
 -------------------------------------------------------------------------------------------------------------
 nRES                         : 1         : input  : TTL               :         :           : Y              
-MA[21]                       : 2         : input  : TTL               :         :           : Y              
+WP0                          : 2         : input  : TTL               :         :           : N              
 VCCINT                       : 3         : power  :                   : 5.0V    :           :                
-nPORT                        : 4         : output : TTL               :         :           : Y              
+MA[16]                       : 4         : output : TTL               :         :           : N              
 nE                           : 5         : output : TTL               :         :           : Y              
 nSD0                         : 6         : output : TTL               :         :           : Y              
 GND                          : 7         : gnd    :                   :         :           :                
-nFPUCS                       : 8         : output : TTL               :         :           : Y              
+nSPI1                        : 8         : output : TTL               :         :           : N              
 nQ                           : 9         : output : TTL               :         :           : Y              
 nSD1                         : 10        : output : TTL               :         :           : Y              
 nCSR                         : 11        : output : TTL               :         :           : Y              
@@ -78,18 +78,18 @@ TDI                          : 14        : input  : TTL               :         
 nWAIT                        : 15        : input  : TTL               :         :           : Y              
 A[14]                        : 16        : input  : TTL               :         :           : Y              
 A[15]                        : 17        : input  : TTL               :         :           : Y              
-RESERVED                     : 18        :        :                   :         :           :                
+CD0                          : 18        : input  : TTL               :         :           : N              
 GND                          : 19        : gnd    :                   :         :           :                
-RESERVED                     : 20        :        :                   :         :           :                
-nMM                          : 21        : output : TTL               :         :           : Y              
-nNMI                         : 22        : output : TTL               :         :           : Y              
+CD1                          : 20        : input  : TTL               :         :           : N              
+WP1                          : 21        : input  : TTL               :         :           : N              
+MA14                         : 22        : output : TTL               :         :           : N              
 TMS                          : 23        : input  : TTL               :         :           : Y              
-P1                           : 24        : output : TTL               :         :           : Y              
+MA[18]                       : 24        : output : TTL               :         :           : N              
 nOPL2                        : 25        : output : TTL               :         :           : Y              
 VCCIO                        : 26        : power  :                   : 5.0V    :           :                
-P0                           : 27        : output : TTL               :         :           : Y              
-nMMUCS                       : 28        : output : TTL               :         :           : Y              
-nSTROBE                      : 29        : output : TTL               :         :           : Y              
+LED0                         : 27        : output : TTL               :         :           : N              
+TSC                          : 28        : output : TTL               :         :           : N              
+MA15                         : 29        : output : TTL               :         :           : N              
 D[3]                         : 30        : bidir  : TTL               :         :           : Y              
 RW                           : 31        : input  : TTL               :         :           : Y              
 GND                          : 32        : gnd    :                   :         :           :                
@@ -123,13 +123,13 @@ GND                          : 59        : gnd    :                   :         
 A[12]                        : 60        : input  : TTL               :         :           : Y              
 A[13]                        : 61        : input  : TTL               :         :           : Y              
 TCK                          : 62        : input  : TTL               :         :           : Y              
-RESERVED                     : 63        :        :                   :         :           :                
-RESERVED                     : 64        :        :                   :         :           :                
-MA[19]                       : 65        : input  : TTL               :         :           : Y              
+nSPI2                        : 63        : output : TTL               :         :           : N              
+nCTRL                        : 64        : output : TTL               :         :           : N              
+MA[19]                       : 65        : output : TTL               :         :           : Y              
 VCCIO                        : 66        : power  :                   : 5.0V    :           :                
-MA[20]                       : 67        : input  : TTL               :         :           : Y              
+LED1                         : 67        : output : TTL               :         :           : N              
 nIOEN                        : 68        : output : TTL               :         :           : Y              
-MHZ24                        : 69        : output : TTL               :         :           : Y              
+MA[17]                       : 69        : output : TTL               :         :           : N              
 nRD245                       : 70        : output : TTL               :         :           : Y              
 TDO                          : 71        : output : TTL               :         :           : Y              
 GND                          : 72        : gnd    :                   :         :           :                

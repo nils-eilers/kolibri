@@ -2,11 +2,9 @@ module clock (
     input MHZ48,            // master clock
     input nWAIT,            // V9958 wait signal
 
-    output MHZ24,           // 24 MHz clock output
     output MHZ12,           // 12 MHz clock output
     output reg nQ,          // inverted clock signals for 6309E
-    output nE,
-    output reg nSTROBE      // low during MMU access
+    output nE
     );
 
 
@@ -24,7 +22,7 @@ module clock (
         nQ = 1'b0;
     end
 
-    assign MHZ24 = counter12[0];            // 24 MHz output
+    //assign MHZ24 = counter12[0];            // 24 MHz output
     assign MHZ12 = counter12[1];            // 12 MHz output
     assign nE = counter3[1];                // nE = 3 MHz
 
@@ -45,22 +43,6 @@ module clock (
             nQ <= 1'b1;
         else
             nQ <= 1'b0;
-    end
-
-    /*
-                   ____________
-    E        _____/            \____    /CS low to strobe low >= 20 ns
-    ______   _______          ______
-    STROBE          \________/          width of strobe pulse >= 75 ns
-
-    */
-
-    always @ (posedge MHZ48)
-    begin
-        if (nE == 0 && counter12 == 2'b11 && counter3 == 2'b00)
-            nSTROBE <= 1'b0;
-        if (nE == 0 && counter12 == 2'b11 && counter3 == 2'b01)
-            nSTROBE <= 1'b1;
     end
 
 
