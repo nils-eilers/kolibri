@@ -25,3 +25,13 @@ hardware/cpld/output_files/*.done
 hardware/cpld/output_files/*.summary
 hardware/cpld/output_files/*.jdi
 hardware/cpld/kolibri.qws
+hardware/cpld2/db
+hardware/cpld2/incremental_db
+hardware/cpld2/simulation
+hardware/cpld2/output_files/*.rpt
+hardware/cpld2/output_files/*.cdf
+hardware/cpld2/output_files/*.done
+hardware/cpld2/output_files/*.summary
+hardware/cpld2/output_files/*.jdi
+hardware/cpld2/output_files/*.fit.smsg
+hardware/cpld2/cpld2.qws
