@@ -66,16 +66,15 @@ module kolibri (
     assign nWR     = nE |  RW;
     assign nIOEN   = nE | !(A[15:8] == 8'hFE);
 
-
+    //assign nMMUCS  = nIOEN |     !(A[7:4] == 4'b0000);    // $FE00-$FE0F
+    assign nRTC    = nIOEN |       !(A[7:4] == 4'b0001);    // $FE10-$FE1F
+    assign nCS8742 = nIOEN |       !(A[7:1] == 7'b0010010); // $FE24-$FE25
+    assign nOPL2   = nIOEN |       !(A[7:1] == 7'b0010011); // $FE26-$FE27
     assign nCSR    = nIOEN | ~RW | !(A[7:2] == 6'b001010);  // $FE28-$FE2B
     assign nCSW    = nIOEN |  RW | !(A[7:2] == 6'b001010);  // $FE28-$FE2B
     assign nRD245  = nIOEN | ~RW | !(A[7:0] == 8'h2C);      // $FE2C
     assign WR245   = nIOEN |  RW | !(A[7:0] == 8'h2C);      // $FE2C
-    //assign nMMUCS  = nIOEN |       !(A[7:4] == 4'b0000);    // $FE00-$FE0F
-    assign nRTC    = nIOEN |       !(A[7:4] == 4'h0001);    // $FE10-$FE1F
-    assign nCS8742 = nIOEN |       !(A[7:1] == 7'b0010010); // $FE24-$FE25
-    assign nOPL2   = nIOEN |       !(A[7:1] == 7'b0010011); // $FE26-$FE27
-    assign nCTRL   = nIOEN |       !(A[7:4] == 3'b0100);    // $FE40-$FE4F
+    assign nCTRL   = nIOEN |       !(A[7:4] == 4'b0100);    // $FE40-$FE4F
 
 
 
