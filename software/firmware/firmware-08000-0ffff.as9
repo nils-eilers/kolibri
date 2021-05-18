@@ -35,6 +35,20 @@ Greet
 
 ; No high level code here, the output shall work even with broken RAM chip
 ; Write greeter to USB virtual COM port
+
+
+; A bad solder joint might let a data bit appear as always been set
+; If these are all good, this loop should output characters from $00 to $ff
+; which can be checked with minicom -H (-H turns on output in hex mode)
+
+    IF DEBUG_FT245
+        CLRA
+OUTL    STA     IO_FT245R
+        INCA
+        BNE     OUTL
+HLT245  BRA     HLT245
+    ENDIF
+
         LDX     #FT245PR
 GRTLP   LDA     ,X+
         BEQ     Greet_20
@@ -43,7 +57,7 @@ GRTLP   LDA     ,X+
         BRA     GRTLP
 
 FT245PR FCC "\r\n\r\n"
-BOOTPRM FCC "kolibri.computer BIOS 2020-04-26\n"
+BOOTPRM FCC "kolibri.computer BIOS 2021-05-18\n"
 NULBYT  FCB 0
 Greet_20
 
@@ -86,17 +100,11 @@ Greet_80
         JSR     SD_Card_Info
         CALL    FLUSH
 
-; Call S-record loader if BOOT switch is pressed
-        TIM     #IO_INBOOT,IO_INPORT
-        BNE     +               ; branch if switch is not pressed
-        JSR     Mon_Load
-+
-
 ; Power Chime! Well, actually, right now it's just a simple beep.
         JSR     OPL2_Power_Chime
 
 ;       JMP     Basic_Coldstart
-        JMP KLOOP
+;       JMP KLOOP
 MONLP   ILLOP                   ; Call monitor
 
 
@@ -197,35 +205,7 @@ Init_Vectors
 Init_MMU
 ********
 
-        LDW     #16
-        LDY     #$IO_MMU
-        LDD     #NULBYT
-        TFM     D,Y+
-
-        LDA     #%00000000
-        STA     IO_MMU
-        STA     IO_MMU+4
-        STA     IO_MMU+8
-        STA     IO_MMU+12
-
-        LDA     #%00000100
-        STA     IO_MMU+1
-        STA     IO_MMU+5
-        STA     IO_MMU+9
-        STA     IO_MMU+13
-
-        LDA     #%00001000
-        STA     IO_MMU+2
-        STA     IO_MMU+6
-        STA     IO_MMU+10
-        STA     IO_MMU+14
-
-
-        LDA     #%00001100
-        STA     IO_MMU+3
-        STA     IO_MMU+7
-        STA     IO_MMU+11
-        STA     IO_MMU+15
+; TODO
 
         RTS
 
@@ -315,10 +295,7 @@ USB_In
 *         B:  zero if no data available *
 *****************************************
 
-        LDB     #$01            ; data available flag
-        TST     BIOS_EMU_Flag
-        BNE     UI_70           ; -> emu active
-        LDA     IO_INPORT       ; data available?
+        LDA     IO_STAT         ; data available?
         BITA    #IO_INRXF
         BEQ     UI_70           ; branch if data available
         CLRD                    ; return '\0' and no data available flag
@@ -355,9 +332,7 @@ Do_Flush
 * Flush all buffers including stdin *
 *************************************
 
-        TST     BIOS_EMU_Flag
-        BNE     DFL_20          ; -> emu active
-DFL_10  LDA     IO_INPORT       ; data from USB serial port available?
+DFL_10  LDA     IO_STAT         ; data from USB serial port available?
         BITA    #IO_INRXF
         BNE     DFL_20          ; branch if no data available
         LDA     IO_FT245R       ; read available data

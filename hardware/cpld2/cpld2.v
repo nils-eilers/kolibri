@@ -50,6 +50,10 @@ module cpld2 (
         end
     end
 
+    assign D[7] = nCS ? 1'bZ : nRXF;
+    assign D[6] = nCS ? 1'bZ : TXE;
+    assign D[5] = nCS ? 1'bZ : nIBF;
+    assign D[4] = nCS ? 1'bZ : OBF;
 
 endmodule
 

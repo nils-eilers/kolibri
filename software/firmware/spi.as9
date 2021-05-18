@@ -24,7 +24,7 @@ SUBROUTINE SD_Card_Info
         CALL    PUTS
         ORA     #'0'            ; Convert # to ASCII
         CALL    PUTC
-        LDA     IO_INPORT
+        LDA     IO_SDCARD
         ANDR    A,E             ; test IO_INCD#
         BEQ     +
         LDX     #Msg_NOT        ; " not"
@@ -32,7 +32,7 @@ SUBROUTINE SD_Card_Info
 +       LDX     #Msg_DET        ; " detected, write protect "
         CALL    PUTS
         LDX     #Msg_ON         ; "ON"
-        LDA     IO_INPORT
+        LDA     IO_SDCARD
         ANDR    A,F             ; test IO_INWP#
         BNE     +
         LDX     #Msg_OFF        ; "OFF"
@@ -46,8 +46,8 @@ SPI_Deselect_Cards
 ******************
 
         PSHS    A
-        LDA     #IO_CS_DRV_0 | IO_CS_DRV_1
-        STA     IO_CARDSEL
+        LDA     #IO_OCSSD0 | IO_OCSSD1
+        STA     IO_SDCARD
         PULS    A,PC
 
 
@@ -56,8 +56,8 @@ SPI_Select_Card_0
 *****************
 
         PSHS    A
-        LDA     #$FF-IO_CS_DRV_0
-        STA     IO_CARDSEL
+        LDA     #$FF-IO_OCSSD0
+        STA     IO_SDCARD
         PULS    A,PC
 
 
@@ -66,8 +66,8 @@ SPI_Select_Card_1
 *****************
 
         PSHS    A
-        LDA     #$FF-IO_CS_DRV_1
-        STA     IO_CARDSEL
+        LDA     #$FF-IO_OCSSD1
+        STA     IO_SDCARD
         PULS    A,PC
 
 

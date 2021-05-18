@@ -112,12 +112,7 @@ USERSTACK       = $7EFF
 * I/O area *
 ************
 
-IO_MMU          = $FE00
 IO_RTC          = $FE10
-IO_MEMCONF0     = $FE20
-IO_MEMCONF1     = $FE21
-IO_MEMCONF2     = $FE22
-IO_MEMCONF3     = $FE23
 IO_KBD_DATA     = $FE24
 IO_KBD_CMD      = $FE25
 IO_KBD_STATUS   = $FE25
@@ -130,23 +125,29 @@ IO_VDPCONTROL   = $FE29         ; write access
 IO_VDPPALETTE   = $FE2A         ; write access
 IO_VDPINDIRECT  = $FE2B         ; write access
 IO_FT245R       = $FE2C         ; virtual COM port R/W
-IO_INPORT       = $FE2D
+
+
+IO_STAT         = $FE2D
+IO_INRXF        = 128           ; when low, there is data available in the FIFO
+IO_ITXE         = 64            ; when low, data can be written into the FIFO
+IO_INIBF        = 32
+IO_IOBF         = 16
+
+IO_SPI_CLK_0    = $FE2E
+IO_SPI_CLK_1    = $FE2F
+
+
+IO_SDCARD       = $FE40
+IO_OCSSD0       = 1
+IO_OCSSD1       = 2
+
 IO_INWP0        = 1
 IO_INWP1        = 2
 IO_INCD0        = 4
 IO_INCD1        = 8
-IO_INBOOT       = 16            ; low if boot switch pressed
 IO_INIBF        = 32
-IO_INTXE        = 64
-IO_INRXF        = 128
-IO_SPI_CLK_0    = $FE2E
-IO_SPI_CLK_1    = $FE2F
-IO_CARDSEL      = $FE30
-IO_CS_DRV_0     = 1
-IO_CS_DRV_1     = 2
+
 IO_SPI_DATA     = $FE31
-IO_MMU_DISABLE  = $FE32         ; 0: MMU enabled, 1: MMU disabled
-IO_FPU          = $FE40         ; 68882 $FE40-$FE5F
 
 IO_RTC_S1       ENUM IO_RTC
 IO_RTC_S10      ENUM
