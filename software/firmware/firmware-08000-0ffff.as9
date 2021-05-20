@@ -2,6 +2,8 @@
         INCLUDE "kolibri-definitions.as9"
         INCLUDE "macros.as9"
 
+        DEBUG_FT245 = 0
+
 VDPFONTDATA = $E000             ; fontata start
 VDPFONTSIZE = $0800             ; fontdata size
 
@@ -57,7 +59,7 @@ GRTLP   LDA     ,X+
         BRA     GRTLP
 
 FT245PR FCC "\r\n\r\n"
-BOOTPRM FCC "kolibri.computer BIOS 2021-05-18\n"
+BOOTPRM FCC "kolibri.computer BIOS 2021-05-19\n"
 NULBYT  FCB 0
 Greet_20
 

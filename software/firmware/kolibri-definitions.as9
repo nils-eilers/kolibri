@@ -126,18 +126,7 @@ IO_VDPPALETTE   = $FE2A         ; write access
 IO_VDPINDIRECT  = $FE2B         ; write access
 IO_FT245R       = $FE2C         ; virtual COM port R/W
 
-
-IO_STAT         = $FE2D
-IO_INRXF        = 128           ; when low, there is data available in the FIFO
-IO_ITXE         = 64            ; when low, data can be written into the FIFO
-IO_INIBF        = 32
-IO_IOBF         = 16
-
-IO_SPI_CLK_0    = $FE2E
-IO_SPI_CLK_1    = $FE2F
-
-
-IO_SDCARD       = $FE40
+IO_SDCARD       = $FE30
 IO_OCSSD0       = 1
 IO_OCSSD1       = 2
 
@@ -148,6 +137,18 @@ IO_INCD1        = 8
 IO_INIBF        = 32
 
 IO_SPI_DATA     = $FE31
+
+IO_SPI_CLK_0    = $FE32
+IO_SPI_CLK_1    = $FE33
+
+IO_STAT         = $FE40
+IO_INRXF        = 128           ; when low, there is data available in the FIFO
+IO_ITXE         = 64            ; when low, data can be written into the FIFO
+IO_INIBF        = 32
+IO_IOBF         = 16
+
+
+
 
 IO_RTC_S1       ENUM IO_RTC
 IO_RTC_S10      ENUM

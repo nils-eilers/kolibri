@@ -63,7 +63,8 @@ Msg_Help
         FCB     "M xxxx yyyy display memory dump\n"
         FCB     "O xxxx yyyy bytes : display occurances\n"
         FCB     "R      display saved registers\n"
-        FCB     "T=yyyy-mm-dd hh:mm:ss set or display date & time\n"
+        FCB     "T=yyyy-mm-dd hh:mm:ss set date & time\n"
+        FCB     "T?     display date & time\n"
         FCB     "U xxxx yyyy unassemble\n"
         FCB     "X      exit monitor\n",0
 Msg_Not_RAM
@@ -383,7 +384,10 @@ ENDSUB
 SUBROUTINE Mon_Toggle_Dollar
 ****************************
 
-        EIM     #1,Mon_Dollar
+; FIXME        EIM     #1,Mon_Dollar
+        LDA     #1
+        EORA    Mon_Dollar
+        STA     Mon_Dollar
         ANDCC   #%1111 1110     ; clear carry
         RTS
 ENDSUB
