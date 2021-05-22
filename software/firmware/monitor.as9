@@ -384,10 +384,7 @@ ENDSUB
 SUBROUTINE Mon_Toggle_Dollar
 ****************************
 
-; FIXME        EIM     #1,Mon_Dollar
-        LDA     #1
-        EORA    Mon_Dollar
-        STA     Mon_Dollar
+        EIM     #1,Mon_Dollar
         ANDCC   #%1111 1110     ; clear carry
         RTS
 ENDSUB
