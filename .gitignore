@@ -1,5 +1,6 @@
 *.bak
 *-bak
+*_autosave*
 *.o
 *.lst
 *.bin
