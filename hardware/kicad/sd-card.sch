@@ -404,7 +404,7 @@ F 3 "~" H 2200 850 50  0001 C CNN
 	1    2200 850 
 	0    -1   1    0   
 $EndComp
-Text GLabel 1175 3125 0    39   Input ~ 0
+Text GLabel 1175 3225 0    39   Input ~ 0
 LED0
 Wire Wire Line
 	2400 850  2350 850 
@@ -430,7 +430,7 @@ F 3 "~" H 2200 1250 50  0001 C CNN
 	1    2200 1250
 	0    -1   1    0   
 $EndComp
-Text GLabel 1175 3225 0    39   Input ~ 0
+Text GLabel 1175 3125 0    39   Input ~ 0
 LED1
 Wire Wire Line
 	2400 1250 2350 1250

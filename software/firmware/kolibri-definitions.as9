@@ -127,14 +127,20 @@ IO_VDPINDIRECT  = $FE2B         ; write access
 IO_FT245R       = $FE2C         ; virtual COM port R/W
 
 IO_SDCARD       = $FE30
-IO_OCSSD0       = 1
-IO_OCSSD1       = 2
+IO_SEL_SD0      = 1
+IO_SEL_SD1      = 2
+IO_SEL_SPI1     = 4
+IO_SEL_SPI2     = 8
+IO_LED0         = 16
+IO_LED1         = 32
+; bit 6 is not used
+IO_TSC          = 128           ; Setting this bit high disables the 6309 CPU
 
-IO_INWP0        = 1
-IO_INWP1        = 2
-IO_INCD0        = 4
-IO_INCD1        = 8
-IO_INIBF        = 32
+IO_WP0          = 1
+IO_WP1          = 2
+IO_CD0          = 4
+IO_CD1          = 8
+IO_IBF          = 32
 
 IO_SPI_DATA     = $FE31
 

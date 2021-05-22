@@ -16,7 +16,7 @@ SUBROUTINE SD_Card_Info
 * Used  : W,X               *
 *****************************
 
-        LDW     #(IO_INCD1 << 8) | IO_INWP1 ; card 1
+        LDW     #(IO_CD1 << 8) | IO_WP1 ; card 1
         TSTA
         BNE     +
         LSRW                    ; shift E & F for card 0
@@ -44,9 +44,10 @@ ENDSUB
 ******************
 SPI_Deselect_Cards
 ******************
+; also deselects auxiliary devices SPI1 and SPI2
 
         PSHS    A
-        LDA     #IO_OCSSD0 | IO_OCSSD1
+        LDA     #IO_SEL_SD0 | IO_SEL_SD1 | IO_SEL_SPI1 | IO_SEL_SPI2
         STA     IO_SDCARD
         PULS    A,PC
 
@@ -56,7 +57,7 @@ SPI_Select_Card_0
 *****************
 
         PSHS    A
-        LDA     #$FF-IO_OCSSD0
+        LDA     #$FF-IO_SEL_SD0
         STA     IO_SDCARD
         PULS    A,PC
 
@@ -66,7 +67,7 @@ SPI_Select_Card_1
 *****************
 
         PSHS    A
-        LDA     #$FF-IO_OCSSD1
+        LDA     #$FF-IO_SEL_SD1
         STA     IO_SDCARD
         PULS    A,PC
 

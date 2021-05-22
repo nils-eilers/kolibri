@@ -599,8 +599,6 @@ NoConn ~ 3400 2700
 NoConn ~ 3400 2800
 NoConn ~ 3400 2900
 NoConn ~ 3400 3000
-Text GLabel 6525 1725 2    39   Output ~ 0
-PU4
 $Comp
 L main-rescue:74LS06 U4
 U 3 1 58C6573F
@@ -713,10 +711,6 @@ Connection ~ 3550 1625
 Wire Wire Line
 	3550 1625 3550 2400
 Wire Wire Line
-	6125 1375 6125 1725
-Wire Wire Line
-	6125 1725 6525 1725
-Wire Wire Line
 	6225 1375 6225 3400
 Connection ~ 6225 3400
 Wire Wire Line
@@ -728,4 +722,5 @@ Wire Wire Line
 Connection ~ 5825 2200
 Wire Wire Line
 	5825 2200 7450 2200
+NoConn ~ 6125 1375
 $EndSCHEMATC

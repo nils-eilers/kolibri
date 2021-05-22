@@ -949,8 +949,8 @@ Wire Wire Line
 	9600 3925 9600 3825
 Wire Wire Line
 	9200 3925 9200 3825
-Text Notes 9100 3450 2    51   ~ 0
-1.6V => RGB
+Text Notes 7300 3700 2    51   ~ 0
+Select RGB signals
 Wire Wire Line
 	8200 3825 7675 3825
 Text GLabel 2000 3650 0    39   Input ~ 0
@@ -1693,18 +1693,6 @@ Wire Wire Line
 	5925 5050 6250 5050
 Wire Wire Line
 	3625 5050 3875 5050
-NoConn ~ 8600 3925
-$Comp
-L Device:R R16
-U 1 1 5F29BB2F
-P 9200 3600
-F 0 "R16" H 8975 3650 50  0000 L CNN
-F 1 "4k7" H 8975 3550 50  0000 L CNN
-F 2 "kolibri:R" V 9130 3600 50  0001 C CNN
-F 3 "~" H 9200 3600 50  0001 C CNN
-	1    9200 3600
-	1    0    0    -1  
-$EndComp
 $Comp
 L main-rescue:GND #PWR061
 U 1 1 5F2A00E1
@@ -1723,16 +1711,6 @@ Wire Wire Line
 Wire Wire Line
 	10050 3825 10050 3900
 Connection ~ 9600 3825
-Wire Wire Line
-	9200 3750 9200 3825
-Connection ~ 9200 3825
-Wire Wire Line
-	9200 3450 9200 3400
-Wire Wire Line
-	9200 3400 9400 3400
-Wire Wire Line
-	9400 3400 9400 3925
-Connection ~ 9200 3400
 Wire Wire Line
 	3875 5050 3875 7725
 Wire Wire Line
@@ -1852,10 +1830,6 @@ F 3 "~" H 5200 6925 50  0001 C CNN
 $EndComp
 NoConn ~ 5400 6925
 NoConn ~ 5400 7025
-Text GLabel 9200 3325 1    39   Input ~ 0
-PU4
-Wire Wire Line
-	9200 3325 9200 3400
 $Comp
 L Connector:TestPoint TP?
 U 1 1 637A05E7
@@ -1896,6 +1870,128 @@ Wire Wire Line
 Connection ~ 2300 1150
 Wire Wire Line
 	2300 1150 3050 1150
+$Comp
+L Transistor_BJT:BC547 Q5
+U 1 1 60A72540
+P 6350 3875
+F 0 "Q5" H 6541 3921 50  0000 L CNN
+F 1 "BC547C" H 6541 3830 50  0000 L CNN
+F 2 "kolibri:TO-92_Inline_Wide" H 6550 3800 50  0001 L CIN
+F 3 "http://www.fairchildsemi.com/ds/BC/BC547.pdf" H 6350 3875 50  0001 L CNN
+	1    6350 3875
+	1    0    0    -1  
+$EndComp
+$Comp
+L main-rescue:VCC #PWR066
+U 1 1 60A86DC6
+P 6100 3250
+F 0 "#PWR066" H 6100 3100 50  0001 C CNN
+F 1 "VCC" H 6117 3423 50  0000 C CNN
+F 2 "" H 6100 3250 50  0001 C CNN
+F 3 "" H 6100 3250 50  0001 C CNN
+	1    6100 3250
+	1    0    0    -1  
+$EndComp
+$Comp
+L main-rescue:R-RESCUE-main R15
+U 1 1 60A87603
+P 6100 3575
+F 0 "R15" H 6225 3575 40  0000 C CNN
+F 1 "1k8" V 6107 3576 40  0000 C CNN
+F 2 "kolibri:R" V 6030 3575 30  0001 C CNN
+F 3 "~" H 6100 3575 30  0000 C CNN
+	1    6100 3575
+	1    0    0    -1  
+$EndComp
+$Comp
+L main-rescue:R-RESCUE-main R16
+U 1 1 60A8802F
+P 6100 4175
+F 0 "R16" H 6225 4175 40  0000 C CNN
+F 1 "4k7" V 6107 4176 40  0000 C CNN
+F 2 "kolibri:R" V 6030 4175 30  0001 C CNN
+F 3 "~" H 6100 4175 30  0000 C CNN
+	1    6100 4175
+	1    0    0    -1  
+$EndComp
+$Comp
+L main-rescue:GND #PWR077
+U 1 1 60A89A8D
+P 6100 4475
+F 0 "#PWR077" H 6100 4225 50  0001 C CNN
+F 1 "GND" H 6105 4302 50  0000 C CNN
+F 2 "" H 6100 4475 50  0001 C CNN
+F 3 "" H 6100 4475 50  0001 C CNN
+	1    6100 4475
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	6100 3250 6100 3300
+Wire Wire Line
+	6100 3300 6450 3300
+Wire Wire Line
+	6450 3300 6450 3675
+Connection ~ 6100 3300
+Wire Wire Line
+	6100 3300 6100 3325
+Wire Wire Line
+	6100 3825 6100 3875
+Wire Wire Line
+	6150 3875 6100 3875
+Connection ~ 6100 3875
+Wire Wire Line
+	6100 3875 6100 3925
+Wire Wire Line
+	6100 4425 6100 4475
+$Comp
+L main-rescue:R-RESCUE-main R17
+U 1 1 60B22DD0
+P 6800 4075
+F 0 "R17" V 6900 4075 40  0000 C CNN
+F 1 "68" V 6807 4076 40  0000 C CNN
+F 2 "kolibri:R" V 6730 4075 30  0001 C CNN
+F 3 "~" H 6800 4075 30  0000 C CNN
+	1    6800 4075
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	6550 4075 6450 4075
+Wire Wire Line
+	9400 3925 9400 3725
+Wire Wire Line
+	9400 3725 7400 3725
+Wire Wire Line
+	7400 3725 7400 4075
+Wire Wire Line
+	7400 4075 7050 4075
+$Comp
+L Jumper:SolderJumper_2_Bridged JP1
+U 1 1 60B8A698
+P 8600 3500
+F 0 "JP1" V 8554 3568 50  0000 L CNN
+F 1 "SolderJumper_2_Bridged" V 8645 3568 50  0000 L CNN
+F 2 "kolibri:SolderJumper-2_P1.3mm_Bridged_RoundedPad1.0x1.5mm" H 8600 3500 50  0001 C CNN
+F 3 "~" H 8600 3500 50  0001 C CNN
+	1    8600 3500
+	0    1    1    0   
+$EndComp
+$Comp
+L main-rescue:VCC #PWR078
+U 1 1 60BA6189
+P 8600 3275
+F 0 "#PWR078" H 8600 3125 50  0001 C CNN
+F 1 "VCC" H 8617 3448 50  0000 C CNN
+F 2 "" H 8600 3275 50  0001 C CNN
+F 3 "" H 8600 3275 50  0001 C CNN
+	1    8600 3275
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	8600 3275 8600 3350
+Wire Wire Line
+	8600 3650 8600 3925
+Text Notes 9550 3325 2    51   ~ 0
+Switch to AV / SCART
 Wire Bus Line
 	5700 850  5700 2650
 Wire Bus Line

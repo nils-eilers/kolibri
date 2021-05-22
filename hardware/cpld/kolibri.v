@@ -96,16 +96,20 @@ module kolibri (
             nSPI1 <= 1;
             nSPI2 <= 1;
             LED0  <= 0;
-            LED1  <= 0;
+            LED1  <= 1;
             TSC   <= 0; 
-        end else if (A[15:0] == 16'hFE30) begin     // $FE30
-            nSD0  <= D[0];
-            nSD1  <= D[1];
-            nSPI1 <= D[2];
-            nSPI2 <= D[3];
-            LED0  <= D[4];
-            LED1  <= D[5];
-            TSC   <= D[7];
+        end else begin
+            if ((A[15:0] == 16'hFE30) && (RW == 0)) 
+            begin     // $FE30
+                nSD0  <= D[0];
+                nSD1  <= D[1];
+                nSPI1 <= D[2];
+                nSPI2 <= D[3];
+                LED0  <= D[4];
+                LED1  <= D[5];
+                // bit 6 not used
+                TSC   <= D[7];
+            end
         end
     end
 

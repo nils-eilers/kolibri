@@ -225,14 +225,6 @@ Wire Wire Line
 	8875 5100 8875 5675
 Wire Wire Line
 	8875 5675 8500 5675
-Text Label 1225 1975 0    51   ~ 0
-TMS
-Text Label 1225 1775 0    51   ~ 0
-TCK
-Text Label 1225 1875 0    51   ~ 0
-TDO
-Text Label 1225 2175 0    51   ~ 0
-TDI
 $Comp
 L main-rescue:GND-RESCUE-main #PWR?
 U 1 1 60FA3809
@@ -349,37 +341,25 @@ NoConn ~ 1375 2075
 Wire Wire Line
 	2025 1875 1875 1875
 Wire Wire Line
-	2550 1975 2125 1975
+	2550 1975 2225 1975
 Wire Wire Line
-	2125 1975 2125 1600
+	2225 1975 2225 1525
 Wire Wire Line
-	2125 1600 1200 1600
+	2225 1525 1050 1525
 Wire Wire Line
-	1375 1775 1200 1775
+	1375 1775 1050 1775
 Wire Wire Line
-	1200 1775 1200 1600
+	1050 1775 1050 1525
 Wire Wire Line
-	2550 1875 2175 1875
+	2550 1875 2300 1875
 Wire Wire Line
-	2175 1875 2175 1550
+	2300 1875 2300 1450
 Wire Wire Line
-	2175 1550 1150 1550
+	2300 1450 950  1450
 Wire Wire Line
-	1150 1550 1150 1975
+	950  1450 950  1975
 Wire Wire Line
-	1150 1975 1375 1975
-Wire Wire Line
-	2550 2175 2275 2175
-Wire Wire Line
-	2550 2075 2225 2075
-Wire Wire Line
-	2225 2075 2225 1500
-Wire Wire Line
-	2225 1500 1100 1500
-Wire Wire Line
-	1100 1500 1100 1875
-Wire Wire Line
-	1100 1875 1375 1875
+	950  1975 1375 1975
 Wire Wire Line
 	3650 5025 3750 5025
 Wire Wire Line
@@ -548,14 +528,6 @@ Wire Wire Line
 	4850 4475 7625 4475
 Wire Wire Line
 	2325 2475 2550 2475
-Wire Wire Line
-	1050 2175 1050 1450
-Wire Wire Line
-	1050 1450 2275 1450
-Wire Wire Line
-	2275 1450 2275 2175
-Wire Wire Line
-	1050 2175 1375 2175
 Wire Wire Line
 	2075 2025 2075 1975
 Wire Wire Line
@@ -948,4 +920,103 @@ Wire Wire Line
 Connection ~ 6900 4575
 Wire Wire Line
 	6900 4575 7625 4575
+$Comp
+L main-rescue:GND #PWR?
+U 1 1 612963E7
+P 1050 2750
+AR Path="/56B86A26/612963E7" Ref="#PWR?"  Part="1" 
+AR Path="/60F127A0/612963E7" Ref="#PWR017"  Part="1" 
+F 0 "#PWR017" H 1050 2500 50  0001 C CNN
+F 1 "GND" H 1050 2600 50  0000 C CNN
+F 2 "" H 1050 2750 50  0001 C CNN
+F 3 "" H 1050 2750 50  0001 C CNN
+	1    1050 2750
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	1050 2450 1050 1775
+Connection ~ 1050 1775
+$Comp
+L Device:R R24
+U 1 1 612953DA
+P 1050 2600
+F 0 "R24" H 1120 2646 50  0000 L CNN
+F 1 "1k" H 1120 2555 50  0000 L CNN
+F 2 "kolibri:R" V 980 2600 50  0001 C CNN
+F 3 "~" H 1050 2600 50  0001 C CNN
+	1    1050 2600
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:R R18
+U 1 1 612D54A7
+P 950 1225
+F 0 "R18" H 1020 1271 50  0000 L CNN
+F 1 "10k" H 1020 1180 50  0000 L CNN
+F 2 "kolibri:R" V 880 1225 50  0001 C CNN
+F 3 "~" H 950 1225 50  0001 C CNN
+	1    950  1225
+	1    0    0    -1  
+$EndComp
+$Comp
+L main-rescue:VCC #PWR?
+U 1 1 612D5891
+P 950 975
+AR Path="/56B86A26/612D5891" Ref="#PWR?"  Part="1" 
+AR Path="/60F127A0/612D5891" Ref="#PWR015"  Part="1" 
+F 0 "#PWR015" H 950 825 50  0001 C CNN
+F 1 "VCC" H 950 1125 50  0000 C CNN
+F 2 "" H 950 975 50  0001 C CNN
+F 3 "" H 950 975 50  0001 C CNN
+	1    950  975 
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	950  975  950  1075
+Wire Wire Line
+	950  1450 950  1375
+Connection ~ 950  1450
+Text GLabel 800  1775 0    39   Output ~ 0
+TCK
+Wire Wire Line
+	1050 1775 800  1775
+Text GLabel 800  1975 0    39   Output ~ 0
+TMS
+Wire Wire Line
+	800  1975 950  1975
+Connection ~ 950  1975
+Text Notes 1225 1775 0    50   ~ 0
+TCK
+Text Notes 1225 1875 0    50   ~ 0
+TDO
+Text Notes 1225 1975 0    50   ~ 0
+TMS
+Text Notes 1225 2175 0    50   ~ 0
+TDI
+Text GLabel 800  2175 0    39   Output ~ 0
+TDI
+Wire Wire Line
+	1375 2175 800  2175
+Text GLabel 800  2375 0    39   Input ~ 0
+TDO
+Wire Wire Line
+	800  2375 1950 2375
+Wire Wire Line
+	1950 2375 1950 2250
+Wire Wire Line
+	1950 2250 2175 2250
+Wire Wire Line
+	2175 2250 2175 2175
+Wire Wire Line
+	2175 2175 2550 2175
+Wire Wire Line
+	2550 2075 2150 2075
+Wire Wire Line
+	2150 2075 2150 1600
+Wire Wire Line
+	1150 1600 1150 1875
+Wire Wire Line
+	1150 1875 1375 1875
+Wire Wire Line
+	1150 1600 2150 1600
 $EndSCHEMATC

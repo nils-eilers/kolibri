@@ -120,8 +120,8 @@ set_location_assignment PIN_60 -to CD0
 set_location_assignment PIN_63 -to WP0
 set_location_assignment PIN_64 -to CD1
 set_location_assignment PIN_65 -to WP1
-set_location_assignment PIN_67 -to LED1
+set_location_assignment PIN_77 -to LED1
 set_location_assignment PIN_69 -to nSPI1
 set_location_assignment PIN_68 -to nSPI2
-set_location_assignment PIN_77 -to LED0
+set_location_assignment PIN_67 -to LED0
 set_global_assignment -name VERILOG_FILE kolibri.v

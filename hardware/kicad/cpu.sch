@@ -24,14 +24,6 @@ F 3 "~" H 9900 3400 60  0000 C CNN
 	1    9900 3850
 	1    0    0    -1  
 $EndComp
-Text Label 1900 3700 0    51   ~ 0
-TMS
-Text Label 1900 3500 0    51   ~ 0
-TCK
-Text Label 1900 3600 0    51   ~ 0
-TDO
-Text Label 1900 3900 0    51   ~ 0
-TDI
 $Comp
 L main-rescue:HD6309E U3
 U 1 1 569E5C08
@@ -861,91 +853,6 @@ Connection ~ 4675 3150
 Wire Wire Line
 	4775 3200 4775 3150
 $Comp
-L main-rescue:Conn_02x05_Odd_Even J2
-U 1 1 5AB121B8
-P 2250 3700
-F 0 "J2" H 2300 4000 50  0000 C CNN
-F 1 "JTAG" H 2300 3400 50  0000 C CNN
-F 2 "kolibri:WSL10G" H 2250 3700 50  0001 C CNN
-F 3 "" H 2250 3700 50  0001 C CNN
-	1    2250 3700
-	1    0    0    -1  
-$EndComp
-$Comp
-L main-rescue:GND #PWR017
-U 1 1 5AB12B39
-P 2625 3975
-F 0 "#PWR017" H 2625 3725 50  0001 C CNN
-F 1 "GND" H 2625 3825 50  0000 C CNN
-F 2 "" H 2625 3975 50  0001 C CNN
-F 3 "" H 2625 3975 50  0001 C CNN
-	1    2625 3975
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	2550 3500 2625 3500
-Wire Wire Line
-	2625 3500 2625 3900
-Wire Wire Line
-	2550 3900 2625 3900
-Connection ~ 2625 3900
-$Comp
-L main-rescue:VCC #PWR015
-U 1 1 5AB13344
-P 2700 3600
-F 0 "#PWR015" H 2700 3450 50  0001 C CNN
-F 1 "VCC" H 2700 3750 50  0000 C CNN
-F 2 "" H 2700 3600 50  0001 C CNN
-F 3 "" H 2700 3600 50  0001 C CNN
-	1    2700 3600
-	1    0    0    -1  
-$EndComp
-NoConn ~ 2550 3700
-NoConn ~ 2550 3800
-NoConn ~ 2050 3800
-Wire Wire Line
-	2700 3600 2550 3600
-Wire Wire Line
-	3225 3700 2800 3700
-Wire Wire Line
-	2800 3700 2800 3325
-Wire Wire Line
-	2800 3325 1875 3325
-Wire Wire Line
-	2050 3500 1875 3500
-Wire Wire Line
-	1875 3500 1875 3325
-Wire Wire Line
-	3225 3600 2850 3600
-Wire Wire Line
-	2850 3600 2850 3275
-Wire Wire Line
-	2850 3275 1825 3275
-Wire Wire Line
-	1825 3275 1825 3700
-Wire Wire Line
-	1825 3700 2050 3700
-Wire Wire Line
-	3225 3900 2775 3900
-Wire Wire Line
-	2775 3900 2775 4175
-Wire Wire Line
-	2775 4175 1875 4175
-Wire Wire Line
-	1875 4175 1875 3900
-Wire Wire Line
-	1875 3900 2050 3900
-Wire Wire Line
-	3225 3800 2900 3800
-Wire Wire Line
-	2900 3800 2900 3225
-Wire Wire Line
-	2900 3225 1775 3225
-Wire Wire Line
-	1775 3225 1775 3600
-Wire Wire Line
-	1775 3600 2050 3600
-$Comp
 L main-rescue:VCC #PWR01
 U 1 1 5AB150A5
 P 8625 5725
@@ -1064,8 +971,6 @@ Wire Wire Line
 	4575 3150 4675 3150
 Wire Wire Line
 	4675 3150 4775 3150
-Wire Wire Line
-	2625 3900 2625 3975
 NoConn ~ 3575 1725
 Wire Wire Line
 	3575 1825 3675 1825
@@ -1674,9 +1579,9 @@ Text GLabel 2850 6200 0    39   Input ~ 0
 CD0
 Text GLabel 2850 5900 0    39   Input ~ 0
 CD1
-Text GLabel 3175 4900 0    39   Output ~ 0
-LED0
 Text GLabel 2850 5700 0    39   Output ~ 0
+LED0
+Text GLabel 3175 4900 0    39   Output ~ 0
 LED1
 Wire Wire Line
 	4875 1050 4625 1050
@@ -2091,4 +1996,20 @@ MHZ48
 Wire Wire Line
 	8325 5550 8075 5550
 Connection ~ 8075 5550
+Text GLabel 3150 3800 0    39   Output ~ 0
+TDO
+Text GLabel 3150 3600 0    39   Input ~ 0
+TMS
+Text GLabel 3150 3700 0    39   Input ~ 0
+TCK
+Text GLabel 3150 3900 0    39   Input ~ 0
+TDI
+Wire Wire Line
+	3225 3600 3150 3600
+Wire Wire Line
+	3225 3700 3150 3700
+Wire Wire Line
+	3225 3800 3150 3800
+Wire Wire Line
+	3225 3900 3150 3900
 $EndSCHEMATC
