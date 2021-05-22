@@ -140,7 +140,6 @@ IO_WP0          = 1
 IO_WP1          = 2
 IO_CD0          = 4
 IO_CD1          = 8
-IO_IBF          = 32
 
 IO_SPI_DATA     = $FE31
 
@@ -148,10 +147,10 @@ IO_SPI_CLK_0    = $FE32
 IO_SPI_CLK_1    = $FE33
 
 IO_STAT         = $FE40
-IO_INRXF        = 128           ; when low, there is data available in the FIFO
-IO_ITXE         = 64            ; when low, data can be written into the FIFO
-IO_INIBF        = 32
-IO_IOBF         = 16
+IO_RXF          = 128           ; when low, there is data available in the FIFO
+IO_TXE          = 64            ; when low, data can be written into the FIFO
+IO_IBF          = 32
+IO_OBF          = 16
 
 
 

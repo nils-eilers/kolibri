@@ -298,7 +298,7 @@ USB_In
 *****************************************
 
         LDA     IO_STAT         ; data available?
-        BITA    #IO_INRXF
+        BITA    #IO_RXF
         BEQ     UI_70           ; branch if data available
         CLRD                    ; return '\0' and no data available flag
         BRA     UI_80
@@ -335,7 +335,7 @@ Do_Flush
 *************************************
 
 DFL_10  LDA     IO_STAT         ; data from USB serial port available?
-        BITA    #IO_INRXF
+        BITA    #IO_RXF
         BNE     DFL_20          ; branch if no data available
         LDA     IO_FT245R       ; read available data
         BRA     DFL_10
