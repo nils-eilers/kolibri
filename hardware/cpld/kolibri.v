@@ -85,9 +85,6 @@ module kolibri (
     // =======================================================================
 
 
-    // SD Card Select Signals
-    // $FE30 bit 0: card select drive 0
-    // $FE30 bit 1: card select drive 1
     always @(negedge nE or negedge nRES)
     begin
         if (nRES == 0) begin
@@ -96,7 +93,7 @@ module kolibri (
             nSPI1 <= 1;
             nSPI2 <= 1;
             LED0  <= 0;
-            LED1  <= 1;
+            LED1  <= 0;
             TSC   <= 0; 
         end else begin
             if ((A[15:0] == 16'hFE30) && (RW == 0)) 
