@@ -542,36 +542,32 @@ Female connector\nseen from the front
 $Comp
 L main-rescue:GND #PWR0113
 U 1 1 5DD7CB17
-P 8050 4225
-F 0 "#PWR0113" H 8050 3975 50  0001 C CNN
-F 1 "GND" H 8050 4075 50  0000 C CNN
-F 2 "" H 8050 4225 50  0000 C CNN
-F 3 "" H 8050 4225 50  0000 C CNN
-	1    8050 4225
+P 8050 4325
+F 0 "#PWR0113" H 8050 4075 50  0001 C CNN
+F 1 "GND" H 8050 4175 50  0000 C CNN
+F 2 "" H 8050 4325 50  0000 C CNN
+F 3 "" H 8050 4325 50  0000 C CNN
+	1    8050 4325
 	-1   0    0    -1  
 $EndComp
 $Comp
 L main-rescue:VCC #PWR0114
 U 1 1 5DD7CFD0
-P 8050 3675
-F 0 "#PWR0114" H 8050 3525 50  0001 C CNN
-F 1 "VCC" H 8050 3825 50  0000 C CNN
-F 2 "" H 8050 3675 50  0000 C CNN
-F 3 "" H 8050 3675 50  0000 C CNN
-	1    8050 3675
+P 8725 3925
+F 0 "#PWR0114" H 8725 3775 50  0001 C CNN
+F 1 "VCC" H 8725 4075 50  0000 C CNN
+F 2 "" H 8725 3925 50  0000 C CNN
+F 3 "" H 8725 3925 50  0000 C CNN
+	1    8725 3925
 	-1   0    0    -1  
 $EndComp
 Wire Wire Line
-	8125 3750 8050 3750
-Wire Wire Line
-	8050 3750 8050 3675
-Wire Wire Line
 	8125 4150 8050 4150
 Wire Wire Line
-	8050 4150 8050 4225
-Text Label 7850 3950 0    50   ~ 0
+	8050 4150 8050 4325
+Text Label 7750 4250 0    50   ~ 0
 KCLK
-Text Label 7850 4050 0    50   ~ 0
+Text Label 7750 4050 0    50   ~ 0
 KDTA
 Wire Wire Line
 	2300 5800 2300 5850
@@ -658,17 +654,6 @@ Wire Wire Line
 Connection ~ 3625 1525
 Wire Wire Line
 	3625 1525 3625 1225
-$Comp
-L Connector_Generic:Conn_01x05 J16
-U 1 1 608C5420
-P 8325 3950
-F 0 "J16" H 8405 3992 50  0000 L CNN
-F 1 "Conn_01x05" H 8405 3901 50  0000 L CNN
-F 2 "kolibri:Pin_Header_Straight_1x05_Pitch2.54mm" H 8325 3950 50  0001 C CNN
-F 3 "~" H 8325 3950 50  0001 C CNN
-	1    8325 3950
-	1    0    0    -1  
-$EndComp
 Wire Wire Line
 	5625 2800 5625 4050
 Wire Wire Line
@@ -676,12 +661,10 @@ Wire Wire Line
 Connection ~ 5625 4050
 Wire Wire Line
 	5625 4050 5625 4200
-Wire Wire Line
-	8125 3950 5375 3950
 Connection ~ 5375 3950
 Wire Wire Line
 	5375 3950 5375 4200
-NoConn ~ 8125 3850
+NoConn ~ 8625 4050
 NoConn ~ 6425 1375
 Wire Wire Line
 	5375 2200 5825 2200
@@ -723,4 +706,28 @@ Connection ~ 5825 2200
 Wire Wire Line
 	5825 2200 7450 2200
 NoConn ~ 6125 1375
+$Comp
+L Connector_Generic:Conn_02x03_Odd_Even J?
+U 1 1 618054B4
+P 8325 4150
+AR Path="/60F127A0/618054B4" Ref="J?"  Part="1" 
+AR Path="/58C640AE/618054B4" Ref="J16"  Part="1" 
+F 0 "J16" H 8375 4467 50  0000 C CNN
+F 1 "Keyboard" H 8375 4376 50  0000 C CNN
+F 2 "kolibri:IDC-Header_2x03_P2.54mm_Vertical" H 8325 4150 50  0001 C CNN
+F 3 "~" H 8325 4150 50  0001 C CNN
+	1    8325 4150
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	8625 4150 8725 4150
+Wire Wire Line
+	8725 4150 8725 3925
+Wire Wire Line
+	8125 4250 7625 4250
+Wire Wire Line
+	7625 4250 7625 3950
+Wire Wire Line
+	7625 3950 5375 3950
+NoConn ~ 8625 4250
 $EndSCHEMATC

@@ -106,7 +106,7 @@ Text Label 7325 6025 0    39   ~ 0
 Wire Wire Line
 	10225 4900 9800 4900
 Wire Wire Line
-	10225 5100 9925 5100
+	10225 5100 9875 5100
 $Comp
 L eilers:GAMEPAD J?
 U 1 1 60FA37CE
@@ -218,9 +218,9 @@ F 3 "" H 8050 6025 50  0001 C CNN
 	-1   0    0    1   
 $EndComp
 Wire Wire Line
-	8500 6025 9925 6025
+	8500 6025 9875 6025
 Wire Wire Line
-	9925 6025 9925 5100
+	9875 6025 9875 5100
 Wire Wire Line
 	8875 5100 8875 5675
 Wire Wire Line
@@ -625,78 +625,56 @@ Wire Wire Line
 $Comp
 L Connector_Generic:Conn_02x03_Odd_Even J6
 U 1 1 6150E689
-P 9450 4025
-F 0 "J6" H 9500 4342 50  0000 C CNN
-F 1 "Gamepads" H 9500 4251 50  0000 C CNN
-F 2 "kolibri:WSL_6W" H 9450 4025 50  0001 C CNN
-F 3 "~" H 9450 4025 50  0001 C CNN
-	1    9450 4025
+P 9500 3900
+F 0 "J6" H 9550 4217 50  0000 C CNN
+F 1 "Gamepads" H 9550 4126 50  0000 C CNN
+F 2 "kolibri:WSL_6W" H 9500 3900 50  0001 C CNN
+F 3 "~" H 9500 3900 50  0001 C CNN
+	1    9500 3900
 	1    0    0    -1  
 $EndComp
-Wire Wire Line
-	8875 5100 8875 4125
-Wire Wire Line
-	8875 4125 9250 4125
 Connection ~ 8875 5100
-Wire Wire Line
-	8550 4375 8550 3925
-Wire Wire Line
-	8550 3925 9250 3925
 Connection ~ 8550 4375
-Wire Wire Line
-	8650 4450 8650 4025
-Wire Wire Line
-	8650 4025 8825 4025
 Connection ~ 8650 4450
 Wire Wire Line
-	9925 5100 9925 4125
-Wire Wire Line
-	9925 4125 9750 4125
-Connection ~ 9925 5100
+	9875 5100 9875 4300
+Connection ~ 9875 5100
 $Comp
 L main-rescue:GND #PWR?
 U 1 1 615403D2
-P 10075 4025
+P 9225 4050
 AR Path="/58C640AE/615403D2" Ref="#PWR?"  Part="1" 
 AR Path="/56B86A26/615403D2" Ref="#PWR?"  Part="1" 
 AR Path="/60F127A0/615403D2" Ref="#PWR075"  Part="1" 
-F 0 "#PWR075" H 10075 3775 50  0001 C CNN
-F 1 "GND" H 10075 3875 50  0000 C CNN
-F 2 "" H 10075 4025 50  0000 C CNN
-F 3 "" H 10075 4025 50  0000 C CNN
-	1    10075 4025
+F 0 "#PWR075" H 9225 3800 50  0001 C CNN
+F 1 "GND" H 9225 3900 50  0000 C CNN
+F 2 "" H 9225 4050 50  0000 C CNN
+F 3 "" H 9225 4050 50  0000 C CNN
+	1    9225 4050
 	-1   0    0    -1  
 $EndComp
 $Comp
 L main-rescue:VCC #PWR?
 U 1 1 61540CE2
-P 10075 3925
+P 9875 3675
 AR Path="/58C640AE/61540CE2" Ref="#PWR?"  Part="1" 
 AR Path="/56B86A26/61540CE2" Ref="#PWR?"  Part="1" 
 AR Path="/60F127A0/61540CE2" Ref="#PWR074"  Part="1" 
-F 0 "#PWR074" H 10075 3775 50  0001 C CNN
-F 1 "VCC" H 10075 4075 50  0000 C CNN
-F 2 "" H 10075 3925 50  0000 C CNN
-F 3 "" H 10075 3925 50  0000 C CNN
-	1    10075 3925
+F 0 "#PWR074" H 9875 3525 50  0001 C CNN
+F 1 "VCC" H 9875 3825 50  0000 C CNN
+F 2 "" H 9875 3675 50  0000 C CNN
+F 3 "" H 9875 3675 50  0000 C CNN
+	1    9875 3675
 	1    0    0    -1  
 $EndComp
-Wire Wire Line
-	10075 3925 9750 3925
-Wire Wire Line
-	9750 4025 10075 4025
-Text Label 9775 4125 0    50   ~ 0
+Text Label 9050 4000 0    50   ~ 0
 PD1
-Text Label 9075 3925 0    50   ~ 0
+Text Label 9975 4000 0    50   ~ 0
 PCLK
-Text Label 9075 4025 0    50   ~ 0
+Text Label 9975 3800 0    50   ~ 0
 LTCH
-Text Label 9075 4125 0    50   ~ 0
+Text Label 9025 3800 0    50   ~ 0
 PD0
-Connection ~ 8550 3925
-Connection ~ 8825 4025
-Wire Wire Line
-	8825 4025 9250 4025
 Text GLabel 7625 3375 2    43   Input ~ 0
 ~EXTINT
 Wire Wire Line
@@ -749,14 +727,14 @@ $EndComp
 $Comp
 L Connector:TestPoint TP59
 U 1 1 638688E6
-P 7000 1350
+P 6500 1350
 AR Path="/60F127A0/638688E6" Ref="TP59"  Part="1" 
 AR Path="/56B86A26/638688E6" Ref="TP?"  Part="1" 
-F 0 "TP59" V 7000 1550 50  0000 L CNN
-F 1 "~RXF" V 7000 1825 50  0000 L CNN
-F 2 "kolibri:PINTST" H 7200 1350 50  0001 C CNN
-F 3 "~" H 7200 1350 50  0001 C CNN
-	1    7000 1350
+F 0 "TP59" V 6500 1550 50  0000 L CNN
+F 1 "~RXF" V 6500 1825 50  0000 L CNN
+F 2 "kolibri:PINTST" H 6700 1350 50  0001 C CNN
+F 3 "~" H 6700 1350 50  0001 C CNN
+	1    6500 1350
 	1    0    0    -1  
 $EndComp
 $Comp
@@ -803,28 +781,19 @@ Wire Wire Line
 Wire Wire Line
 	4850 3275 7625 3275
 Wire Wire Line
-	4850 3475 7000 3475
+	4850 3475 6150 3475
 Wire Wire Line
 	5425 4075 7625 4075
 Wire Wire Line
-	4850 4375 6400 4375
-Connection ~ 6400 4375
-Wire Wire Line
-	6400 4375 7625 4375
+	4850 4375 6050 4375
 Connection ~ 6600 3875
 Wire Wire Line
 	6600 3875 7625 3875
 Connection ~ 6700 3775
 Wire Wire Line
 	6700 3775 7625 3775
-Connection ~ 7000 3475
 Wire Wire Line
-	7000 3475 7625 3475
-Wire Wire Line
-	4850 3375 7100 3375
-Connection ~ 7100 3375
-Wire Wire Line
-	7100 3375 7625 3375
+	4850 3375 6250 3375
 Wire Wire Line
 	4850 3775 6700 3775
 Wire Wire Line
@@ -834,19 +803,13 @@ Wire Wire Line
 Wire Wire Line
 	6700 1350 6700 3775
 Wire Wire Line
-	7000 1350 7000 3475
-Wire Wire Line
 	8550 1675 5125 1675
 Wire Wire Line
 	5125 1675 5125 1350
 Wire Wire Line
-	8550 1675 8550 3925
-Wire Wire Line
 	5225 1350 5225 1600
 Wire Wire Line
-	5225 1600 8825 1600
-Wire Wire Line
-	8825 1600 8825 4025
+	5225 1600 8650 1575
 Wire Wire Line
 	2550 2675 2325 2675
 Wire Wire Line
@@ -875,40 +838,6 @@ Text Label 7325 4900 0    39   ~ 0
 ~PCLK
 Text Label 7325 5275 0    39   ~ 0
 ~LTCH
-$Comp
-L Device:R R1
-U 1 1 60967284
-P 7300 1250
-F 0 "R1" H 7370 1296 50  0000 L CNN
-F 1 "10k" H 7370 1205 50  0000 L CNN
-F 2 "kolibri:R" V 7230 1250 50  0001 C CNN
-F 3 "~" H 7300 1250 50  0001 C CNN
-	1    7300 1250
-	1    0    0    -1  
-$EndComp
-$Comp
-L main-rescue:VCC #PWR?
-U 1 1 60967A36
-P 7300 1025
-AR Path="/56B86A26/60967A36" Ref="#PWR?"  Part="1" 
-AR Path="/60F127A0/60967A36" Ref="#PWR064"  Part="1" 
-F 0 "#PWR064" H 7300 875 50  0001 C CNN
-F 1 "VCC" H 7300 1175 50  0000 C CNN
-F 2 "" H 7300 1025 50  0001 C CNN
-F 3 "" H 7300 1025 50  0001 C CNN
-	1    7300 1025
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	7300 1025 7300 1100
-Wire Wire Line
-	7300 1400 7300 1475
-Wire Wire Line
-	7300 1475 7100 1475
-Wire Wire Line
-	7100 1475 7100 3375
-Wire Wire Line
-	6400 1350 6400 4375
 Wire Wire Line
 	5325 3975 7625 3975
 Wire Wire Line
@@ -947,35 +876,6 @@ F 3 "~" H 1050 2600 50  0001 C CNN
 	1    1050 2600
 	1    0    0    -1  
 $EndComp
-$Comp
-L Device:R R18
-U 1 1 612D54A7
-P 950 1225
-F 0 "R18" H 1020 1271 50  0000 L CNN
-F 1 "10k" H 1020 1180 50  0000 L CNN
-F 2 "kolibri:R" V 880 1225 50  0001 C CNN
-F 3 "~" H 950 1225 50  0001 C CNN
-	1    950  1225
-	1    0    0    -1  
-$EndComp
-$Comp
-L main-rescue:VCC #PWR?
-U 1 1 612D5891
-P 950 975
-AR Path="/56B86A26/612D5891" Ref="#PWR?"  Part="1" 
-AR Path="/60F127A0/612D5891" Ref="#PWR015"  Part="1" 
-F 0 "#PWR015" H 950 825 50  0001 C CNN
-F 1 "VCC" H 950 1125 50  0000 C CNN
-F 2 "" H 950 975 50  0001 C CNN
-F 3 "" H 950 975 50  0001 C CNN
-	1    950  975 
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	950  975  950  1075
-Wire Wire Line
-	950  1450 950  1375
-Connection ~ 950  1450
 Text GLabel 800  1775 0    39   Output ~ 0
 TCK
 Wire Wire Line
@@ -1019,4 +919,108 @@ Wire Wire Line
 	1150 1875 1375 1875
 Wire Wire Line
 	1150 1600 2150 1600
+$Comp
+L Device:R_Network04 RN6
+U 1 1 6172A6E4
+P 6150 1150
+F 0 "RN6" H 6050 1450 50  0000 L CNN
+F 1 "4 x 10k" H 6050 1375 50  0000 L CNN
+F 2 "kolibri:R_Array_SIP5" V 6425 1150 50  0001 C CNN
+F 3 "http://www.vishay.com/docs/31509/csc.pdf" H 6150 1150 50  0001 C CNN
+	1    6150 1150
+	1    0    0    -1  
+$EndComp
+$Comp
+L main-rescue:VCC #PWR?
+U 1 1 6172B690
+P 5950 875
+AR Path="/56B86A26/6172B690" Ref="#PWR?"  Part="1" 
+AR Path="/60F127A0/6172B690" Ref="#PWR0107"  Part="1" 
+F 0 "#PWR0107" H 5950 725 50  0001 C CNN
+F 1 "VCC" H 5950 1025 50  0000 C CNN
+F 2 "" H 5950 875 50  0001 C CNN
+F 3 "" H 5950 875 50  0001 C CNN
+	1    5950 875 
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	5950 950  5950 875 
+Wire Wire Line
+	5950 1350 5850 1350
+Wire Wire Line
+	5850 1350 5850 600 
+Wire Wire Line
+	5850 600  2300 600 
+Wire Wire Line
+	2300 600  2300 1450
+Connection ~ 2300 1450
+Wire Wire Line
+	6050 1350 6050 1425
+Connection ~ 6050 4375
+Wire Wire Line
+	6150 1350 6150 1500
+Connection ~ 6150 3475
+Wire Wire Line
+	6050 4375 7625 4375
+Wire Wire Line
+	6400 1350 6400 1425
+Wire Wire Line
+	6400 1425 6050 1425
+Connection ~ 6050 1425
+Wire Wire Line
+	6050 1425 6050 4375
+Wire Wire Line
+	6500 1350 6500 1500
+Wire Wire Line
+	6500 1500 6150 1500
+Connection ~ 6150 1500
+Wire Wire Line
+	6150 1500 6150 3475
+Wire Wire Line
+	6150 3475 7625 3475
+Wire Wire Line
+	6250 1350 6250 3375
+Connection ~ 6250 3375
+Wire Wire Line
+	6250 3375 7625 3375
+Wire Wire Line
+	9875 3675 9875 3900
+Wire Wire Line
+	9875 3900 9800 3900
+Wire Wire Line
+	8650 1575 8650 3400
+Wire Wire Line
+	9225 4050 9225 3900
+Wire Wire Line
+	9225 3900 9300 3900
+Wire Wire Line
+	8550 1675 8550 3325
+Wire Wire Line
+	9300 3800 8875 3800
+Wire Wire Line
+	8875 3800 8875 5100
+Wire Wire Line
+	9300 4000 9000 4000
+Wire Wire Line
+	9000 4000 9000 4300
+Wire Wire Line
+	9000 4300 9875 4300
+Wire Wire Line
+	8650 3400 10200 3400
+Wire Wire Line
+	10200 3400 10200 3800
+Wire Wire Line
+	10200 3800 9800 3800
+Connection ~ 8650 3400
+Wire Wire Line
+	8650 3400 8650 4450
+Wire Wire Line
+	9800 4000 10275 4000
+Wire Wire Line
+	10275 4000 10275 3325
+Wire Wire Line
+	10275 3325 8550 3325
+Connection ~ 8550 3325
+Wire Wire Line
+	8550 3325 8550 4375
 $EndSCHEMATC

@@ -2013,4 +2013,21 @@ Wire Wire Line
 Wire Wire Line
 	3225 3900 3150 3900
 NoConn ~ 3175 5100
+$Comp
+L Connector:TestPoint TP?
+U 1 1 615A3352
+P 9175 1125
+AR Path="/60F127A0/615A3352" Ref="TP?"  Part="1" 
+AR Path="/56B86A26/615A3352" Ref="TP11"  Part="1" 
+F 0 "TP11" V 9175 1325 50  0000 L CNN
+F 1 "~RESET" V 9175 1600 50  0000 L CNN
+F 2 "kolibri:PINTST" H 9375 1125 50  0001 C CNN
+F 3 "~" H 9375 1125 50  0001 C CNN
+	1    9175 1125
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	9175 1125 9450 1125
+Text GLabel 9450 1125 2    43   Input ~ 0
+~RES
 $EndSCHEMATC
