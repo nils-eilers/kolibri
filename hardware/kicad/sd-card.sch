@@ -5,8 +5,8 @@ $Descr A4 11693 8268
 encoding utf-8
 Sheet 4 9
 Title "kolibri"
-Date "2021-03-09"
-Rev "issue two"
+Date "2021-05-26"
+Rev "issue three"
 Comp "nils.eilers@gmx.de"
 Comment1 ""
 Comment2 ""
